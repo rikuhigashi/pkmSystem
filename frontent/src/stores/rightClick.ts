@@ -22,7 +22,6 @@ export const useRightClickStore = defineStore('rightClick', () => {
             menuPosition.value = { x: event.clientX, y: event.clientY }
         }, 100)
 
-
     }
 
     const closeRightClickMenu = () => {
