@@ -17,6 +17,7 @@ export const useRightClickStore = defineStore('rightClick', () => {
 
         isRightChickActive.value = false
 
+        
         debounceTimeout = window.setTimeout(() => {
             isRightChickActive.value = true
             menuPosition.value = { x: event.clientX, y: event.clientY }
