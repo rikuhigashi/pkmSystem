@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, type Ref } from 'vue'
-
+// 侧边栏状态
 interface sidebarState {
     sidebarOpen: Ref<boolean>
 }

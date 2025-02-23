@@ -5,6 +5,7 @@ interface MenuItem {
   icon: any
   label: string;
   onClick: (event: MouseEvent) => void
+  show: () => boolean
 }
 
 interface Props {
@@ -75,15 +76,23 @@ watch(() => props.menuItems, () => {
           class="mt-2 w-40 origin-top-right divide-y divide-gray-300 rounded-md bg-gradient-to-br from-gray-50 to-gray-200 shadow-lg ring-1 ring-black/5 focus:outline-none">
 
           <div class="py-1" v-for="(group, index) in props.menuItems" :key="index">
+
             <span draggable="false"
-              :class="['text-gray-700 hover:text-blue-500', 'group flex items-center px-4 py-2 text-sm cursor-pointer']"
+              :class="[item.show() ? 'text-gray-700 hover:text-blue-500' : 'hidden', 'group flex items-center px-4 py-2 text-sm cursor-pointer']"
               v-for="(item, index) in group" :key="index" @click="item.onClick">
+
               <component :is="item.icon" :class="['mr-3 size-5 text-gray-400 group-hover:text-blue-400']"
                 aria-hidden="true" />
               {{ item.label }}
+
             </span>
           </div>
         </div>
+
+
+
+
+
       </transition>
 
     </div>

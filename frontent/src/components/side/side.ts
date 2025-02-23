@@ -16,103 +16,97 @@ import {
 } from '@heroicons/vue/24/outline'
 import { ref } from 'vue'
 
-
 export const icon = {
+    CalendarIcon,
+    ChartPieIcon,
     Cog6ToothIcon,
+    DocumentDuplicateIcon,
+    FolderIcon,
+    HomeIcon,
+    UsersIcon,
     XMarkIcon,
+    ArchiveBoxIcon,
+    ArrowRightCircleIcon,
+    HeartIcon,
+    PencilSquareIcon,
+    TrashIcon,
+    UserPlusIcon,
 }
 
+
 // 侧边栏主内容
-export const navigation = [
+export const navigation = ref([
     {
         name: '全部笔记',
         href: '#',
         icon: HomeIcon,
         current: true,
-        onclick: (event: MouseEvent) => {
-            console.log("1");
-        },
+
     },
     {
         name: '2',
         href: '#',
         icon: UsersIcon,
         current: false,
-        onclick: (event: MouseEvent) => {
-            console.log("1");
-        },
+
     },
     {
         name: '3',
         href: '#',
         icon: FolderIcon,
         current: false,
-        onclick: (event: MouseEvent) => {
-            console.log("1");
-        },
+
     },
     {
         name: '4',
         href: '#',
         icon: CalendarIcon,
         current: false,
-        onclick: (event: MouseEvent) => {
-            console.log("1");
-        },
+
     },
     {
         name: '5',
         href: '#',
         icon: DocumentDuplicateIcon,
         current: false,
-        onclick: (event: MouseEvent) => {
-            console.log("1");
-        },
+
     },
     {
         name: 'test',
-        href: '#',
+        href: 'testView',
         icon: ChartPieIcon,
         current: false,
-        onclick: (event: MouseEvent) => {
-            console.log("1");
-        },
+
     },
-]
+])
 
 // 主内容内部的分组
-export const teams = [
-    {
-        id: 1,
-        name: '回收站',
-        href: '#',
-        initial: 't',
-        current: false,
-        onclick: (event: MouseEvent) => {
-            console.log("1");
-        },
-    },
-    {
-        id: 2,
-        name: 'Tailwind Labs',
-        href: '#',
-        initial: 'T',
-        current: false,
-        onclick: (event: MouseEvent) => {
-            console.log("1");
-        },
-    },
-    {
-        id: 3,
-        name: '回收站3',
-        href: '#',
-        initial: 'W',
-        current: false,
-        onclick: (event: MouseEvent) => {
-            console.log("1");
-        },
-    },
-]
+// export const teams = [
+//     {
+//         id: 1,
+//         name: '回收站',
+//         href: '#',
+//         initial: 't',
+//         current: false,
+
+//     },
+//     {
+//         id: 2,
+//         name: 'Tailwind Labs',
+//         href: '#',
+//         initial: 'T',
+//         current: false,
+
+//     },
+//     {
+//         id: 3,
+//         name: '回收站3',
+//         href: '#',
+//         initial: 'W',
+//         current: false,
+
+//     },
+// ]
 // 侧边栏主内容
 
 
@@ -138,73 +132,38 @@ export const iconVipActive = () => {
 // 暂时用于测试，vip的图标切换
 
 
-// 点击右键出现的菜单内容
-const rightClickSelectMenuItems = [
-    [
-        {
-            icon: PencilSquareIcon,
-            label: '编辑',
-            onClick: (event: MouseEvent) => {
-                console.log("编辑");
-            },
-        },
-        {
-            icon: DocumentDuplicateIcon,
-            label: '复制',
-            onClick: (event: MouseEvent) => {
-                console.log("复制");
-            },
-        },
-    ],
-    [
-        {
-            icon: ArchiveBoxIcon,
-            label: '档案',
-            onClick: (event: MouseEvent) => {
-                console.log("档案");
-            },
-        },
-        {
-            icon: ArrowRightCircleIcon,
-            label: '移动',
-            onClick: (event: MouseEvent) => {
-                console.log("移动");
-            },
-        },
-    ],
-    [
-        {
-            icon: UserPlusIcon,
-            label: '共享',
-            onClick: (event: MouseEvent) => {
-                console.log("共享");
-            },
-        },
-        {
-            icon: HeartIcon,
-            label: '添加到收藏夹',
-            onClick: (event: MouseEvent) => {
-                console.log("添加到收藏夹");
-            },
-        },
-    ],
-    [
-        {
-            icon: TrashIcon,
-            label: '删去',
-            onClick: (event: MouseEvent) => {
-                console.log("删去");
-            },
-        },
-    ],
-];
-// 点击右键出现的菜单内容
+
+
+// 输入框状态
+
+export const isInputActive = ref(false)
+
+// 
+
+// 添加方法
+export const addItem = () => {
+    if (inputValue.value) {
+        navigation.value.push({
+            name: inputValue.value,
+            href: '#',
+            icon: HomeIcon,
+            current: false,
+        })
+    }
+    // console.log('添加数据');
+}
+// 添加方法
+
+// 输入框
+export const inputValue = ref('')
+// 输入框
 
 
 
-// 用于测试点击功能是否能够正确点击
+
+
 export const clickTest = () => {
-    console.log("被点击了！");
+    console.log("这是测试的输出",inputValue.value);
 }
 // 用于测试点击功能是否能够正确点击
 
@@ -213,11 +172,13 @@ export const clickTest = () => {
 
 export default {
     navigation,
-    teams,
+    // teams,
     icon,
     accountSelect,
     isVipActive,
     iconVipActive,
-    rightClickSelectMenuItems,
+    addItem,
+    inputValue,
     clickTest,
+
 }

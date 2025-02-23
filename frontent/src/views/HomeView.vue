@@ -16,7 +16,6 @@
       <main :class="['h-screen flex justify-center items-center duration-300 transition-all',
         sidebarStore.sidebarOpen ? ' bg-red-500 w-4/5' : ' bg-sky-600 '
       ]">
-
           <div @click="sidebarStore.toggleSidebar">test</div>
       </main>
       <!-- 内容区域 -->

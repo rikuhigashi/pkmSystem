@@ -10,7 +10,7 @@ const router = createRouter({
       name: 'home',
       component: HomeView,
       beforeEnter: (to, from, next) => {
-        console.log('Before entering Home route');
+        // console.log('Before entering Home route');
         next(); // 允许导航
       },
     },
@@ -18,6 +18,12 @@ const router = createRouter({
       path: '/sideList',
       name: 'sideList',
       component: () => import('../components/side/sideComponents/sideList.vue'),
+      meta: { standalone: true },
+    },
+    {
+      path: '/testView',
+      name: 'testView',
+      component: () => import('../views/testView.vue'),
       meta: { standalone: true },
     },
   ],
