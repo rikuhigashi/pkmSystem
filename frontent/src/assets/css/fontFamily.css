@@ -1,0 +1,111 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;700&family=Noto+Serif+SC&family=Noto+Sans+JP&family=Roboto:ital,wght@0,300;0,700;1,400&family=Open+Sans&family=Montserrat&family=Lato:wght@300;700&family=Merriweather&family=Microsoft+YaHei&family=PingFang+SC&family=Inter:wght@400;700&family=Playfair+Display&family=Source+Code+Pro&family=Noto+Color+Emoji&family=ZCOOL+XiaoWei&family=Dancing+Script&family=Fira+Code&family=Oswald&family=Pacifico&family=Zhi+Mang+Xing&family=Ma+Shan+Zheng&display=swap');
+
+
+:root {
+    --font-en: 'Roboto', 'Open Sans', system-ui, sans-serif;
+    --font-cn-serif: "仿宋", FangSong, "Noto Serif SC", serif;
+    --font-cn: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+    --font-jp: 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif;
+}
+
+.font-arial {
+    font-family: Arial, sans-serif;
+}
+
+.font-arial {
+    font-family: Arial, sans-serif;
+}
+
+.font-times-new-roman {
+    font-family: 'Times New Roman', serif;
+}
+
+.font-lato {
+    font-family: 'Lato', var(--font-en);
+}
+
+.font-merriweather {
+    font-family: var(--font-en);
+}
+
+
+.font-notosanssc {
+    font-family: var(--font-cn);
+}
+
+.font-notoserifsc {
+    font-family: 'Noto Serif SC', 'SimSun', serif;
+}
+
+.font-fangsong {
+    font-family: "仿宋", FangSong, serif;
+    font-weight: normal;
+    font-style: normal;
+}
+
+.font-notosansjp {
+    font-family: var(--font-jp);
+    line-height: 1.8;
+}
+
+.font-roboto {
+    font-family: 'Roboto', var(--font-en);
+}
+
+.font-pingfang {
+    font-family: 'PingFang SC', var(--font-cn);
+}
+
+.font-helvetica {
+    font-family: Helvetica, Arial, sans-serif;
+}
+
+.font-georgia {
+    font-family: Georgia, 'Times New Roman', serif;
+}
+
+.font-sourcecodepro {
+    font-family: 'Source Code Pro', monospace;
+}
+
+.font-playfair {
+    font-family: 'Playfair Display', serif;
+}
+
+.font-inter {
+    font-family: 'Inter', sans-serif;
+}
+
+.font-zcoolxw {
+    font-family: 'ZCOOL XiaoWei', sans-serif;
+}
+
+
+.font-dancingscript {
+    font-family: 'Dancing Script', cursive;
+}
+
+
+.font-oswald {
+    font-family: 'Oswald', sans-serif;
+}
+
+.font-pacifico {
+    font-family: 'Pacifico', cursive;
+}
+
+
+.font-zmgx {
+    font-family: 'Zhi Mang Xing', cursive;
+}
+
+.font-msz {
+    font-family: 'Ma Shan Zheng', cursive;
+}
+
+.font-\[Yu\ Gothic\] {
+    font-family: 'Yu Gothic';
+}
+.font-\[Noto\ Sans\ JP\] {
+    font-family: 'Noto Sans JP';
+}
