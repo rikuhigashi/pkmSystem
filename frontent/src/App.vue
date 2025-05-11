@@ -2,6 +2,8 @@
 import { RouterView } from 'vue-router'
 import { useRightClickStore } from './stores/rightClick';
 
+
+
 const rightClickStore = useRightClickStore()
 
 const close = () =>{
@@ -11,7 +13,7 @@ const close = () =>{
 </script>
 
 <template>
-  <div class="w-full h-screen" @contextmenu.prevent @click="close">
+  <div class="min-h-screen bg-gray-100 overflow-auto" @contextmenu.prevent @click="close">
     <RouterView />
   </div>
 </template>

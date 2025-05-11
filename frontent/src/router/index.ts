@@ -1,32 +1,88 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-import HomeView from '@/views/homeView.vue'
+import loginView from '@/views/loginAndRegistration/loginView.vue'
+import { userAuthStore } from '@/stores/auth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
-      name: 'home',
-      component: HomeView,
+      name: 'login',
+      component: loginView,
       beforeEnter: (to, from, next) => {
         // console.log('Before entering Home route');
-        next(); // 允许导航
+        next() // 允许导航
       },
     },
+
+    {
+      path: '/home',
+      name: 'home',
+      component: () => import('@/views/homeView.vue'),
+      meta: { requiresAuth: true }, //标记需要登录
+    },
+
     {
       path: '/sideList',
       name: 'sideList',
-      component: () => import('../components/side/sideComponents/sideList.vue'),
+      component: () => import('@/components/sideComponents/sideList.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/registerView',
+      name: 'registerView',
+      component: () => import('../views/loginAndRegistration/registerView.vue'),
       meta: { standalone: true },
     },
     {
-      path: '/testView',
-      name: 'testView',
-      component: () => import('../views/testView.vue'),
+      path: '/forgotPassword',
+      name: 'forgotPassword',
+      component: () => import('../views/loginAndRegistration/forgotPassword.vue'),
       meta: { standalone: true },
     },
+    {
+      path: '/resetPassword',
+      name: 'resetPassword',
+      component: () => import('../views/loginAndRegistration/resetPassword.vue'),
+      meta: { standalone: true },
+    },
+    {
+      path: '/adminDashboard',
+      name: 'adminDashboard',
+      component: () => import('../views/admin/adminDashboard.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/AdminPendingReview',
+      name: 'AdminPendingReview',
+      component: () => import('../views/admin/AdminPendingReview.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/sponsorshipView',
+      name: 'sponsorshipView',
+      component: () => import('../views/sponsorship/sponsorshipView.vue'),
+      meta: { requiresAuth: true },
+    },
   ],
+})
+
+router.beforeEach(async (to, from, next) => {
+  const authStore = userAuthStore()
+  // const isAuthenticated = authStore.isLoggedIn
+
+  await authStore.checkSession();
+
+
+
+  if (to.name === 'login' && authStore.isLoggedIn) {
+    next({ name: 'home' })
+  } else if (to.meta.requiresAuth && !authStore.isLoggedIn) {
+    next({ name: 'login' })
+  } else {
+    next()
+  }
 })
 
 export default router

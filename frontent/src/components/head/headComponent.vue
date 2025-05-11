@@ -26,6 +26,9 @@ const sidebarStore = useSidebarStore()
             <!-- @click="sidebarOpen = true" -->
             <span class="sr-only">Open sidebar</span>
             <Bars3Icon class="size-6" aria-hidden="true" />
+
+
+
         </button>
 
         <div class="h-6 w-px bg-gray-900/10 lg:hidden" aria-hidden="true" />
