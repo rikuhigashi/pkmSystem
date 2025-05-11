@@ -1,5 +1,17 @@
 <template>
-  <div v-if="editor" class="h-screen w-full">
+  <div
+    v-if="editor"
+    class="h-screen w-full "
+
+  >
+
+    <div
+
+      class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 px-8 py-4 border-2 border-dashed border-blue-500 rounded-lg text-blue-500 text-xl pointer-events-none"
+    >
+      拖放图片或视频到这里
+    </div>
+
     <!-- 工具栏 -->
     <bubble-menu
       ref="bubbleMenuRef"
@@ -72,16 +84,19 @@
 
     <editor-content
       :editor="editor"
-      class="min-h-[calc(100vh-3rem)] p-6 border-t-0 border-gray-200 rounded-b-lg prose prose-sm max-w-none bg-gray-200"
+      class="editor-container min-h-[calc(100vh-3rem)] p-6 border-t-0 border-gray-200 rounded-b-lg prose prose-sm max-w-none bg-gray-200"
+      @dragover.prevent="handleDragOver"
+      @drop.prevent="handleDrop"
+
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import {nextTick, onBeforeUnmount, ref, watch} from 'vue'
+import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
 
 // -------------- tipTap各种导入 --------------
-import {useEditor, EditorContent, BubbleMenu} from '@tiptap/vue-3'
+import { useEditor, EditorContent, BubbleMenu } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import TextStyle from '@tiptap/extension-text-style'
@@ -94,6 +109,7 @@ import TextAlign from '@tiptap/extension-text-align'
 import FontFamily from '@tiptap/extension-font-family'
 import ListItem from '@tiptap/extension-list-item'
 import OrderedList from '@tiptap/extension-ordered-list'
+import Image from '@tiptap/extension-image'
 
 // -------------- tipTap各种导入 --------------
 
@@ -103,7 +119,7 @@ import css from 'highlight.js/lib/languages/css'
 import js from 'highlight.js/lib/languages/javascript'
 import ts from 'highlight.js/lib/languages/typescript'
 import html from 'highlight.js/lib/languages/xml'
-import {all, createLowlight} from 'lowlight'
+import { all, createLowlight } from 'lowlight'
 
 import 'highlight.js/styles/night-owl.css'
 
@@ -116,8 +132,8 @@ lowlight.register('typescript', ts)
 // -------------- 高光代码块 --------------
 
 // -------------- stores --------------
-import {userInputStore} from '@/stores/inputState'
-import {useEditorStore} from '@/stores/main/editorStore'
+import { userInputStore } from '@/stores/inputState'
+import { useEditorStore } from '@/stores/main/editorStore'
 
 const inputStore = userInputStore()
 const editorStore = useEditorStore()
@@ -126,7 +142,7 @@ const editorStore = useEditorStore()
 
 // -------------- 引入组件 --------------
 import noCollingBlur from '@/utils/noCollingBlurMethod'
-import {loadMainData} from '@/views/main/configs/mainConfigs'
+import { loadMainData } from '@/views/main/configs/mainConfigs'
 // -------------- 引入组件 --------------
 
 // onMounted(() => {
@@ -151,17 +167,13 @@ watch(
         await loadMainData(newId, editor.value)
 
         editorStore.editorContent = editor.value.getJSON()
-
-
-
       } catch (error) {
         console.error('加载数据失败:', error)
       }
     }
   },
-  {immediate: true},
+  { immediate: true },
 )
-
 
 onBeforeUnmount(() => {
   editor.value?.destroy()
@@ -169,13 +181,11 @@ onBeforeUnmount(() => {
 
 // ------------------- tiptap编辑器配置 -------------------
 
-
 const editor = useEditor({
-  onUpdate: ({editor}) => {
+  onUpdate: ({ editor }) => {
     // 获取到编辑器内部内容
 
     editorStore.editorContent = editor.getJSON()
-
   },
   extensions: [
     StarterKit.configure({
@@ -200,7 +210,7 @@ const editor = useEditor({
       lowlight,
       defaultLanguage: 'typescript',
     }),
-    Highlight.configure({multicolor: true}),
+    Highlight.configure({ multicolor: true }),
     Subscript,
     Superscript,
     TextAlign.configure({
@@ -212,9 +222,89 @@ const editor = useEditor({
     }),
     ListItem,
     OrderedList,
+    Image.configure({
+      inline: true,
+      allowBase64: true,
+      HTMLAttributes: {
+        class: 'prose-img',
+      },
+    })
   ],
 })
 // ------------------- tiptap编辑器配置 -------------------
+
+// ------------------- 图片配置 -------------------
+
+// 扩展Image节点
+const CustomImage = Image.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      width: {
+        default: 'auto',
+        parseHTML: element => element.getAttribute('width') || 'auto',
+        renderHTML: attributes => ({ width: attributes.width })
+      },
+      height: {
+        default: 'auto',
+        parseHTML: element => element.getAttribute('height') || 'auto',
+        renderHTML: attributes => ({ height: attributes.height })
+      }
+    }
+  }
+})
+
+
+
+const handleDragOver = (event: DragEvent) => {
+
+  event.dataTransfer!.dropEffect = 'copy'
+}
+
+const handleDrop = async (event: DragEvent) => {
+
+  const files = event.dataTransfer?.files
+  if (!files || files.length === 0) return
+
+  const { view } = editor.value!
+  const editorDom = view.dom as HTMLElement
+  const rect = editorDom.getBoundingClientRect()
+
+  // 修正坐标计算，考虑滚动偏移
+  const coordinates = view.posAtCoords({
+    left: event.clientX - rect.left + editorDom.scrollLeft,
+    top: event.clientY - rect.top + editorDom.scrollTop
+  }) ?? { pos: 0 } // 处理空值情况
+
+  const insertPos = Math.max(0, coordinates.pos)
+
+  for (const file of Array.from(files)) {
+    try {
+      const base64 = await readFileAsBase64(file)
+      if (file.type.startsWith('image/')) {
+        // 使用insertContent替代insertContentAt确保正确插入
+        editor.value!.chain()
+          .focus()
+          .insertContent({
+            type: 'image',
+            attrs: { src: base64, class: 'prose-img' }
+          })
+          .run()
+      }
+    } catch (error) {
+      console.error('文件处理失败:', error)
+    }
+  }
+}
+
+const readFileAsBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.onload = (e) => resolve(e.target?.result as string)
+    reader.readAsDataURL(file)
+  })
+}
+// ------------------- 视频配置 -------------------
 
 // ------------------- 工具栏按钮配置 -------------------
 const bubbleMenuRef = ref<InstanceType<typeof BubbleMenu> | null>(null)
@@ -227,14 +317,14 @@ const toolbarButtons: toolbarItem[] = [
     title: 'Heading',
     options: [
       // 默认选项
-      {label: '正文', value: '0'},
-      {label: 'H1', value: '1'},
-      {label: 'H2', value: '2'},
-      {label: 'H3', value: '3'},
-      {label: 'H4', value: '4'},
-      {label: '---', value: 'divider'},
-      {label: {type: 'icon', name: 'iconBulletList'}, value: 'bullet'},
-      {label: {type: 'icon', name: 'iconOrderedList'}, value: 'ordered'},
+      { label: '正文', value: '0' },
+      { label: 'H1', value: '1' },
+      { label: 'H2', value: '2' },
+      { label: 'H3', value: '3' },
+      { label: 'H4', value: '4' },
+      { label: '---', value: 'divider' },
+      { label: { type: 'icon', name: 'iconBulletList' }, value: 'bullet' },
+      { label: { type: 'icon', name: 'iconOrderedList' }, value: 'ordered' },
     ],
     action: (value: string) => {
       if (value === 'bullet') {
@@ -247,7 +337,7 @@ const toolbarButtons: toolbarItem[] = [
           editor.value
             ?.chain()
             .focus()
-            .toggleHeading({level: level as 1 | 2 | 3 | 4}) // 类型断言
+            .toggleHeading({ level: level as 1 | 2 | 3 | 4 }) // 类型断言
             .run()
         } else {
           editor.value?.chain().focus().setParagraph().run()
@@ -264,12 +354,12 @@ const toolbarButtons: toolbarItem[] = [
       if (value) {
         const level = parseInt(value)
         return level > 0
-          ? (editor.value?.isActive('heading', {level}) ?? false)
+          ? (editor.value?.isActive('heading', { level }) ?? false)
           : (editor.value?.isActive('paragraph') ?? false)
       }
-      return [1, 2, 3, 4].some((level) => editor.value?.isActive('heading', {level}))
+      return [1, 2, 3, 4].some((level) => editor.value?.isActive('heading', { level }))
     },
-    meta: {type: 'heading'},
+    meta: { type: 'heading' },
   },
   // 字体
   {
@@ -278,41 +368,41 @@ const toolbarButtons: toolbarItem[] = [
     title: 'Font Family',
     options: [
       // 默认选项
-      {label: '默认字体', value: 'unset'},
+      { label: '默认字体', value: 'unset' },
 
       // === 中文字体 ===
-      {label: '苹方 (iOS)', value: 'PingFang SC'},
-      {label: '微软雅黑 (Windows)', value: 'Microsoft YaHei'},
-      {label: '思源黑体', value: 'Noto Sans SC'},
-      {label: '思源宋体', value: 'Noto Serif SC'},
-      {label: '仿宋', value: 'FangSong'},
-      {label: '仿宋_GB2312', value: 'FangSong_GB2312'},
-      {label: '站酷小薇', value: 'ZCOOL XiaoWei'},
+      { label: '苹方 (iOS)', value: 'PingFang SC' },
+      { label: '微软雅黑 (Windows)', value: 'Microsoft YaHei' },
+      { label: '思源黑体', value: 'Noto Sans SC' },
+      { label: '思源宋体', value: 'Noto Serif SC' },
+      { label: '仿宋', value: 'FangSong' },
+      { label: '仿宋_GB2312', value: 'FangSong_GB2312' },
+      { label: '站酷小薇', value: 'ZCOOL XiaoWei' },
 
       // === 英文字体 ===
-      {label: 'Arial', value: 'Arial'},
-      {label: 'Helvetica', value: 'Helvetica'},
-      {label: 'Georgia', value: 'Georgia'},
-      {label: 'Lato', value: 'Lato'},
-      {label: 'Roboto', value: 'Roboto'},
-      {label: 'Times New Roman', value: 'Times New Roman'},
+      { label: 'Arial', value: 'Arial' },
+      { label: 'Helvetica', value: 'Helvetica' },
+      { label: 'Georgia', value: 'Georgia' },
+      { label: 'Lato', value: 'Lato' },
+      { label: 'Roboto', value: 'Roboto' },
+      { label: 'Times New Roman', value: 'Times New Roman' },
 
       // === 代码/等宽字体 ===
-      {label: 'Fira Code', value: 'Fira Code'},
-      {label: 'Source Code Pro', value: 'Source Code Pro'},
+      { label: 'Fira Code', value: 'Fira Code' },
+      { label: 'Source Code Pro', value: 'Source Code Pro' },
 
       // === 特色字体 ===
-      {label: '优雅衬线', value: 'Playfair Display'},
-      {label: '现代UI字体 - Inter', value: 'Inter'},
-      {label: '标题字体', value: 'Oswald'},
-      {label: '手写体', value: 'Dancing Script'},
-      {label: '可爱体', value: 'Pacifico'},
-      {label: '中文书法', value: 'Zhi Mang Xing'},
-      {label: '马善政体', value: 'Ma Shan Zheng'},
+      { label: '优雅衬线', value: 'Playfair Display' },
+      { label: '现代UI字体 - Inter', value: 'Inter' },
+      { label: '标题字体', value: 'Oswald' },
+      { label: '手写体', value: 'Dancing Script' },
+      { label: '可爱体', value: 'Pacifico' },
+      { label: '中文书法', value: 'Zhi Mang Xing' },
+      { label: '马善政体', value: 'Ma Shan Zheng' },
 
       // === 日文字体 ===
-      {label: 'Noto Sans JP', value: 'Noto Sans JP'},
-      {label: '游ゴシック', value: 'Yu Gothic'},
+      { label: 'Noto Sans JP', value: 'Noto Sans JP' },
+      { label: '游ゴシック', value: 'Yu Gothic' },
     ],
     action: (value: string) => {
       if (value) {
@@ -327,12 +417,12 @@ const toolbarButtons: toolbarItem[] = [
         return !editor.value?.isActive('textStyle')
       } else if (value) {
         // 其他字体激活条件：精确匹配字体
-        return editor.value?.isActive('textStyle', {fontFamily: value}) ?? false
+        return editor.value?.isActive('textStyle', { fontFamily: value }) ?? false
       }
       // 按钮整体激活状态：应用了任意字体
       return editor.value?.isActive('textStyle') ?? false
     },
-    meta: {type: 'fontFamily'},
+    meta: { type: 'fontFamily' },
   },
   // 左对齐
   {
@@ -340,7 +430,7 @@ const toolbarButtons: toolbarItem[] = [
     icon: 'iconAlignLeft',
     title: 'AlignLeft Ctrl+Shift+L',
     action: () => editor.value?.chain().focus().setTextAlign('left').run(),
-    isActive: () => editor.value?.isActive({textAlign: 'left'}) ?? false,
+    isActive: () => editor.value?.isActive({ textAlign: 'left' }) ?? false,
     disabled: () => !editor.value?.can().chain().focus().setTextAlign('left').run(),
   },
   // 居中对齐
@@ -349,7 +439,7 @@ const toolbarButtons: toolbarItem[] = [
     icon: 'iconAlignCenter',
     title: 'AlignCenter Ctrl+Shift+E',
     action: () => editor.value?.chain().focus().setTextAlign('center').run(),
-    isActive: () => editor.value?.isActive({textAlign: 'center'}) ?? false,
+    isActive: () => editor.value?.isActive({ textAlign: 'center' }) ?? false,
     disabled: () => !editor.value?.can().chain().focus().setTextAlign('center').run(),
   },
   // 右对齐
@@ -358,7 +448,7 @@ const toolbarButtons: toolbarItem[] = [
     icon: 'iconAlignRight',
     title: 'Justify Ctrl+Shift+R',
     action: () => editor.value?.chain().focus().setTextAlign('right').run(),
-    isActive: () => editor.value?.isActive({textAlign: 'right'}) ?? false,
+    isActive: () => editor.value?.isActive({ textAlign: 'right' }) ?? false,
     disabled: () => !editor.value?.can().chain().focus().setTextAlign('right').run(),
   },
   // 两端对齐
@@ -367,11 +457,11 @@ const toolbarButtons: toolbarItem[] = [
     icon: 'iconJustify',
     title: 'AlignRight Ctrl+Shift+J',
     action: () => editor.value?.chain().focus().setTextAlign('justify').run(),
-    isActive: () => editor.value?.isActive({textAlign: 'justify'}) ?? false,
+    isActive: () => editor.value?.isActive({ textAlign: 'justify' }) ?? false,
     disabled: () => !editor.value?.can().chain().focus().setTextAlign('justify').run(),
   },
   // 分割线
-  {type: 'divider'},
+  { type: 'divider' },
   // 字体加粗
   {
     type: 'button',
@@ -451,8 +541,8 @@ const toolbarButtons: toolbarItem[] = [
       inputStore.toggleLinkInput()
     },
     isActive: () => editor.value?.isActive('link') ?? false,
-    disabled: () => !editor.value?.can().setLink({href: ''}),
-    meta: {type: 'link'},
+    disabled: () => !editor.value?.can().setLink({ href: '' }),
+    meta: { type: 'link' },
   },
   // 给文字添加背景色
   {
@@ -480,7 +570,7 @@ const toolbarButtons: toolbarItem[] = [
     },
     isActive: () => editor.value?.isActive('highlight') ?? false,
     disabled: () => !editor.value?.can().chain().focus().toggleHighlight().run(),
-    meta: {type: 'highlight'},
+    meta: { type: 'highlight' },
   },
   // 给文字添加颜色
   {
@@ -506,10 +596,10 @@ const toolbarButtons: toolbarItem[] = [
       colorActionType.value = 'text'
     },
     isActive: () => editor.value?.isActive('textStyle') ?? false,
-    meta: {type: 'textColor'},
+    meta: { type: 'textColor' },
   },
   // 分割线
-  {type: 'divider'},
+  { type: 'divider' },
   //   下标
   {
     type: 'button',
@@ -548,11 +638,11 @@ const handleBlur = () => {
 
 // ------------------ 颜色选择器 ------------------
 import colorSelect from '@/components/mainComponent/colorSelect.vue'
-import type {toolbarItem} from '@/views/main/types/mainTypes'
+import type { toolbarItem } from '@/views/main/types/mainTypes'
 import DropdownMenu from '@/components/mainComponent/DropdownMenu.vue'
 
 const showColorPicker = ref(false)
-const colorPickerPosition = ref({top: 0, left: 0})
+const colorPickerPosition = ref({ top: 0, left: 0 })
 const colorActionType = ref<'text' | 'highlight'>('text')
 
 // 设置颜色选择器的颜色
@@ -569,7 +659,7 @@ const handleColorSelect = (color: string) => {
 
   // 设置颜色
   if (colorActionType.value === 'highlight') {
-    editor.value?.chain().focus().setHighlight({color}).run()
+    editor.value?.chain().focus().setHighlight({ color }).run()
   } else {
     editor.value?.chain().focus().setColor(color).run()
   }
@@ -584,7 +674,7 @@ const handleColorPickerClose = () => {
 // ------------------ 颜色选择器 ------------------
 
 // ------------------ 设置文字链接输入框 ------------------
-const linkPosition = ref({top: 0, left: 0})
+const linkPosition = ref({ top: 0, left: 0 })
 
 const inputLinkValue = ref('')
 const setLinkValue = () => {
@@ -595,7 +685,7 @@ const setLinkValue = () => {
       href = 'https://' + href
     }
 
-    editor.value?.chain().focus().setLink({href}).run()
+    editor.value?.chain().focus().setLink({ href }).run()
   } else {
     editor.value?.chain().focus().unsetLink().run()
   }
@@ -697,4 +787,20 @@ const setLinkValue = () => {
 .ProseMirror li {
   margin: 0.25rem 0;
 }
+
+
+.prose-img {
+  display: block !important;
+  max-width: 100% !important;
+  height: auto !important;
+  margin: 1rem auto !important;
+}
+
+.editor-container {
+  z-index: 1;
+  min-height: 500px;
+  position: relative;
+  overflow: visible !important;
+}
+
 </style>
