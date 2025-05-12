@@ -40,6 +40,7 @@
     "@tiptap/pm": "^2.11.7",
     "@tiptap/starter-kit": "^2.11.7",
     "@tiptap/vue-3": "^2.11.7",
+    "@vueuse/core": "^13.1.0",
     "daisyui": "^4.12.23",
     "frontent": "file:",
     "highlight.js": "^11.11.1",
@@ -47,6 +48,7 @@
     "lodash-es": "^4.17.21",
     "lowlight": "^3.3.0",
     "pinia": "^2.2.6",
+    "tiptap-extension-resize-image": "^1.2.2",
     "vue": "^3.5.12",
     "vue-router": "^4.4.5"
   },
