@@ -134,9 +134,9 @@ export const saveMainData = async () => {
     // console.log('editorStore?.editorContent:', editorStore?.editorContent)
 
      await upDataMainData(editorStore?.currentDocId, editorStore?.editorContent)
-    if (alertStore){
 
-    alertStore.showAlert('保存成功', 'success')
+    if (alertStore){
+      alertStore.showAlert('保存成功', 'success')
     }
 
   } catch (error) {

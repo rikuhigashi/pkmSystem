@@ -13,9 +13,13 @@ const close = () =>{
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-100 overflow-auto" @contextmenu.prevent @click="close">
+  <div class="h-full bg-gray-100 overflow-auto" @contextmenu.prevent @click="close">
     <RouterView />
   </div>
 </template>
 
-<style scoped></style>
+<style>
+html, body, #app {
+  @apply h-full;
+}
+</style>

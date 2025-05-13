@@ -1,88 +1,94 @@
 <template>
-  <div v-if="editor" class="h-screen w-full">
-    <!-- 工具栏 -->
-    <bubble-menu
-      ref="bubbleMenuRef"
-      v-if="editor"
-      class="bubble-menu"
-      :editor="editor"
-      :tippy-options="{
-        duration: 100,
-        maxWidth: 'none',
-        placement: 'top',
-        animation: 'fade',
-        appendTo: 'parent',
-      }"
-      :should-show="shouldShowBubble"
-    >
-      <div class="flex flex-wrap gap-1 p-2 bg-gray-50 rounded border border-gray-200">
-        <template v-for="(item, index) in toolbarButtons" :key="index">
-          <!-- 保持原有按钮结构 -->
-          <DropdownMenu
-            v-if="item.type === 'dropdown'"
-            :config="item"
-            :is-active="item.isActive?.() ?? false"
-          />
+  <div class="flex-1 w-full">
+    <div v-if="editor" class="h-full flex flex-col">
+      <!-- 工具栏 -->
+      <bubble-menu
+        ref="bubbleMenuRef"
+        v-if="editor"
+        class="bubble-menu shadow-lg rounded-box"
+        :editor="editor"
+        :tippy-options="{
+          duration: 100,
+          maxWidth: 'none',
+          placement: 'top',
+          animation: 'fade',
+          appendTo: 'parent',
+        }"
+        :should-show="shouldShowBubble"
+      >
+        <div class="flex flex-wrap gap-1 p-2 bg-base-200 rounded border border-base-300">
+          <template v-for="(item, index) in toolbarButtons" :key="index">
+            <!-- 保持原有按钮结构 -->
+            <DropdownMenu
+              v-if="item.type === 'dropdown'"
+              :config="item"
+              :is-active="item.isActive?.() ?? false"
+            />
 
-          <button
-            v-else-if="item.type === 'button'"
-            @mousedown.prevent="item.action($event)"
-            :disabled="item.disabled?.() ?? false"
-            :class="[
-              'p-2 rounded hover:bg-gray-200 transition-colors',
-              item.isActive?.() ? 'bg-gray-200 text-gray-900' : 'text-gray-600',
-            ]"
-            :title="item.title"
-            :data-toolbar-button="item.meta?.type"
-          >
-            <component :is="item.icon" class="h-4 w-4"></component>
-          </button>
+            <!--          :class="[-->
+            <!--          'p-2 rounded hover:bg-gray-200 transition-colors ' ,-->
+            <!--          item.isActive?.() ? 'bg-gray-200 text-gray-900' : 'text-gray-600',-->
+            <!--          ]"-->
 
-          <div v-else-if="item.type === 'divider'" class="h-6 w-px mx-1.5 bg-gray-300 m-auto" />
-        </template>
-      </div>
-    </bubble-menu>
+            <button
+              v-else-if="item.type === 'button'"
+              @mousedown.prevent="item.action($event)"
+              :disabled="item.disabled?.() ?? false"
+              :class="['btn btn-xs btn-ghost gap-1', item.isActive?.() ? 'btn-active' : '']"
+              :title="item.title"
+              :data-toolbar-button="item.meta?.type"
+            >
+              <component :is="item.icon" class="h-4 w-4"></component>
+            </button>
 
-    <input
-      type="text"
-      placeholder="Type here"
-      v-if="inputStore.isInputLink"
-      v-focus="true"
-      v-model="inputLinkValue"
-      @keyup.enter.prevent="handleEnterKey()"
-      @blur="handleBlur()"
-      :style="{
-        top: `${linkPosition.top}px`,
-        left: `${linkPosition.left}px`,
-      }"
-      class="input fixed z-50 bg-white p-2 shadow-lg border rounded w-64 transition-all duration-150"
-    />
+            <div v-else-if="item.type === 'divider'" class="h-6 w-px mx-1.5 bg-gray-300 m-auto" />
+          </template>
+        </div>
+      </bubble-menu>
 
-    <color-select
-      :visible="showColorPicker"
-      :position="colorPickerPosition"
-      :style="{
-        top: `${colorPickerPosition.top}px`,
-        left: `${colorPickerPosition.left}px`,
-      }"
-      @color-change="handleColorSelect"
-      @close="handleColorPickerClose"
-    />
+      <input
+        type="text"
+        placeholder="Type here"
+        v-if="inputStore.isInputLink"
+        v-focus="true"
+        v-model="inputLinkValue"
+        @keyup.enter.prevent="handleEnterKey()"
+        @blur="handleBlur()"
+        :style="{
+          top: `${linkPosition.top}px`,
+          left: `${linkPosition.left}px`,
+        }"
+        class="input fixed z-50 bg-white p-2 shadow-lg border rounded w-64 transition-all duration-150"
+      />
 
-    <!-- 编辑器内容 -->
+      <color-select
+        :visible="showColorPicker"
+        :position="colorPickerPosition"
+        :style="{
+          top: `${colorPickerPosition.top}px`,
+          left: `${colorPickerPosition.left}px`,
+        }"
+        @color-change="handleColorSelect"
+        @close="handleColorPickerClose"
+      />
 
-    <editor-content
-      :editor="editor"
-      class="editor-container min-h-[calc(100vh-3rem)] p-6 border-t-0 border-gray-200 rounded-b-lg prose prose-sm max-w-none bg-gray-200"
-      @dragover.prevent="handleDragOver"
-      @drop.prevent="handleDrop"
-    />
+      <!-- 编辑器内容 -->
+
+      <!--    class="editor-container p-6 border-t-0 border-gray-200 rounded-b-lg prose prose-sm max-w-none bg-gray-200"-->
+
+      <editor-content
+        :editor="editor"
+        class="editor-container flex-1 p-6 rounded-box bg-base-100 border border-base-300 shadow-sm prose prose-sm max-w-none min-h-screen"
+        @dragover.prevent="handleDragOver"
+        @drop.prevent="handleDrop"
+      >
+      </editor-content>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, ref, watch } from 'vue'
-import { NodeSelection } from 'prosemirror-state'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 // -------------- tipTap各种导入 --------------
 import { useEditor, EditorContent, BubbleMenu } from '@tiptap/vue-3'
@@ -100,6 +106,7 @@ import ListItem from '@tiptap/extension-list-item'
 import OrderedList from '@tiptap/extension-ordered-list'
 import ImageResize from 'tiptap-extension-resize-image'
 import type { Editor } from '@tiptap/core'
+import Placeholder from '@tiptap/extension-placeholder'
 
 // -------------- tipTap各种导入 --------------
 
@@ -135,8 +142,6 @@ import noCollingBlur from '@/utils/noCollingBlurMethod'
 import { loadMainData } from '@/views/main/configs/mainConfigs'
 // -------------- 引入组件 --------------
 
-
-
 // 自定义图片扩展
 const CustomImage = ImageResize.extend({
   addAttributes() {
@@ -144,23 +149,37 @@ const CustomImage = ImageResize.extend({
       ...this.parent?.(),
       width: {
         default: '100%',
-        parseHTML: element => element.getAttribute('width') || '100%',
-        renderHTML: attributes => ({
-          width: attributes.width,
-          style: `width: ${attributes.width}; height: auto;`
-        }),
+        parseHTML: element => {
+          const currentWidth = element.getAttribute('width')
+          return currentWidth || '100%'
+        },
+        renderHTML: ({ width }) => ({ width }),
+        updateDOM: (element:HTMLElement, value:string) => {
+          element.setAttribute('width', value)
+        },
       },
       height: {
         default: 'auto',
-        parseHTML: element => element.getAttribute('height') || 'auto',
+        parseHTML: element => {
+          const existingStyle = element.getAttribute('style') || ''
+          return `${existingStyle}; max-width: 600px; height: auto;`
+        },
+        renderHTML: ({ height }) => ({ height }),
+        updateDOM: (element:HTMLElement, value:string) => {
+          element.setAttribute('height', value)
+        },
       },
       style: {
         default: 'max-width: 600px; height: auto;',
-        parseHTML: element => element.getAttribute('style'),
+        parseHTML: (element) => element.getAttribute('style'),
+        renderHTML: ({ style }) => ({ style }),
+        updateDOM: (element:HTMLElement, value:string) => {
+          element.setAttribute('style', value)
+        },
       },
       isResizable: {
-        default: true
-      }
+        default: true,
+      },
     }
   },
 }).configure({
@@ -168,10 +187,8 @@ const CustomImage = ImageResize.extend({
   allowBase64: true,
   HTMLAttributes: {
     class: 'prose-img',
-  }
+  },
 })
-
-
 
 // ------------------- tiptap编辑器配置 -------------------
 
@@ -192,6 +209,24 @@ const editor = useEditor({
           class: 'my-heading',
         },
       },
+      paragraph: {
+        HTMLAttributes: {
+          class: 'prose-paragraph',
+          contenteditable: 'true',
+        },
+      },
+    }),
+    Placeholder.configure({
+      placeholder: ({ node }) => {
+        // 针对段落节点显示提示
+        if (node.type.name === 'paragraph') {
+          return '开始输入内容...'
+        }
+        return ''
+      },
+      showOnlyWhenEditable: true,    // 在可编辑时显示
+      showOnlyCurrent: true,         // 在当前空节点显示
+      emptyNodeClass: 'is-empty'
     }),
     TextStyle,
     Color,
@@ -221,11 +256,9 @@ const editor = useEditor({
 })
 // ------------------- tiptap编辑器配置 -------------------
 
-
-
 // ------------------- 图片配置 -------------------
 // Bubble菜单显示条件判断
-const shouldShowBubble = ({ editor }: { editor: Editor  }) => {
+const shouldShowBubble = ({ editor }: { editor: Editor }) => {
   // 选中图片节点时不显示
   if (editor.isActive('image')) return false
   // 仅在选择文本内容时显示
@@ -233,42 +266,68 @@ const shouldShowBubble = ({ editor }: { editor: Editor  }) => {
 }
 
 // 图片拖放处理
+
 const handleDrop = async (event: DragEvent) => {
   const files = event.dataTransfer?.files
-
   if (!files || files.length === 0) return
 
-  // 获取当前选中图片的尺寸
-  const currentImageAttrs = editor.value?.getAttributes('image') || {}
+  // 获取当前选中图片的属性
+  const currentImageAttrs = editor.value?.getAttributes('image') || {
+    src: '',
+    width: '100%',
+    height: 'auto',
+    style: 'max-width: 600px; height: auto;'
+  }
 
   for (const file of Array.from(files)) {
     if (file.type.startsWith('image/')) {
       const base64 = await readFileAsBase64(file)
-      editor
-        .value!.chain()
-        .focus()
-        .insertContent({
-          type: 'image',
-          attrs: {
-            src: base64,
-            class: 'editor-image',
-            width: currentImageAttrs.width || '100%',
-            height: currentImageAttrs.height || 'auto',
-            style: currentImageAttrs.style || 'max-width: 600px; height: auto;',
-          },
+
+      editor.value!.chain().focus().command(({ tr }) => {
+        const node = editor.value!.schema.nodes.image.create({
+          ...currentImageAttrs,
+          src: base64,
+          style: `${currentImageAttrs.style}; --img-width: ${currentImageAttrs.width}; --img-height: ${currentImageAttrs.height};`
         })
-        .run()
+        tr.replaceSelectionWith(node)
+        return true
+      }).run()
     }
   }
+
 }
 
-const readFileAsBase64 = (file: File) => {
-  return new Promise<string>((resolve) => {
-    const reader = new FileReader()
-    reader.onload = (e) => resolve(e.target?.result as string)
-    reader.readAsDataURL(file)
-  })
-}
+// 读取文件为Base64
+const readFileAsBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const base64 = e.target?.result as string;
+      // 压缩
+      const compressedBase64 = await compressBase64Image(base64, 0.8);
+      resolve(compressedBase64);
+    };
+    reader.readAsDataURL(file);
+  });
+};
+
+// Base64图片压缩工具函数
+const compressBase64Image = async (base64: string, quality: number): Promise<string> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.src = base64;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d')!;
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+      // 转换为JPEG并压缩质量
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+  });
+};
+
 
 const handleDragOver = (event: DragEvent) => {
   event.dataTransfer!.dropEffect = 'copy'
@@ -668,38 +727,6 @@ const setLinkValue = () => {
 // ------------------ watch ------------------
 
 watch(
-  () => editor.value?.state.selection,
-  (selection) => {
-    if (selection instanceof NodeSelection && selection.node?.type.name === 'image') {
-      // 当移动图片时保留属性
-      const attrs = selection.node.attrs
-      editor.value?.commands.updateAttributes('image', {
-        width: attrs.width,
-        height: attrs.height,
-        style: attrs.style
-      })
-    }
-  },
-  { deep: true }
-)
-
-
-// watch(
-//   () => editor.value?.state.selection,
-//   (selection) => {
-//     if (selection instanceof NodeSelection && selection.node?.type.name === 'image') {
-//       // 添加选中样式逻辑
-//       document.querySelectorAll('.selected-image').forEach(el => {
-//         el.classList.remove('selected-image')
-//       })
-//       const node = editor.value?.view.nodeDOM(selection.from) as HTMLElement
-//       node?.classList.add('selected-image')
-//     }
-//   },
-//   { deep: true }
-// )
-
-watch(
   () => editorStore.currentDocId,
   async (newId) => {
     await nextTick()
@@ -717,22 +744,21 @@ watch(
   { immediate: true },
 )
 
+onMounted(() => {
+  if (editor.value && !editor.value.getHTML()) {
+    editor.value.commands.insertContent('<p></p><p></p>')
+  }
+})
 
 onBeforeUnmount(() => {
   editor.value?.destroy()
 })
-
 </script>
 
 <style>
 /* 代码块容器 */
 .ProseMirror pre {
-  background-color: #0d0d0d !important;
-  color: #fff !important;
-  padding: 1rem !important;
-  border-radius: 0.5rem !important;
-  margin: 1rem 0 !important;
-  overflow-x: auto !important;
+  @apply bg-neutral text-neutral-content p-4 rounded-box my-4 overflow-x-auto;
 }
 
 /* 代码行样式 */
@@ -751,6 +777,14 @@ onBeforeUnmount(() => {
 
 .ProseMirror a:hover {
   color: #2563eb; /* blue-600 */
+}
+
+.ProseMirror p.is-empty::before {
+  content: attr(data-placeholder);
+  color: #adb5bd;
+  float: left;
+  height: 0;
+  pointer-events: none;
 }
 
 .ProseMirror:focus-visible {
@@ -813,47 +847,36 @@ onBeforeUnmount(() => {
 }
 
 .editor-container {
-  z-index: 1;
-  min-height: 500px;
-  position: relative;
-  overflow: visible !important;
+  @apply relative overflow-visible;
+}
+
+.prose-paragraph {
+  min-height: 2rem;
+  margin: 0.5rem 0;
+  padding: 0.25rem 0;
 }
 
 .prose-img {
-  max-width: min(100%, 800px) !important;
-  height: auto;
-  display: block;
-  margin: 1rem auto;
-  transition: all 0.3s ease-in-out !important;}
+  @apply max-w-[600px] h-auto block my-4 mx-auto transition-all duration-300 shadow-md rounded-lg;
+}
 
 .editor-container img {
   max-width: min(100%, 600px);
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-
 .resize-handle {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  background: #3b82f6;
-  border: 2px solid white;
-  border-radius: 50%;
-  cursor: nwse-resize;
+  @apply absolute w-3 h-3 bg-primary border-2 border-white rounded-full cursor-nwse-resize;
   bottom: -6px;
   right: -6px;
-  z-index: 100;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* 选中状态 */
 .selected-image {
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5);
-
+  @apply shadow-[0_0_0_3px_rgba(99,102,241,0.5)];
 }
-
-
 
 /* 保持图片响应式 */
 .prose-img {
@@ -863,5 +886,4 @@ onBeforeUnmount(() => {
   margin: 1rem auto;
   transition: box-shadow 0.2s;
 }
-
 </style>

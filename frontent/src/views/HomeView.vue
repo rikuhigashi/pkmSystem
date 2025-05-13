@@ -1,27 +1,24 @@
 <template>
-  <div class="w-4/5 m-auto">
+  <div class="w-4/5 mx-auto h-full  ">
 
     <!-- 侧边栏 -->
     <side-view />
     <!-- 侧边栏 -->
 
-
-
-
     <div
       :class="[
-        'transition-all duration-300 ',
+        'transition-all duration-300  overflow-auto',
         sidebarStore.sidebarOpen ? 'flex justify-center items-center' : 'lg:pl-72',
       ]"
     >
-      <div class="w-4/5">
+      <div class="w-4/5 h-full flex flex-col ">
         <headView />
         <!-- 内容区域           :class="[
             'h-screen flex justify-center items-center duration-300 transition-all',
             sidebarStore.sidebarOpen ? '' : '',
           ]" -->
 
-        <main class="h-screen flex justify-center items-center duration-300 transition-all">
+        <main class=" duration-300 transition-all ">
           <mainView />
         </main>
 
