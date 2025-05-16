@@ -18,7 +18,11 @@ import java.util.Map;
 @Getter
 @Setter
 @Entity
-@Table(name = "sidedata")
+@Table(name = "sidedata", indexes = {
+        @Index(name = "idx_created_at", columnList = "created_at"), // 排序字段索引
+        @Index(name = "idx_status", columnList = "status"),         // 过滤字段索引
+        @Index(name = "idx_status_created_at", columnList = "status, createdAt DESC")
+})
 public class Sidedatum {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -52,7 +56,7 @@ public class Sidedatum {
     private Instant updatedAt;
 
 
-    @Column(name = "tiptap_json")
+    @Column(name = "tiptap_json", columnDefinition = "JSON")
     @JdbcTypeCode(SqlTypes.JSON)
     private Map<String, Object> tiptapJson;
 
@@ -75,5 +79,6 @@ public class Sidedatum {
         APPROVED, // 已通过
         REJECTED  // 已拒绝
     }
+
 
 }

@@ -68,7 +68,10 @@ export const userAuthStore = defineStore('auth', () => {
       await apiClient.post('/api/auth/logout')
       isLoggedIn.value = false
       userInfo.value = {}
-      await router.replace('/')
+      localStorage.removeItem('token')
+      sessionStorage.clear()
+      await router.replace({ name: 'login' });
+
     } catch (error) {
       console.error('登出失败:', error)
     }

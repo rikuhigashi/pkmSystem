@@ -1,11 +1,11 @@
 import apiClient from '@/API/axios'
-import type { AxiosError } from 'axios'
+import type {AxiosError} from 'axios'
 
 // 获取全部数据信息
 export const getAllUsersWithSideData = async () => {
   try {
     const res = await apiClient.get('/admin/users')
-    return { success: true, data: res.data }
+    return {success: true, data: res.data}
   } catch (error) {
     const axiosError = error as AxiosError<{ message: string }>
     return {
@@ -29,7 +29,7 @@ export const getPendingData = async (params?: {
         page: params?.page ? params.page - 1 : 0,
       },
     })
-    return { success: true, data: res.data }
+    return {success: true, data: res.data}
   } catch (error) {
     const axiosError = error as AxiosError<{ message: string }>
     return {
@@ -39,11 +39,13 @@ export const getPendingData = async (params?: {
   }
 }
 
+
+
 // 管理员批准数据
 export const approveData = async (id: number) => {
   try {
     const res = await apiClient.put(`/admin/sidedata/${id}/approve`)
-    return { success: true, data: res.data }
+    return {success: true, data: res.data}
   } catch (error) {
     const axiosError = error as AxiosError<{ message: string }>
     return {
@@ -57,7 +59,7 @@ export const approveData = async (id: number) => {
 export const rejectData = async (id: number) => {
   try {
     const res = await apiClient.put(`/admin/sidedata/${id}/reject`)
-    return { success: true, data: res.data }
+    return {success: true, data: res.data}
   } catch (error) {
     const axiosError = error as AxiosError<{ message: string }>
     return {

@@ -88,14 +88,8 @@ public class AdminController {
         );
         return ResponseEntity.ok(response);
 
-
-
-//        List<Sidedatum> pendingData = sideService.getPendingData();
-//        List<AdminSidedatumDto> dtos = pendingData.stream()
-//                .map(side -> convertToAdminSidedatumDto(side))
-//                .collect(Collectors.toList());
-//        return ResponseEntity.ok(dtos);
     }
+
 
     private AdminSidedatumDto convertToAdminSidedatumDto(Sidedatum side) {
         AdminSidedatumDto dto = new AdminSidedatumDto();

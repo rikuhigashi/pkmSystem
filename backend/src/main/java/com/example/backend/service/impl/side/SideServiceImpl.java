@@ -1,6 +1,7 @@
 package com.example.backend.service.impl.side;
 
 import com.example.backend.dto.side.SidedatumDto;
+import com.example.backend.dto.user.AdminSidedatumDto;
 import com.example.backend.entity.side.Sidedatum;
 import com.example.backend.entity.user.User;
 import com.example.backend.exception.ResourceNotFoundException;
@@ -172,7 +173,7 @@ public class SideServiceImpl implements SideService {
         // 按名称模糊查询
         if (name != null && !name.isEmpty()) {
             spec = spec.and((root, query, cb) ->
-                    cb.like(root.get("name"), "%" + name + "%")
+                    cb.like(root.get("name"), name + "%")
             );
         }
 
@@ -184,8 +185,8 @@ public class SideServiceImpl implements SideService {
         }
 
         return sidedatumRepository.findAll(spec, pageable);
-
-//        return sidedatumRepository.findByStatus(Sidedatum.Status.PENDING);
-
     }
+
+
+
 }

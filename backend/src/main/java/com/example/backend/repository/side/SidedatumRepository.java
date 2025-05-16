@@ -23,7 +23,6 @@ public interface SidedatumRepository extends JpaRepository<Sidedatum, Integer> {
 
     Long countByUser(User user);
 
-    List<Sidedatum> findByStatusAndExpiredAtAfter(Sidedatum.Status status, Instant now);
 
     @Modifying
     @Query("DELETE FROM Sidedatum s WHERE s.status IN :statuses AND s.expiredAt <= :now")
@@ -34,4 +33,9 @@ public interface SidedatumRepository extends JpaRepository<Sidedatum, Integer> {
     List<Sidedatum> findByStatus(Sidedatum.Status status);
 
     Page<Sidedatum> findAll(Specification<Sidedatum> spec, Pageable pageable);
+
+
+
+
+
 }

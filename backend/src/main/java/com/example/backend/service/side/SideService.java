@@ -14,7 +14,7 @@ import java.util.Map;
 
 public interface SideService {
 
-//    获取全部数据
+    //    获取全部数据
     List<SidedatumDto> getAllSideDataByUser(User user);
 
     //    根据id获取数据
@@ -41,9 +41,6 @@ public interface SideService {
 
     Page<Sidedatum> getPendingData(String name, Instant expiredBefore, Pageable pageable);
 
-//    @Transactional
-//    Sidedatum addSideData(Sidedatum sidedatum);
 
-//    List<Sidedatum> getPendingData();
 
 }

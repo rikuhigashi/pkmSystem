@@ -10,7 +10,7 @@ import { useSidebarStore } from '@/stores/sidebar'
 import { useRightClickStore } from '@/stores/rightClick'
 import { userInputStore } from '@/stores/inputState'
 import { useEditorStore } from '@/stores/main/editorStore'
-import {userAuthStore} from "@/stores/auth"
+import { userAuthStore } from '@/stores/auth'
 // ==================== import store ====================
 
 // ==================== userStore ====================
@@ -40,7 +40,8 @@ const { Cog6ToothIcon, PencilSquareIcon, TrashIcon, DocumentDuplicateIcon } = si
 // ==================== icon ====================
 
 import { ChevronDownIcon } from '@heroicons/vue/20/solid'
-import { onMounted} from 'vue'
+import { onMounted } from 'vue'
+import IconLeftArrow from "@/assets/icons/iconLeftArrow.vue";
 
 // ==================== method ====================
 
@@ -72,19 +73,19 @@ const handleLeftClick = (item: sideListItem) => {
 }
 // 点击用户名出现的下拉框
 const accountSelect = [
-  { name: '账号详情', href: '#', isNew: false },
-  { name: '会员中心', href: '#', isNew: false },
-  { name: '消息通知', href: '#', isNew: true },
-  { name: '意见反馈', href: '/sponsorshipView', isNew: false },
-  { name: '退出登录', action: 'logout', isNew: false },
+  { name: '账号详情', href: '/home', isNew: false },
+  { name: '会员中心', href: '/home', isNew: false },
+  { name: '消息通知', href: '/home', isNew: true },
+  { name: '意见反馈', href: '/home', isNew: false },
+  { name: '赞助我', href: '/sponsorshipView', isNew: false },
+  { name: '退出登录',action: 'logout', isNew: false },
 ]
 
-const handleAction = (action: string) => {
+const handleAction =async (action: string) => {
   if (action === 'logout') {
-    authStore.logout()
+    await authStore.logout()
   }
 }
-
 
 // 点击右键出现的菜单内容
 const rightClickSelectMenuItems = [
@@ -294,7 +295,7 @@ onMounted(async () => {
       <!--  右键菜单栏    -->
 
       <nav class="relative flex flex-1 flex-col">
-        <ul role="list" class="flex flex-1 flex-col gap-y-7 ">
+        <ul role="list" class="flex flex-1 flex-col gap-y-7">
           <sideList
             :navigation="sideUtils.navigation"
             @right-click="handleRightClick"

@@ -9,6 +9,7 @@ import com.example.backend.entity.user.User;
 import com.example.backend.repository.user.EmailVerificationCodeRepository;
 import com.example.backend.repository.user.PasswordResetTokenRepository;
 import com.example.backend.repository.user.UserRepository;
+import com.example.backend.service.impl.side.SideServiceImpl;
 import com.example.backend.service.impl.user.EmailServiceImpl;
 import com.example.backend.service.side.SideService;
 import com.example.backend.utils.security.CodeGenerator;
@@ -46,9 +47,9 @@ public class AuthController {
     private final EmailServiceImpl emailServiceImpl;
     private final CodeGenerator codeGenerator;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
-    private final SideService sideService;
+    private final SideServiceImpl sideService;
 
-    public AuthController(AuthenticationManager authenticationManager, JwtUtils jwtUtils, UserRepository userRepository, PasswordEncoder passwordEncoder, EmailVerificationCodeRepository codeRepository, EmailServiceImpl emailServiceImpl, CodeGenerator codeGenerator, PasswordResetTokenRepository passwordResetTokenRepository, SideService sideService) {
+    public AuthController(AuthenticationManager authenticationManager, JwtUtils jwtUtils, UserRepository userRepository, PasswordEncoder passwordEncoder, EmailVerificationCodeRepository codeRepository, EmailServiceImpl emailServiceImpl, CodeGenerator codeGenerator, PasswordResetTokenRepository passwordResetTokenRepository, SideServiceImpl sideService) {
         this.authenticationManager = authenticationManager;
         this.jwtUtils = jwtUtils;
         this.userRepository = userRepository;

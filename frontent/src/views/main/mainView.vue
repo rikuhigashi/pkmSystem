@@ -192,7 +192,8 @@ const CustomImage = ImageResize.extend({
 
 // ------------------- tiptap编辑器配置 -------------------
 
-const editor = useEditor({
+
+ const editor = useEditor({
   onUpdate: ({ editor }) => {
     // 获取到编辑器内部内容
 
@@ -252,6 +253,7 @@ const editor = useEditor({
     ListItem,
     OrderedList,
     CustomImage,
+    VideoExtension,
   ],
 })
 // ------------------- tiptap编辑器配置 -------------------
@@ -321,9 +323,16 @@ const compressBase64Image = async (base64: string, quality: number): Promise<str
       const ctx = canvas.getContext('2d')!;
       canvas.width = img.width;
       canvas.height = img.height;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 根据图片类型选择压缩格式
+      const isPNG = base64.startsWith('data:image/png');
+      const mimeType = isPNG ? 'image/png' : 'image/jpeg';
+
       ctx.drawImage(img, 0, 0);
       // 转换为JPEG并压缩质量
-      resolve(canvas.toDataURL('image/jpeg', quality));
+      resolve(canvas.toDataURL(mimeType, isPNG ? 1.0 : quality));
     };
   });
 };
@@ -573,6 +582,21 @@ const toolbarButtons: toolbarItem[] = [
     disabled: () => !editor.value?.can().setLink({ href: '' }),
     meta: { type: 'link' },
   },
+  // 视频插入
+  {
+    type: 'button',
+    icon: 'iconVideo',
+    title: 'video',
+    action: () => {
+      const url = prompt('请输入视频链接（支持Bilibili/YouTube）', '')
+      if (url && editor.value) {
+        editor.value.chain().focus().setVideo({ src: url }).run()
+      }
+    },
+
+    meta: { type: 'embed' },
+  },
+
   // 给文字添加背景色
   {
     type: 'button',
@@ -647,6 +671,7 @@ const toolbarButtons: toolbarItem[] = [
     isActive: () => editor.value?.isActive('superscript') ?? false,
     disabled: () => !editor.value?.can().chain().focus().toggleSuperscript().run(),
   },
+
 ]
 
 // ------------------- 工具栏按钮配置 -------------------
@@ -669,6 +694,7 @@ const handleBlur = () => {
 import colorSelect from '@/components/mainComponent/colorSelect.vue'
 import type { toolbarItem } from '@/views/main/types/mainTypes'
 import DropdownMenu from '@/components/mainComponent/DropdownMenu.vue'
+import {VideoExtension} from "@/extensions/video";
 
 const showColorPicker = ref(false)
 const colorPickerPosition = ref({ top: 0, left: 0 })
@@ -745,9 +771,18 @@ watch(
 )
 
 onMounted(() => {
+  if (editor.value) {
+    console.log("111")
+    console.log('编辑器节点列表:', editor.value.schema.nodes);
+  }
+
+
   if (editor.value && !editor.value.getHTML()) {
     editor.value.commands.insertContent('<p></p><p></p>')
   }
+
+
+
 })
 
 onBeforeUnmount(() => {
@@ -857,20 +892,19 @@ onBeforeUnmount(() => {
 }
 
 .prose-img {
-  @apply max-w-[600px] h-auto block my-4 mx-auto transition-all duration-300 shadow-md rounded-lg;
+  @apply max-w-[600px] h-auto block my-4 mx-auto transition-all duration-300  rounded-lg;
 }
 
 .editor-container img {
   max-width: min(100%, 600px);
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .resize-handle {
-  @apply absolute w-3 h-3 bg-primary border-2 border-white rounded-full cursor-nwse-resize;
+  @apply absolute w-3 h-3 bg-primary/50 border-2 border-white rounded-full cursor-nwse-resize;
   bottom: -6px;
   right: -6px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow:none;
 }
 
 /* 选中状态 */
@@ -878,12 +912,5 @@ onBeforeUnmount(() => {
   @apply shadow-[0_0_0_3px_rgba(99,102,241,0.5)];
 }
 
-/* 保持图片响应式 */
-.prose-img {
-  max-width: min(100%, 600px);
-  height: auto;
-  display: block;
-  margin: 1rem auto;
-  transition: box-shadow 0.2s;
-}
+
 </style>

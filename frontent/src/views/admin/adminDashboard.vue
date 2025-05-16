@@ -1,6 +1,6 @@
 <template>
   <div class="container mx-auto p-6 space-y-8">
-    <p @click="test">退出登录</p>
+    <p @click="logout">退出登录</p>
     <h1 class="text-2xl font-bold mb-4">用户管理</h1>
     <router-link
       to="/AdminPendingReview"
@@ -50,7 +50,7 @@ interface UserData {
 
 
 
-const test = () => {
+const logout = () => {
   authStore.logout()
   console.log('退出登录')
 }

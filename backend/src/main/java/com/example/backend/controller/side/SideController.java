@@ -1,6 +1,7 @@
 package com.example.backend.controller.side;
 
 import com.example.backend.dto.side.SidedatumDto;
+import com.example.backend.entity.side.Sidedatum;
 import com.example.backend.entity.user.User;
 import com.example.backend.repository.user.UserRepository;
 import com.example.backend.service.side.SideService;
@@ -44,6 +45,8 @@ public class SideController {
     @GetMapping("/full/{id}")
     public ResponseEntity<SidedatumDto> getFullData(@PathVariable Integer id, @AuthenticationPrincipal UserDetails userDetails) {
 
+
+
         String email = userDetails.getUsername();
         SidedatumDto data = sideService.getFullSidedata(id, email);
 
@@ -58,11 +61,11 @@ public class SideController {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
 
-        System.out.println("当前用户ID：" + user.getId());
 
         // 设置用户 ID
         SidedatumDto updatedDto = sidedatumDto.toBuilder()
                 .userId(user.getId())  // 设置新的 userId
+                .status(Sidedatum.Status.APPROVED) // 设置状态为 PENDING
                 .build();
 
         SidedatumDto savaData = sideService.addSideData(updatedDto);
@@ -75,7 +78,13 @@ public class SideController {
     public ResponseEntity<SidedatumDto> updateSideData(
             @PathVariable Integer id,
             @Valid @RequestBody SidedatumDto sidedatumDto) {
-        return ResponseEntity.ok(sideService.updataItem(id, sidedatumDto));
+
+        SidedatumDto updatedDto = sidedatumDto.toBuilder()
+                .status(Sidedatum.Status.PENDING)  // 新增此行
+                .build();
+
+
+        return ResponseEntity.ok(sideService.updataItem(id, updatedDto));
     }
 
 
