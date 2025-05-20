@@ -105,7 +105,6 @@
           </template>
           <template v-else> 立刻支付</template>
         </button>
-
       </div>
     </div>
   </div>
@@ -129,7 +128,7 @@ const handlePayment = async (price: string) => {
 
     const response = await createPaymentOrder({
       amount: amount,
-      subject: '项目赞助',
+      subject: 'VIP会员订阅',
     })
 
     if (!response.success) {
@@ -146,12 +145,13 @@ const handlePayment = async (price: string) => {
     const validOrderNo = orderNo as string
     const validPayForm = payForm as string
 
+
     // 处理支付表单
     const formContainer = document.createElement('div')
     formContainer.innerHTML = validPayForm
     document.body.appendChild(formContainer)
 
-    // 提交支付表单
+     // 提交支付表单
     const form = formContainer.querySelector('form')
     if (form) {
       form.submit()
@@ -164,8 +164,6 @@ const handlePayment = async (price: string) => {
     iframe.style.display = 'none'
     document.body.appendChild(iframe)
 
-
-
     if (form) {
       iframe.contentWindow?.document.write(response.data.payForm)
       iframe.contentWindow?.document.forms[0].submit()
@@ -177,30 +175,35 @@ const handlePayment = async (price: string) => {
 
     const checkStatus = async () => {
       attempts++
-
-      const statusRes = await checkPaymentStatus(validOrderNo)
-      if (statusRes.success) {
-        switch (statusRes.data.status) {
-          case 'SUCCESS':
-            await router.push({
-              name: 'paymentSuccess',
-              query: { orderNo: response.data.orderNo },
-            })
-            document.body.removeChild(iframe)
-            clearInterval(interval)
-            break
-          case 'EXPIRED':
-          case 'FAILED':
-            alert('支付失败或超时')
-            clearInterval(interval)
-            break
+      try {
+        const statusRes = await checkPaymentStatus(validOrderNo)
+        if (statusRes.success) {
+          switch (statusRes.data.status) {
+            case 'SUCCESS':
+              clearInterval(interval)
+              await router.push({
+                name: 'paymentSuccess',
+                query: { orderNo: validOrderNo },
+              })
+              document.body.removeChild(iframe)
+              break
+            case 'EXPIRED':
+            case 'FAILED':
+              alert('支付失败或超时')
+              clearInterval(interval)
+              break
+          }
         }
+        if (attempts >= maxAttempts) {
+          clearInterval(interval)
+          alert('支付状态查询超时')
+        }
+
+      } catch (error) {
+        console.error('支付状态查询失败:', error)
       }
 
-      if (attempts >= maxAttempts) {
-        clearInterval(interval)
-        alert('支付状态查询超时')
-      }
+
     }
     const interval = setInterval(checkStatus, 3000)
   } catch (error) {

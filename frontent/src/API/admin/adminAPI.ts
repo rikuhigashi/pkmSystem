@@ -56,15 +56,30 @@ export const approveData = async (id: number) => {
 }
 
 // 管理员拒绝数据
-export const rejectData = async (id: number) => {
+export const rejectData = async (id: number, reason: string) => {
   try {
-    const res = await apiClient.put(`/admin/sidedata/${id}/reject`)
+    const res = await apiClient.put(`/admin/sidedata/${id}/reject`, { reason })
     return {success: true, data: res.data}
   } catch (error) {
     const axiosError = error as AxiosError<{ message: string }>
     return {
       success: false,
       error: axiosError.response?.data || '拒绝操作失败',
+    }
+  }
+}
+
+
+// 获取通知
+export const getNotifications = async () => {
+  try {
+    const res = await apiClient.get('/admin/user/notifications')
+    return { success: true, data: res.data }
+  } catch (error) {
+    const axiosError = error as AxiosError<{ message: string }>
+    return {
+      success: false,
+      error: axiosError.response?.data || '获取通知失败',
     }
   }
 }

@@ -70,7 +70,8 @@ public class User {
     @JsonManagedReference
     private Set<Sidedatum> sidedata = new LinkedHashSet<>();
 
-
+    @Column
+    private boolean vipActive; // VIP字段
 
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singleton(

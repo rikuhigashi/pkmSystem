@@ -96,7 +96,7 @@ export const accountSelect = [
 // 点击用户名出现的下拉框
 
 // 暂时用于测试，vip的图标切换
-export const isVipActive = ref(true)
+export const isVipActive = ref(false)
 export const iconVipActive = () => {
   isVipActive.value = !isVipActive.value
   console.log('被点击了！', isVipActive.value)

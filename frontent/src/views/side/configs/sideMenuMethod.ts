@@ -206,6 +206,10 @@ export const savaDeleteSideData = async (id: number) => {
   }
 }
 
+
+
+
+
 export default {
   loadSideData,
   saveInputDate,

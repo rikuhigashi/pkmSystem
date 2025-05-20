@@ -73,11 +73,15 @@ public class Sidedatum {
     @ColumnDefault("'PENDING'") // 初始状态为待审核
     private Status status;      // 审核状态
 
+    @Column(columnDefinition = "TEXT")
+    private String rejectReason; //拒绝原因
+
 
     public enum Status {
         PENDING,  // 待审核
         APPROVED, // 已通过
-        REJECTED  // 已拒绝
+        REJECTED,  // 已拒绝
+        REJECTED_PENDING //待处理拒绝
     }
 
 

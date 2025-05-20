@@ -12,7 +12,7 @@
           maxWidth: 'none',
           placement: 'top',
           animation: 'fade',
-          appendTo: 'parent',
+          appendTo: 'parent'
         }"
         :should-show="shouldShowBubble"
       >

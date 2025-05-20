@@ -57,6 +57,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()  // 允许匿名访问登录接口
+                        .requestMatchers("/admin/user/notifications").hasRole("USER")
                         .requestMatchers("/admin/**").hasRole("ADMIN")// 仅允许ADMIN角色访问
                         .requestMatchers("/api/payment/**").authenticated()
                         .anyRequest().authenticated()  // 其他请求需认证

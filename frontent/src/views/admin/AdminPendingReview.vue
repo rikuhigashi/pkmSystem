@@ -78,6 +78,7 @@
                 >
                   拒绝
                 </button>
+
                 <button class="btn btn-sm btn-info" @click="openDetail(item)">查看</button>
               </div>
             </td>
@@ -114,6 +115,10 @@
       </div>
     </dialog>
   </div>
+
+  <RejectDialog ref="rejectDialog" @confirmed="handleRejectConfirm" />
+
+
 </template>
 
 <script setup lang="ts">
@@ -122,6 +127,7 @@ import { getPendingData, approveData, rejectData } from '@/API/admin/adminAPI'
 import TiptapViewer from '@/components/admin/TiptapViewer.vue'
 import type { AdminSidedatumDto, PageResponse } from '@/types/backend'
 import iconRefresh from '@/assets/icons/adminIcon/iconRefresh.vue'
+import RejectDialog from '@/components/message/rejectDialog.vue'
 
 // 响应式数据
 const loading = ref(true)
@@ -132,6 +138,11 @@ const totalPages = ref(0)
 const dataList = ref<AdminSidedatumDto[]>([])
 const selectedItem = ref<AdminSidedatumDto | null>(null)
 const modal = ref<HTMLDialogElement | null>(null)
+const rejectDialog = ref<InstanceType<typeof RejectDialog>>()
+
+
+
+
 
 // 获取数据
 const fetchData = async () => {
@@ -189,15 +200,28 @@ const handleApprove = async (id: number) => {
   }
 }
 
-const handleReject = async (id: number) => {
+
+const handleRejectConfirm = async (id: number, reason: string) => {
   try {
-    const res = await rejectData(id)
+    const res = await rejectData(id, reason)
     if (res.success) {
       await fetchData()
     }
   } catch (error) {
     console.error('拒绝失败:', error)
   }
+}
+
+const handleReject = async (id: number) => {
+  rejectDialog.value?.open(id)
+  // try {
+  //   const res = await rejectData(id)
+  //   if (res.success) {
+  //     await fetchData()
+  //   }
+  // } catch (error) {
+  //   console.error('拒绝失败:', error)
+  // }
 }
 
 // 打开详情
@@ -221,6 +245,7 @@ onMounted(fetchData)
 </script>
 
 <style scoped>
+
 .badge {
   @apply px-2 py-1 rounded-md text-sm;
 }
@@ -237,12 +262,5 @@ onMounted(fetchData)
   @apply bg-red-100 text-red-800;
 }
 
-@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
-.material-icons {
-  font-family: 'Material Icons';
-  font-weight: normal;
-  font-style: normal;
-  font-size: 24px;
-  line-height: 1;
-}
+
 </style>

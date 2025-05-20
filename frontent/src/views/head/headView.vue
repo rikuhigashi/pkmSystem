@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { Bars3Icon, BellIcon } from '@heroicons/vue/24/outline'
+import { Bars3Icon } from '@heroicons/vue/24/outline'
 import { MagnifyingGlassIcon } from '@heroicons/vue/20/solid'
 
 // ----------------- store -----------------
@@ -9,6 +9,7 @@ const sidebarStore = useSidebarStore()
 
 import IconSaveData from '@/assets/icons/iconSaveData.vue'
 import sideMenuMethod from '@/views/side/configs/sideMenuMethod'
+import NotificationPanel from '@/components/message/notificationPanel.vue'
 
 const handleSaveMainData = async () => {
     await sideMenuMethod.saveMainData()
@@ -50,7 +51,8 @@ const handleSaveMainData = async () => {
       <div class="flex items-center gap-x-4 lg:gap-x-6">
         <button type="button" class="-m-2.5 p-2.5 text-gray-400 hover:text-gray-500">
           <span class="sr-only">View notifications</span>
-          <BellIcon class="size-6" aria-hidden="true" />
+<!--          <BellIcon class="size-6" aria-hidden="true" />-->
+          <NotificationPanel />
         </button>
       </div>
     </div>

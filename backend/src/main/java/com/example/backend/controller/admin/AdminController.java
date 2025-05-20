@@ -4,10 +4,15 @@ package com.example.backend.controller.admin;
 import com.example.backend.dto.common.PageResponse;
 import com.example.backend.dto.user.AdminSidedatumDto;
 import com.example.backend.dto.user.AdminUserDto;
+import com.example.backend.entity.message.Notification;
 import com.example.backend.entity.side.Sidedatum;
+import com.example.backend.entity.user.User;
+import com.example.backend.repository.message.NotificationRepository;
+import com.example.backend.repository.user.UserRepository;
 import com.example.backend.service.impl.side.SideServiceImpl;
 import com.example.backend.service.impl.user.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -15,13 +20,17 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequestMapping("/admin")
 @RequiredArgsConstructor
@@ -30,6 +39,8 @@ public class AdminController {
 
     private final UserServiceImpl userService;
     private final SideServiceImpl sideService;
+    private final UserRepository userRepository;
+    private final NotificationRepository notificationRepository;
 
     /**
      * 获取所有用户及其数据
@@ -57,8 +68,9 @@ public class AdminController {
      */
     @PutMapping("/sidedata/{id}/reject")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> rejectData(@PathVariable Integer id) {
-        sideService.rejectData(id);
+    public ResponseEntity<Void> rejectData(@PathVariable Integer id,@RequestBody Map<String, String> request) {
+//        sideService.rejectData(id);
+        sideService.rejectData(id, request.get("reason"));
         return ResponseEntity.ok().build();
     }
 
@@ -101,6 +113,20 @@ public class AdminController {
         dto.setExpiredAt(side.getExpiredAt());
         dto.setStatus(side.getStatus());
         return dto;
+    }
+
+    @GetMapping("/user/notifications")
+    @PreAuthorize("hasRole('USER')")
+    public List<Notification> getUserNotifications(
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        log.info("当前请求用户：{}", userDetails.getUsername());
+
+
+        User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("用户不存在"));
+        log.info("数据库用户ID：{}", user.getId());
+        return notificationRepository.findByUserOrderByCreatedAtDesc(user);
     }
 
 }

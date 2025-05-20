@@ -35,7 +35,5 @@ public interface SidedatumRepository extends JpaRepository<Sidedatum, Integer> {
     Page<Sidedatum> findAll(Specification<Sidedatum> spec, Pageable pageable);
 
 
-
-
-
+    List<Sidedatum> findAllByStatusAndExpiredAtLessThanEqual(Sidedatum.Status status, Instant now);
 }

@@ -20,6 +20,11 @@ public interface SideService {
     //    根据id获取数据
     SidedatumDto getFullSidedata(Integer id, String userEmail);
 
+
+
+    @Transactional
+    void rejectData(Integer id, String reason);
+
     @Transactional
     SidedatumDto addSideData(SidedatumDto sidedatumDto);
 
@@ -36,8 +41,8 @@ public interface SideService {
     @Transactional
     void approveData(Integer id);
 
-    @Transactional
-    void rejectData(Integer id);
+//    @Transactional
+//    void rejectData(Integer id);
 
     Page<Sidedatum> getPendingData(String name, Instant expiredBefore, Pageable pageable);
 

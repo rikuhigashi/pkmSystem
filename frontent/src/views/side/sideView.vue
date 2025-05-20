@@ -42,8 +42,15 @@ const { Cog6ToothIcon, PencilSquareIcon, TrashIcon, DocumentDuplicateIcon } = si
 import { ChevronDownIcon } from '@heroicons/vue/20/solid'
 import { onMounted } from 'vue'
 import IconLeftArrow from "@/assets/icons/iconLeftArrow.vue";
+import router from "@/router";
 
 // ==================== method ====================
+
+const handleVipClick = () => {
+  if (!sideUtils.isVipActive.value) {
+    router.push('/sponsorshipView')
+  }
+}
 
 // 右键事件
 const handleRightClick = (item: sideListItem, event: MouseEvent) => {
@@ -74,7 +81,6 @@ const handleLeftClick = (item: sideListItem) => {
 // 点击用户名出现的下拉框
 const accountSelect = [
   { name: '账号详情', href: '/AccountDetailView', isNew: false },
-  { name: '会员中心', href: '/home', isNew: false },
   { name: '消息通知', href: '/home', isNew: true },
   { name: '意见反馈', href: '/home', isNew: false },
   { name: '赞助我', href: '/sponsorshipView', isNew: false },
@@ -271,7 +277,7 @@ onMounted(async () => {
               <component
                 :is="sideUtils.isVipActive.value ? 'iconVipAct' : 'iconVip'"
                 class="h-6 w-auto ml-2"
-                @click="sideUtils.iconVipActive"
+                @click="handleVipClick()"
               ></component>
             </span>
           </MenuButton>

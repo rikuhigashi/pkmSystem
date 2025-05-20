@@ -73,3 +73,4 @@ export const deleteSideData = async (id: string | number) => {
     throw error
   }
 }
+

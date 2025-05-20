@@ -1,11 +1,12 @@
 package com.example.backend.service.impl.side;
 
 import com.example.backend.dto.side.SidedatumDto;
-import com.example.backend.dto.user.AdminSidedatumDto;
+import com.example.backend.entity.message.Notification;
 import com.example.backend.entity.side.Sidedatum;
 import com.example.backend.entity.user.User;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.mapper.side.SidedatumMapper;
+import com.example.backend.repository.message.NotificationRepository;
 import com.example.backend.repository.side.SidedatumRepository;
 import com.example.backend.repository.user.UserRepository;
 import com.example.backend.service.side.SideService;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,13 +29,15 @@ public class SideServiceImpl implements SideService {
     private final SidedatumRepository sidedatumRepository;
     private final SidedatumMapper sidedatumMapper;
     private final UserRepository userRepository;
+    private final NotificationRepository notificationRepository;
 
 
     @Autowired
-    public SideServiceImpl(SidedatumRepository sidedatumRepository, SidedatumMapper sidedatumMapper, UserRepository userRepository) {
+    public SideServiceImpl(SidedatumRepository sidedatumRepository, SidedatumMapper sidedatumMapper, UserRepository userRepository, NotificationRepository notificationRepository) {
         this.sidedatumRepository = sidedatumRepository;
         this.sidedatumMapper = sidedatumMapper;
         this.userRepository = userRepository;
+        this.notificationRepository = notificationRepository;
     }
 
 
@@ -54,13 +58,20 @@ public class SideServiceImpl implements SideService {
     }
 
 
-
-
     //    更新
     @Override
     public SidedatumDto updataItem(Integer id, SidedatumDto sidedatumDto) {
         Sidedatum sidedatum = sidedatumRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Sidedatum not found with id: " + id));
+
+
+        // 重置拒绝状态
+        if (sidedatum.getStatus() == Sidedatum.Status.REJECTED_PENDING) {
+            sidedatum.setStatus(Sidedatum.Status.PENDING);
+            sidedatum.setExpiredAt(null);
+            sidedatum.setRejectReason(null);
+        }
+
 
         sidedatumMapper.partialUpdate(sidedatumDto, sidedatum);
         return sidedatumMapper.toDto(sidedatumRepository.save(sidedatum));
@@ -125,20 +136,54 @@ public class SideServiceImpl implements SideService {
      */
     @Transactional
     @Override
-    public void rejectData(Integer id) {
+    public void rejectData(Integer id, String reason) {
         Sidedatum data = sidedatumRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("数据不存在"));
 //        data.setStatus(Sidedatum.Status.REJECTED);
 //        data.setExpiredAt(Instant.now()); // 设置为当前时间，触发立即清理
 //        sidedatumRepository.save(data);
 
-        sidedatumRepository.delete(data);
+        log.info("开始处理拒绝请求 ID: {} 原因: {}", id, reason);
+
+        // 设置24小时缓冲期
+        data.setStatus(Sidedatum.Status.REJECTED_PENDING);
+        data.setExpiredAt(Instant.now().plus(24, ChronoUnit.HOURS));
+        data.setRejectReason(reason);
+        sidedatumRepository.save(data);
 
 
-        log.info("数据已立即删除：ID={}", id);
+        // 创建通知
+        Notification notification = new Notification();
+        notification.setUser(data.getUser());
+        notification.setContent(String.format(
+                "您的数据【%s】因【%s】将被删除，请及时修改！",
+                data.getName(), reason
+        ));
+        notification.setRelatedDataId(data.getId());
+        notification.setExpireAt(data.getExpiredAt());
+        notificationRepository.save(notification);
 
+        log.info("已标记数据待删除 ID: {}, 原因: {}", id, reason);
 
     }
+
+    @Scheduled(cron = "0 0 * * * *") // 每小时执行一次
+    @Transactional
+    public void cleanRejectedData() {
+        List<Sidedatum> expiredData = sidedatumRepository
+                .findAllByStatusAndExpiredAtLessThanEqual(Sidedatum.Status.REJECTED_PENDING, Instant.now());
+
+        expiredData.forEach(data -> {
+            // 发送最终通知
+            Notification notification = new Notification();
+            notification.setUser(data.getUser());
+            notification.setContent(String.format("您的数据'%s'已因'%s'被删除", data.getName(), data.getRejectReason()));
+            notificationRepository.save(notification);
+
+            sidedatumRepository.delete(data);
+        });
+    }
+
 
     /**
      * 用户上传数据，默认设置7天有效期
@@ -148,7 +193,7 @@ public class SideServiceImpl implements SideService {
      */
     @Transactional
     @Override
-    public SidedatumDto  addSideData(SidedatumDto sidedatumDto) {
+    public SidedatumDto addSideData(SidedatumDto sidedatumDto) {
         Sidedatum sidedatum = sidedatumMapper.toEntity(sidedatumDto);
 
         sidedatum.setStatus(Sidedatum.Status.PENDING);
@@ -158,7 +203,6 @@ public class SideServiceImpl implements SideService {
 
         return sidedatumMapper.toDto(savedData);
     }
-
 
 
     @Override
@@ -186,7 +230,6 @@ public class SideServiceImpl implements SideService {
 
         return sidedatumRepository.findAll(spec, pageable);
     }
-
 
 
 }
