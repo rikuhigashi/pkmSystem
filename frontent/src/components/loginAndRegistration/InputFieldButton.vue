@@ -14,7 +14,7 @@
         @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
         class="input input-bordered w-2/3 rounded-r-none rounded-md bg-white px-3 py-1.5 text-base text-gray-900 border border-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
       />
-      <button class="btn w-1/3 btn-primary rounded-l-none" @click="$emit('send-code')">
+      <button  type="button"  class="btn w-1/3 btn-primary rounded-l-none" @click="$emit('send-code')">
         {{ buttonValue }}
       </button>
     </label>

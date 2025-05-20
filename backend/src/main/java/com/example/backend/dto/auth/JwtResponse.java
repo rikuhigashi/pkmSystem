@@ -3,9 +3,13 @@ package com.example.backend.dto.auth;
 
 public record JwtResponse(
         String token,
+        Integer id,
         String username,
+        com.example.backend.entity.user.User.Role role,
+        String email
 
-        com.example.backend.entity.user.User.Role role) {}
+        ) {}
+
 //    private String token;
 //    private String username;
 //

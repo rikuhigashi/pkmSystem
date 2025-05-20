@@ -47,7 +47,7 @@ public class User {
     private Role role;
 
     @Size(max = 255)
-    @Column(name = "email",unique = true)
+    @Column(name = "email",unique = true,updatable = false)
     private String email;
 
     @ColumnDefault("CURRENT_TIMESTAMP")

@@ -28,11 +28,21 @@ const { resetPasswordFormData } = useAuthForm()
 const passwordError = ref(false) // 密码错误标志
 
 const handleSubmit = async () => {
+
+  const MIN_PASSWORD_LENGTH = 6;
+
   // 判断两处密码是否相同
   if (resetPasswordFormData.value.newPassword !== resetPasswordFormData.value.confirmPassword) {
     passwordError.value = true
+    alertStore.showAlert('密码不一致', 'error')
     return
   }
+
+  if (resetPasswordFormData.value.newPassword.length < MIN_PASSWORD_LENGTH) {
+      alertStore.showAlert('密码至少需要6个字符', 'error');
+      return;
+  }
+
 
   try {
     isLoading.value = true
@@ -41,7 +51,7 @@ const handleSubmit = async () => {
     })
     if (res.success) {
       alertStore.showAlert('密码重置成功，请登录', 'success')
-      await router.replace('/login')
+      await router.replace('/')
     }
   } catch (error) {
     alertStore.showAlert('重置失败，请重试', 'error')
@@ -65,6 +75,7 @@ const handleSubmit = async () => {
         label="新密码"
         type="password"
         required
+        minlength="6"
         placeholder="请输入新密码"
         v-model="resetPasswordFormData.newPassword"
         :class="[
@@ -74,10 +85,11 @@ const handleSubmit = async () => {
       />
 
       <InputField
-        id="verificationCode"
+        id="resetVerificationCode"
         label="再次输入新密码"
         type="password"
         required
+        minlength="6"
         placeholder="请再次输入新密码"
         v-model="resetPasswordFormData.confirmPassword"
         :class="[

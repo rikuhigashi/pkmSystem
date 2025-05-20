@@ -31,10 +31,14 @@ const isSending = ref(false) // 是否正在发送验证码
 
 // 点击获取验证码按钮
 const handleSendCode = async () => {
+  const email = resetPasswordFormData.value.email.trim().toLowerCase();
+
   try {
     isSending.value = true
 
-    const response = await sendResetPasswordCode({ email: resetPasswordFormData.value.email })
+    const response = await sendResetPasswordCode({ email });
+
+    // const response = await sendResetPasswordCode({ email: resetPasswordFormData.value.email })
 
     if (response.success) {
       alertStore.showAlert('验证码已发送', 'success')
@@ -49,8 +53,10 @@ const handleSendCode = async () => {
           countdown.value = 0
         }
       }, 1000)
+
+
     } else {
-      alertStore.showAlert('用户不存在', 'error')
+      alertStore.showAlert('发送验证码失败', 'error')
     }
   } catch (error) {
     alertStore.showAlert('网络错误，请重试', 'error')

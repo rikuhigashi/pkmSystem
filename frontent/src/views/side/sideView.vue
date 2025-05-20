@@ -73,7 +73,7 @@ const handleLeftClick = (item: sideListItem) => {
 }
 // 点击用户名出现的下拉框
 const accountSelect = [
-  { name: '账号详情', href: '/home', isNew: false },
+  { name: '账号详情', href: '/AccountDetailView', isNew: false },
   { name: '会员中心', href: '/home', isNew: false },
   { name: '消息通知', href: '/home', isNew: true },
   { name: '意见反馈', href: '/home', isNew: false },

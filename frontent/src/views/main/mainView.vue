@@ -771,17 +771,10 @@ watch(
 )
 
 onMounted(() => {
-  if (editor.value) {
-    console.log("111")
-    console.log('编辑器节点列表:', editor.value.schema.nodes);
-  }
-
 
   if (editor.value && !editor.value.getHTML()) {
     editor.value.commands.insertContent('<p></p><p></p>')
   }
-
-
 
 })
 

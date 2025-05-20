@@ -26,23 +26,31 @@ const passwordError = ref(false) // 密码错误标志
 
 // 注册提交
 const handleSubmit = async () => {
+  const MIN_PASSWORD_LENGTH = 6
+
   if (registerFormData.value.password !== registerFormData.value.confirmPassword) {
     alertStore.showAlert('密码不一致', 'error')
+    return
+  } else if (registerFormData.value.password.length < MIN_PASSWORD_LENGTH) {
+    alertStore.showAlert('密码至少需要6个字符', 'error')
     return
   }
 
   try {
     isLoading.value = true
-    await authStore.registerUser({
+    const res = await authStore.registerUser({
       email: registerFormData.value.email,
       username: registerFormData.value.username,
       password: registerFormData.value.password,
       confirmPassword: registerFormData.value.confirmPassword,
       code: registerFormData.value.code,
     })
-    alertStore.showAlert('注册成功', 'success')
+    if (res.success) {
+      alertStore.showAlert('注册成功', 'success')
+    } else {
+      alertStore.showAlert('注册失败,验证码或其他信息错误', 'error')
+    }
   } catch (error) {
-    alertStore.showAlert('注册失败', 'error')
     console.error(error)
   } finally {
     isLoading.value = false
@@ -54,11 +62,11 @@ const handleSubmit = async () => {
   //   return
   // }
   //
-  // // 验证码必填检查
-  // if (!registerFormData.value.code) {
-  //   alertStore.showAlert('请输入验证码', 'error');
-  //   return;
-  // }
+  // 验证码必填检查
+  if (!registerFormData.value.code) {
+    alertStore.showAlert('请输入验证码', 'error')
+    return
+  }
   //
   // alertStore.showAlert('注册成功，请登录', 'success')
   //
@@ -77,12 +85,19 @@ const handleSendCode = async () => {
   //   return;
   // }
 
-  // // 邮箱格式验证
+  // 邮箱格式验证
+  // const email = registerFormData.value.email;
+  // if (!email) {
+  //   alertStore.showAlert('请输入邮箱地址', 'error');
+  //   return;
+  // }
   // const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  // if (!emailRegex.test(registerFormData.value.email)) {
+  // if (!emailRegex.test(email)) {
   //   alertStore.showAlert('邮箱格式不正确', 'error');
   //   return;
   // }
+
+  // 发送验证码成功后显示输入框
   showVerificationField.value = false
   try {
     isSending.value = true
@@ -161,6 +176,7 @@ const handleSendCode = async () => {
         type="password"
         autocomplete="current-password"
         required
+        minlength="6"
         placeholder="请输入密码"
         v-model="registerFormData.password"
         :class="[
@@ -174,6 +190,7 @@ const handleSendCode = async () => {
         type="password"
         autocomplete="current-password"
         required
+        minlength="6"
         placeholder="请输入再次密码"
         v-model="registerFormData.confirmPassword"
         :class="[

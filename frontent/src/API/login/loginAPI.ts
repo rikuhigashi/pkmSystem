@@ -90,8 +90,6 @@ export const resetPassword = async (data: { newPassword: string }) => {
   try {
     const res = await apiClient.post('/api/auth/reset-password', data)
 
-
-
     return { success: true, data: res.data }
   } catch (error) {
     const axiosError = error as AxiosError<{ message: string }>
@@ -102,7 +100,14 @@ export const resetPassword = async (data: { newPassword: string }) => {
   }
 }
 
-
 // ================= 重置密码 ==================
+
+export const logoutAPI = async () => {
+  try {
+    await apiClient.post('/api/auth/logout')
+  } catch (e) {
+    console.error(e)
+  }
+}
 
 

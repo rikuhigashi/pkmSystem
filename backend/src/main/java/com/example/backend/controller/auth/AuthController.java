@@ -94,7 +94,15 @@ public class AuthController {
                     .orElseThrow(() -> new UsernameNotFoundException("用户不存在"));
 
 //            return ResponseEntity.ok(new JwtResponse(jwt, user.getUsername()) + "登录成功");
-            return ResponseEntity.ok(new JwtResponse(jwt, user.getUsername(),user.getRole()));
+            return ResponseEntity.ok(
+                    new JwtResponse(
+                            jwt,
+                            user.getId(),
+                            user.getUsername(),
+                            user.getRole(),
+                            user.getEmail()
+                    )
+            );
 
 
         } catch (BadCredentialsException e) {
@@ -102,25 +110,29 @@ public class AuthController {
         }
     }
 
-//    验证 Cookie 中的 Token 是否有效
-   @GetMapping("/checkSession")
+    //    验证 Cookie 中的 Token 是否有效
+    @GetMapping("/checkSession")
     public ResponseEntity<?> checkSession(@CookieValue(name = "authToken", required = false) String token) {
         // 检查用户是否已登录
-       if (token != null && jwtUtils.validateToken(token)) {
+        if (token != null && jwtUtils.validateToken(token)) {
 
-           // 从 JWT 中提取邮箱
-           String email = jwtUtils.getEmailFromToken(token);
-           User user = userRepository.findByEmail(email)
-                   .orElseThrow(() -> new UsernameNotFoundException("用户不存在"));
+            // 从 JWT 中提取邮箱
+            String email = jwtUtils.getEmailFromToken(token);
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new UsernameNotFoundException("用户不存在"));
 
-           // 返回用户信息
-           return ResponseEntity.ok(Map.of(
-                   "isAuthenticated", true,
-                   "userInfo", Map.of("username", user.getUsername())
-           ));
+            // 返回用户信息
+            return ResponseEntity.ok(Map.of(
+                    "isAuthenticated", true,
+                    "userInfo", Map.of(
+                            "id", user.getId(),
+                            "username", user.getUsername(),
+                            "email", user.getEmail())
+            ));
 
-       }
-    return ResponseEntity.ok(Map.of("isAuthenticated", false));}
+        }
+        return ResponseEntity.ok(Map.of("isAuthenticated", false));
+    }
 
 
     //退出登录
@@ -145,8 +157,13 @@ public class AuthController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "邮箱已被注册");
         }
 
+        EmailVerificationCode codeEntry = validateVerificationCode(
+                registerRequest.email(),
+                registerRequest.code()
+        );
 
-
+        // 删除已验证的验证码
+        codeRepository.delete(codeEntry);
 
 
         User newuser = new User();
@@ -177,16 +194,6 @@ public class AuthController {
 
         sideService.addSideData(defaultItem);
 
-
-//        String token = UUID.randomUUID().toString();
-//        EmailVerificationToken verificationToken = new EmailVerificationToken();
-//       verificationToken.setToken(token);
-//        verificationToken.setUser(newuser);
-//        verificationToken.setExpirationTime(Instant.now().plus(5, ChronoUnit.MINUTES));
-//
-//        tokenRepository.save(verificationToken);
-
-
         return ResponseEntity.status(HttpStatus.CREATED).body("注册成功，请检查邮箱完成验证");
 
     }
@@ -195,7 +202,9 @@ public class AuthController {
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(
             @RequestBody ResetPasswordRequest request,
-            @CookieValue(name = "resetToken", required = false) String token) {
+            @CookieValue(name = "resetToken", required = false) String token,
+            HttpServletResponse response
+    ) {
         if (token == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "未找到有效令牌");
         }
@@ -219,6 +228,14 @@ public class AuthController {
         //   删除令牌
         passwordResetTokenRepository.delete(resetToken);
 
+        Cookie cookie = new Cookie("resetToken", null);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(0); // 立即过期
+        response.addCookie(cookie);
+
+
         return ResponseEntity.ok("密码重置成功");
     }
 
@@ -226,7 +243,7 @@ public class AuthController {
     //    发送密码重置的验证码
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestBody ResendRequest request) {
-        String email = request.email();
+        String email = request.email().trim();
 
 //        检查邮箱是否被注册
         if (!userRepository.existsByEmail(email)) {
@@ -244,7 +261,7 @@ public class AuthController {
 
         emailServiceImpl.sendPasswordResetEmail(email, code);
         return ResponseEntity.ok("重置验证码已发送至邮箱");
-
+//        return ResponseEntity.ok(Map.of("success", true, "message", "验证码已发送"));
     }
 
     //    验证重置的验证码并生成令牌
@@ -252,25 +269,12 @@ public class AuthController {
     @Transactional
     public ResponseEntity<?> verifyResetCode(@RequestBody VerifyCodeRequest request,
                                              HttpServletResponse response) {
-        // 获取该邮箱所有验证码（按过期时间倒序）
-        List<EmailVerificationCode> codes = codeRepository.findLatestByEmail(request.email());
-        if (codes.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "未找到验证码");
-        }
 
-        // 取最新的一条
-        EmailVerificationCode codeEntry = codes.get(0);
+        EmailVerificationCode codeEntry = validateVerificationCode(
+                request.email(),
+                request.code()
+        );
 
-        //检查验证码是否匹配
-        if (!codeEntry.getCode().equals(request.code())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "验证码错误");
-        }
-
-//        检查是否过期
-        if (codeEntry.getExpirationTime().isBefore(Instant.now())) {
-            codeRepository.delete(codeEntry);
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "验证码已过期");
-        }
 
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "用户不存在"));
@@ -312,7 +316,7 @@ public class AuthController {
 
         String email = request.get("email");
 
-
+        // 删除该邮箱所有旧验证
         codeRepository.deleteByEmail(email);
 
 
@@ -321,8 +325,6 @@ public class AuthController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "邮箱已被注册");
         }
 
-        // 删除该邮箱所有未过期的旧验证码
-        codeRepository.deleteByEmail(email);
 
         // 生成并保存新验证码
         String code = codeGenerator.generate6DigitCode();
@@ -393,5 +395,27 @@ public class AuthController {
 
     }
 
+
+    private EmailVerificationCode validateVerificationCode(String email, String userCode) {
+        // 获取该邮箱最新的验证码
+        List<EmailVerificationCode> codes = codeRepository.findLatestByEmail(email);
+        if (codes.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "未找到验证码");
+        }
+        EmailVerificationCode codeEntry = codes.get(0);
+
+        // 检查验证码是否匹配
+        if (!codeEntry.getCode().equals(userCode)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "验证码错误");
+        }
+
+        // 检查验证码是否过期
+        if (codeEntry.getExpirationTime().isBefore(Instant.now())) {
+            codeRepository.delete(codeEntry);
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "验证码已过期");
+        }
+
+        return codeEntry;
+    }
 
 }
