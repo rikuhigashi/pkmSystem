@@ -5,7 +5,7 @@
       aria-hidden="true"
     >
       <div
-        class="mx-auto aspect-1155/678 w-[72.1875rem] bg-linear-to-tr from-[#ff80b5] to-[#9089fc] opacity-30"
+        class="mx-auto aspect-1155/678 w-288.75 bg-linear-to-tr from-[#ff80b5] to-[#9089fc] opacity-30"
         style="
           clip-path: polygon(
             74.1% 44.1%,

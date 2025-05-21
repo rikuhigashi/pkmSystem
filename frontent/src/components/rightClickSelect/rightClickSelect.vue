@@ -84,7 +84,7 @@ watch(
         leave-to-class="opacity-0 translate-y-4 scale-95"
       >
         <div
-          class="mt-2 w-40 origin-top-right divide-y divide-gray-300 rounded-md bg-gradient-to-br from-gray-50 to-gray-200 shadow-lg ring-1 ring-black/5 focus:outline-none"
+          class="mt-2 w-40 origin-top-right divide-y divide-gray-300 rounded-md bg-linear-to-br from-gray-50 to-gray-200 shadow-lg ring-1 ring-black/5 focus:outline-none"
         >
           <div class="py-1" v-for="(group, index) in props.menuItems" :key="index">
             <span

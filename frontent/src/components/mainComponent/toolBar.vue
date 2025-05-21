@@ -6,7 +6,7 @@
     ref="toolbarRef"
     :style="{ top: `${adjustedPosition.top}px`, left: `${adjustedPosition.left}px` }"
     :class="[
-      'fixed  z-[99] flex flex-wrap gap-1 p-2 bg-gray-50 rounded border border-gray-200',
+      'fixed  z-99 flex flex-wrap gap-1 p-2 bg-gray-50 rounded border border-gray-200',
       visible ? 'opacity-100' : 'opacity-0 pointer-events-none',
     ]"
   >

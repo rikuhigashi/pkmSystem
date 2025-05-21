@@ -50,6 +50,6 @@ watch(() => props.content, (newContent) => {
 }
 
 .tiptap-container :deep(.ProseMirror) {
-  @apply !min-h-[300px] !p-4;
+  @apply min-h-[300px]! !p-4;
 }
 </style>

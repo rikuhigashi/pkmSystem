@@ -17,7 +17,7 @@ const alertStore = useAlertStore()
     <div
       v-if="alertStore.show"
       :class="[
-        `alert shadow-lg fixed top-4 z-[99] w-1/4 transition-all duration-300 `,
+        `alert shadow-lg fixed top-4 z-99 w-1/4 transition-all duration-300 `,
         {
           'alert-info': alertStore.type === 'info',
           'alert-success': alertStore.type === 'success',
@@ -29,7 +29,7 @@ const alertStore = useAlertStore()
       <div class="flex items-center gap-2">
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          class="stroke-current flex-shrink-0 w-6 h-6"
+          class="stroke-current shrink-0 w-6 h-6"
           fill="none"
           viewBox="0 0 24 24"
         >

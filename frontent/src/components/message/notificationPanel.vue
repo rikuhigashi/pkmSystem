@@ -65,7 +65,7 @@ onUnmounted(() => {
       <BellIcon class="w-6 h-6" />
     </label>
 
-    <div tabindex="0" class="mt-3 z-[1] card card-compact dropdown-content w-96 bg-base-100 shadow">
+    <div tabindex="0" class="mt-3 z-1 card card-compact dropdown-content w-96 bg-base-100 shadow">
       <div class="card-body max-h-[480px] overflow-y-auto">
         <div class="flex items-center justify-between mb-2">
           <h3 class="card-title">通知中心</h3>

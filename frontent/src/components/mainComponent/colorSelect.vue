@@ -2,7 +2,7 @@
   <!--  -->
   <div
     ref="colorPickerRef"
-    class="fixed z-[999] select-none pointer-events-auto bg-white shadow-lg p-2 rounded"
+    class="fixed z-999 select-none pointer-events-auto bg-white shadow-lg p-2 rounded"
     v-if="props.visible"
     :style="{
       top: `${position.top}px`,

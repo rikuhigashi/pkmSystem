@@ -43,7 +43,7 @@ onMounted(fetchNotifications)
         </span>
       </div>
     </label>
-    <div tabindex="0" class="mt-3 z-[1] card card-compact dropdown-content w-96 bg-base-100 shadow">
+    <div tabindex="0" class="mt-3 z-1 card card-compact dropdown-content w-96 bg-base-100 shadow">
       <div class="card-body max-h-96 overflow-y-auto">
         <h3 class="card-title">通知</h3>
         <div v-for="n in notifications" :key="n.id"
