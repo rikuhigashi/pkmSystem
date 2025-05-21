@@ -93,6 +93,7 @@
     <AppAlert />
   </AuthLayout>
 </template>
+
 <script setup lang="ts">
 // --------------------  组件引入 --------------------
 import AuthLayout from '@/components/loginAndRegistration/authLayout.vue'
