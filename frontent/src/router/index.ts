@@ -19,62 +19,63 @@ const router = createRouter({
     {
       path: '/home',
       name: 'home',
-      component: () => import('../views/homeView.vue'),
+      component: () => import('@/views/homeView.vue'),
       meta: { requiresAuth: true }, //标记需要登录
     },
 
     {
       path: '/sideList',
       name: 'sideList',
-      component: () => import('../components/sideComponents/sideList.vue'),
+      component: () => import('@/components/sideComponents/sideList.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/registerView',
       name: 'registerView',
-      component: () => import('../views/loginAndRegistration/registerView.vue'),
+      component: () => import('@/views/loginAndRegistration/registerView.vue'),
       meta: { standalone: true },
     },
     {
       path: '/forgotPassword',
       name: 'forgotPassword',
-      component: () => import('../views/loginAndRegistration/forgotPassword.vue'),
+      component: () => import('@/views/loginAndRegistration/resetPassword.vue'),
       meta: { standalone: true },
     },
     {
       path: '/resetPassword',
       name: 'resetPassword',
-      component: () => import('../views/loginAndRegistration/resetPassword.vue'),
+      component: () => import('@/views/loginAndRegistration/resetPassword.vue'),
       meta: { standalone: true },
     },
     {
       path: '/adminDashboard',
       name: 'adminDashboard',
-      component: () => import('../views/admin/adminDashboard.vue'),
+      component: () => import('@/views/admin/adminDashboard.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/AdminPendingReview',
       name: 'AdminPendingReview',
-      component: () => import('../views/admin/AdminPendingReview.vue'),
+
+      component: () => import('@/views/admin/AdminPendingReview.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/sponsorshipView',
       name: 'sponsorshipView',
-      component: () => import('../views/sponsorship/sponsorshipView.vue'),
+      component: () => import('@/views/sponsorship/sponsorshipView.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/AccountDetailView',
       name: 'AccountDetailView',
-      component: () => import('../views/user/AccountDetailView.vue'),
+      component: () => import('@/views/user/AccountDetailView.vue'),
       meta: { requiresAuth: true },
     },
     {
       path: '/payment/success',
       name: 'paymentSuccess',
-      component: () => import('../views/sponsorship/PaymentResultView.vue'),
+      component: () => import('@/views/sponsorship/PaymentResultView.vue'),
       meta: { requiresAuth: true }
     }
   ],

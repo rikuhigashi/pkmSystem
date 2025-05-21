@@ -28,7 +28,7 @@ import type { sideListItem } from './types/sideTypes'
 
 // ==================== Component ====================
 import AccountSelect from '@/components/sideComponents/AccountSelect.vue'
-import RightClickRightClickSelect from '../../components/rightClickSelect/rightClickSelect.vue'
+import RightClickRightClickSelect from '@/components/rightClickSelect/rightClickSelect.vue'
 import sideList from '@/components/sideComponents/sideList.vue'
 // ==================== Component ====================
 
