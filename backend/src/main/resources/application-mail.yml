@@ -1,0 +1,34 @@
+spring:
+  mail:
+    host: smtp.qq.com
+    port: 465
+    username: walkurelulu@qq.com
+    password: "qqkqmqvsdfcxeabh"
+    protocol: smtps
+    properties:
+      mail.smtp.ssl.enable: true
+      mail.smtp.auth: true
+      mail.smtp.timeout: 5000
+
+
+#spring:
+#  mail:
+#    host: smtp.gmail.com
+#    port: 465
+##    port: 587
+#    username: walkurelulu@gmail.com
+#    password: "zdvq teyi tovs hbow"
+#    protocol: smtp
+#    properties:
+#      mail:
+#        smtp:
+##          tls:
+##            enable: true
+#          ssl:
+#            enable: true
+#          auth: true
+#          starttls:
+#            enable: true
+#          timeout: 5000
+
+

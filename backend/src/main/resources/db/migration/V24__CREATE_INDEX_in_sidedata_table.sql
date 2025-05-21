@@ -1,0 +1,1 @@
+CREATE INDEX idx_status_created_at ON sidedata (status, created_at DESC);
