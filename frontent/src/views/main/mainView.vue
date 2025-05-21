@@ -786,7 +786,7 @@ onBeforeUnmount(() => {
 <style>
 /* 代码块容器 */
 .ProseMirror pre {
-  @apply bg-neutral text-neutral-content p-4 rounded-box my-4 overflow-x-auto;
+  @apply bg-[#1a1a1a] text-[#e0e0e0] p-4 rounded-lg my-4 overflow-x-auto;
 }
 
 /* 代码行样式 */
@@ -894,7 +894,9 @@ onBeforeUnmount(() => {
 }
 
 .resize-handle {
-  @apply absolute w-3 h-3 bg-primary/50 border-2 border-white rounded-full cursor-nwse-resize;
+  @apply absolute w-3 h-3 border-2 rounded-full cursor-nwse-resize;
+  border-color: rgba(255, 255, 255, 0.9);
+  background-color: rgba(79, 70, 229, 0.5);
   bottom: -6px;
   right: -6px;
   box-shadow:none;
@@ -902,7 +904,7 @@ onBeforeUnmount(() => {
 
 /* 选中状态 */
 .selected-image {
-  @apply shadow-[0_0_0_3px_rgba(99,102,241,0.5)];
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5);
 }
 
 
