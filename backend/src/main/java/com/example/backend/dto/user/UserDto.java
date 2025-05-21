@@ -15,4 +15,6 @@ public class UserDto  {
     String username;
     @Size(max = 255)
     String email;
+
+
 }

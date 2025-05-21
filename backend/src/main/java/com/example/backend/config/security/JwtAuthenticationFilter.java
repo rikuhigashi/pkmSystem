@@ -6,6 +6,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,6 +15,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtils jwtUtils;
@@ -45,19 +47,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private String parseToken(HttpServletRequest request) {
 
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("authToken".equals(cookie.getName())) {
-                    return cookie.getValue();
-                }
+//        Cookie[] cookies = request.getCookies();
+//        if (cookies != null) {
+//            for (Cookie cookie : cookies) {
+//                if ("authToken".equals(cookie.getName())) {
+//                    return cookie.getValue();
+//                }
+//            }
+//        }
+
+        String header = request.getHeader("Authorization");
+
+        if (header != null) {
+            // 处理Bearer token格式
+            String[] parts = header.trim().split("\\s+");
+            if (parts.length == 2 && "Bearer".equalsIgnoreCase(parts[0])) {
+                return parts[1].trim();
             }
         }
 
-//        String header = request.getHeader("Authorization");
-//
 //        if (header != null && header.startsWith("Bearer ")) {
-//            return header.substring(7);
+//            String token = header.substring(7).trim();
+//            log.debug("原始 Token: {}", header.substring(7));
+//            log.debug("处理后的 Token: {}", token);
+//            return token.isEmpty() ? null : token;
 //        }
         return null;
     }

@@ -19,6 +19,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -60,6 +61,7 @@ public class SecurityConfig {
                         .requestMatchers("/admin/user/notifications").hasRole("USER")
                         .requestMatchers("/admin/**").hasRole("ADMIN")// 仅允许ADMIN角色访问
                         .requestMatchers("/api/payment/**").authenticated()
+
                         .anyRequest().authenticated()  // 其他请求需认证
                 )
                 // 添加JWT过滤器
@@ -87,11 +89,15 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173")); // 前端地址
+//        config.setAllowedOrigins(List.of("http://localhost:5173")); // 前端地址
+        config.setAllowedOrigins(Arrays.asList(
+                "http://localhost:5173"
+        )); // 前端地址
         config.setAllowedMethods(List.of("*"));
         config.setAllowCredentials(true); // 允许携带 Cookie
-        config.setAllowedHeaders(List.of("*"));
 
+        config.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type"));
+        config.setExposedHeaders(List.of("Authorization", "Content-Length"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;

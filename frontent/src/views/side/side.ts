@@ -18,8 +18,9 @@ import {
 // --------------------------------- 导入图标 ---------------------------
 
 // --------------------------------- 各种import ---------------------------
-import {type Component, ref} from 'vue'
+import {type Component, computed, ref} from 'vue'
 import type {sideListItem} from "@/views/side/types/sideTypes";
+import {userAuthStore} from "@/stores/auth";
 
 
 // --------------------------------- 各种import ---------------------------
@@ -96,11 +97,10 @@ export const accountSelect = [
 // 点击用户名出现的下拉框
 
 // 暂时用于测试，vip的图标切换
-export const isVipActive = ref(false)
-export const iconVipActive = () => {
-  isVipActive.value = !isVipActive.value
-  console.log('被点击了！', isVipActive.value)
-}
+// export const isVipActive = ref(false)
+// export const iconVipActive = () => {
+//   isVipActive.value = !isVipActive.value
+// }
 // 暂时用于测试，vip的图标切换
 
 // 输入框状态
@@ -123,6 +123,10 @@ export const defaultInputForm = ref({
   icon: 'HomeIcon',
 })
 
+export const isVipActive = computed(() => {
+  return userAuthStore().userInfo?.vipActive || false
+})
+
 
 // 输入框
 export const inputValue = ref()
@@ -137,11 +141,9 @@ export default {
   navigation,
   // teams,
   iconMap,
-
-  isVipActive,
-  iconVipActive,
   inputValue,
   clickTest,
   inputForm,
-  defaultInputForm
+  defaultInputForm,
+  isVipActive
 }

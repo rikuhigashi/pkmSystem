@@ -42,12 +42,7 @@ public class JwtUtils {
         return parseToken(token).getSubject();
 
 
-//        return Jwts.parserBuilder()
-//                .setSigningKey(key)
-//                .build()
-//                .parseClaimsJws(token)
-//                .getBody()
-//                .getSubject();
+
     }
 
 

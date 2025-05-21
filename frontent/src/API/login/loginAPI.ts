@@ -4,20 +4,43 @@ import type { AxiosError } from 'axios'
 // 登录
 export const login = async (data: { email: string; password: string }) => {
   try {
-    const res = await apiClient.post('/api/auth/login', {
-      email: data.email,
-      password: data.password,
-    })
-
-    return { success: true, data: res.data }
+    const res = await apiClient.post('/api/auth/login', data)
+    console.log(res.data.token)
+    localStorage.setItem('authToken', res.data.token)
+    return {
+      success: true,
+      data: {
+        ...res.data,
+        role: res.data.role || 'USER' // 确保默认角色
+      }
+    }
   } catch (error) {
-    const axiosError = error as AxiosError<{ message: string }>
+    const axiosError = error as AxiosError<{ message?: string }>
     return {
       success: false,
-      error: axiosError.response?.data || '登录失败，请检查网络连接',
+      error: axiosError.response?.data?.message || '登录失败，请检查凭证',
     }
   }
 }
+
+// export const login = async (data: { email: string; password: string }) => {
+//   try {
+//     const res = await apiClient.post('/api/auth/login', {
+//       email: data.email,
+//       password: data.password
+//     })
+//     localStorage.setItem('authToken', res.data.token)
+//
+//     console.log(res.data)
+//     return { success: true, data: res.data }
+//   } catch (error) {
+//     const axiosError = error as AxiosError<{ message: string }>
+//     return {
+//       success: false,
+//       error: axiosError.response?.data || '登录失败，请检查网络连接',
+//     }
+//   }
+// }
 
 // ================= 注册 ==================
 // 注册
@@ -104,10 +127,18 @@ export const resetPassword = async (data: { newPassword: string }) => {
 
 export const logoutAPI = async () => {
   try {
+    localStorage.removeItem('authToken')
     await apiClient.post('/api/auth/logout')
   } catch (e) {
-    console.error(e)
+    console.error('退出错误:', e)
   }
 }
+// export const logoutAPI = async () => {
+//   try {
+//     await apiClient.post('/api/auth/logout')
+//   } catch (e) {
+//     console.error(e)
+//   }
+// }
 
 

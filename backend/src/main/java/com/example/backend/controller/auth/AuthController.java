@@ -16,6 +16,8 @@ import com.example.backend.utils.security.CodeGenerator;
 import com.example.backend.utils.security.JwtUtils;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -36,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -61,92 +64,80 @@ public class AuthController {
         this.sideService = sideService;
     }
 
+
+    @Value("${app.is-production}")
+    private boolean isProduction;
+
     //    登录
     @PostMapping("/login")
-    public ResponseEntity<?> login(
-            @RequestBody LoginRequest loginRequest,
-            HttpServletResponse response
-    ) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         try {
-            // 使用邮箱进行认证
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequest.email(),
                             loginRequest.password()));
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
-
-            // 生成 JWT
             String jwt = jwtUtils.generateJwtToken(authentication);
 
-            Cookie cookie = new Cookie("authToken", jwt);
-            cookie.setHttpOnly(true);
-            cookie.setSecure(true); // 生产环境启用
-            cookie.setPath("/");
-            cookie.setMaxAge(7 * 24 * 60 * 60);// 设置 Cookie 的过期时间为 1 小时
-            response.addCookie(cookie);
-
-
-            // 从 UserDetails 获取邮箱，然后查询数据库获取用户名
+            // 获取用户信息
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            String email = userDetails.getUsername(); // UserDetails 的 username 是邮箱
+            String email = userDetails.getUsername();
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new UsernameNotFoundException("用户不存在"));
 
-//            return ResponseEntity.ok(new JwtResponse(jwt, user.getUsername()) + "登录成功");
-            return ResponseEntity.ok(
-                    new JwtResponse(
-                            jwt,
-                            user.getId(),
-                            user.getUsername(),
-                            user.getRole(),
-                            user.getEmail()
-                    )
-            );
-
+            // 返回JWT和用户信息
+            return ResponseEntity.ok(new JwtResponse(
+                    jwt,
+                    user.getId(),
+                    user.getUsername(),
+                    user.getRole(),
+                    user.getEmail(),
+                    user.isVipActive()
+            ));
 
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("用户名或密码错误");
         }
     }
 
+
+
+
     //    验证 Cookie 中的 Token 是否有效
     @GetMapping("/checkSession")
-    public ResponseEntity<?> checkSession(@CookieValue(name = "authToken", required = false) String token) {
-        // 检查用户是否已登录
-        if (token != null && jwtUtils.validateToken(token)) {
+    public ResponseEntity<?> checkSession(@RequestHeader(name = "Authorization", required = false) String authHeader) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            if (jwtUtils.validateToken(token)) {
+                String email = jwtUtils.getEmailFromToken(token);
+                User user = userRepository.findByEmail(email)
+                        .orElseThrow(() -> new UsernameNotFoundException("用户不存在"));
 
-            // 从 JWT 中提取邮箱
-            String email = jwtUtils.getEmailFromToken(token);
-            User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new UsernameNotFoundException("用户不存在"));
-
-            // 返回用户信息
-            return ResponseEntity.ok(Map.of(
-                    "isAuthenticated", true,
-                    "userInfo", Map.of(
-                            "id", user.getId(),
-                            "username", user.getUsername(),
-                            "email", user.getEmail())
-            ));
-
+                return ResponseEntity.ok(Map.of(
+                        "isAuthenticated", true,
+                        "userInfo", Map.of(
+                                "id", user.getId(),
+                                "username", user.getUsername(),
+                                "email", user.getEmail(),
+                                "vipActive", user.isVipActive()
+                        )
+                ));
+            }
         }
         return ResponseEntity.ok(Map.of("isAuthenticated", false));
     }
 
 
+
     //退出登录
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletResponse response) {
-        Cookie cookie = new Cookie("authToken", null);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(0); // 立即过期
-        response.addCookie(cookie);
-
+    public ResponseEntity<?> logout() {
+        // 前端负责删除localStorage中的token
         return ResponseEntity.ok("退出登录成功");
     }
+
+
 
 
     //    注册

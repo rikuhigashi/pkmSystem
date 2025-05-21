@@ -19,27 +19,30 @@ export const userAuthStore = defineStore('auth', () => {
   const loginUser = async (email: string, password: string) => {
     try {
       const res = await login({ email, password })
+      if (res.data) {
 
-      if (res.data.role == 'ADMIN') {
-        isLoggedIn.value = true
-        // userInfo.value = res.data.username
-        userInfo.value = {
-          id: res.data.id,
-          username: res.data.username,
-          email: res.data.email,
+        if (res.data.role == 'ADMIN') {
+          isLoggedIn.value = true
+          // userInfo.value = res.data.username
+          userInfo.value = {
+            id: res.data.id,
+            username: res.data.username,
+            email: res.data.email,
+            vipActive: res.data.vipActive,
+          }
+          await router.replace('/adminDashboard')
+        } else {
+          isLoggedIn.value = true
+          // userInfo.value = res.data.username
+          userInfo.value = {
+            id: res.data.id,
+            username: res.data.username,
+            email: res.data.email,
+            vipActive: res.data.vipActive,
+          }
+          // 不是管理员，重定向到普通用户页面
+          await router.replace('/home')
         }
-        await router.replace('/adminDashboard')
-      } else {
-        isLoggedIn.value = true
-        // userInfo.value = res.data.username
-        userInfo.value = {
-          id: res.data.id,
-          username: res.data.username,
-          email: res.data.email,
-        }
-
-        // 不是管理员，重定向到普通用户页面
-        await router.replace('/home')
       }
       return res
     } catch (error) {
@@ -73,43 +76,104 @@ export const userAuthStore = defineStore('auth', () => {
   const logout = async () => {
     try {
       await logoutAPI()
-      // await apiClient.post('/api/auth/logout')
+      localStorage.removeItem('authToken')
       isLoggedIn.value = false
       userInfo.value = null
-      // localStorage.removeItem('token')
-      // sessionStorage.clear()
       await router.replace({ name: 'login' })
     } catch (error) {
       console.error('登出失败:', error)
+      // 强制清除本地状态
+      localStorage.removeItem('authToken')
+      isLoggedIn.value = false
+      userInfo.value = null
     }
   }
+  // const logout = async () => {
+  //   try {
+  //     await logoutAPI()
+  //     // await apiClient.post('/api/auth/logout')
+  //     isLoggedIn.value = false
+  //     userInfo.value = null
+  //     // localStorage.removeItem('token')
+  //     // sessionStorage.clear()
+  //     await router.replace({ name: 'login' })
+  //   } catch (error) {
+  //     console.error('登出失败:', error)
+  //   }
+  // }
 
   // 检查会话状态
   const checkSession = async () => {
     try {
+      const token = localStorage.getItem('authToken')
+      if (!token) {
+        isLoggedIn.value = false
+        userInfo.value = null
+        return
+      }
+
       const res = await apiClient.get('/api/auth/checkSession')
-      isLoggedIn.value = res.data.isAuthenticated
-      // userInfo.value = res.data.userInfo || {}
-      userInfo.value = res.data.userInfo
-        ? {
-            id: res.data.userInfo.id,
-            username: res.data.userInfo.username,
-            email: res.data.userInfo.email,
-          }
-        : null
+      if (res.data.isAuthenticated) {
+        isLoggedIn.value = true
+        userInfo.value = {
+          id: res.data.userInfo.id,
+          username: res.data.userInfo.username,
+          email: res.data.userInfo.email,
+          vipActive: res.data.userInfo.vipActive,
+        }
+      } else {
+        localStorage.removeItem('authToken')
+        isLoggedIn.value = false
+        userInfo.value = null
+      }
     } catch (error) {
+      localStorage.removeItem('authToken')
       isLoggedIn.value = false
-      console.error(error)
+      userInfo.value = null
+      console.error('会话检查失败:', error)
     }
   }
+
+  // const checkSession = async () => {
+  //   try {
+  //
+  //     const token = localStorage.getItem('authToken');
+  //     if (!token) {
+  //       isLoggedIn.value = false;
+  //       return;
+  //     }
+  //     const res = await apiClient.get('/api/auth/checkSession', {
+  //       headers: { Authorization: `Bearer ${token}` }
+  //     });
+  //     isLoggedIn.value = res.data.isAuthenticated;
+  //     userInfo.value = res.data.userInfo || null;
+  //
+  //     // const res = await apiClient.get('/api/auth/checkSession')
+  //     //
+  //     // isLoggedIn.value = res.data.isAuthenticated
+  //     // // userInfo.value = res.data.userInfo || {}
+  //     // userInfo.value = res.data.userInfo
+  //     //   ? {
+  //     //       id: res.data.userInfo.id,
+  //     //       username: res.data.userInfo.username,
+  //     //       email: res.data.userInfo.email,
+  //     //       vipActive: res.data.userInfo.vipActive,
+  //     //     }
+  //     //   : null
+  //
+  //   } catch (error) {
+  //     isLoggedIn.value = false
+  //     console.error(error)
+  //   }
+  // }
 
   //更新user数据
   const updateUserInfo = async (payload: Partial<UserInfo>) => {
     try {
-      const userId = userInfo.value?.id;
-      if (!userId) throw new Error('用户未登录');
+      const userId = userInfo.value?.id
+      if (!userId) throw new Error('用户未登录')
 
-      const response = await apiClient.put(`/user/${userId}`, payload);
+      const response = await apiClient.put(`/user/${userId}`, payload)
       userInfo.value = {
         ...userInfo.value!,
         ...response.data,
