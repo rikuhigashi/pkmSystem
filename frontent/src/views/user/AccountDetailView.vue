@@ -88,8 +88,13 @@ const handleSubmit = async () => {
       path: '/home',
       query: { updated: 'true' }
     })
-  } catch (error: any) {
-    submitError.value = error.message || '更新用户信息失败'
+  }catch (error) {
+
+    if (error instanceof Error) {
+      submitError.value = error.message || '更新用户信息失败';
+    } else {
+      submitError.value = '更新用户信息失败';
+    }
   } finally {
     isSubmitting.value = false
   }
