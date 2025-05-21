@@ -19,14 +19,14 @@ const router = createRouter({
     {
       path: '/home',
       name: 'home',
-      component: () => import('@/views/homeView.vue'),
+      component: () => import('../views/homeView.vue'),
       meta: { requiresAuth: true }, //标记需要登录
     },
 
     {
       path: '/sideList',
       name: 'sideList',
-      component: () => import('@/components/sideComponents/sideList.vue'),
+      component: () => import('../components/sideComponents/sideList.vue'),
       meta: { requiresAuth: true },
     },
     {
