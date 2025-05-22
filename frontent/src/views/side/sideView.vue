@@ -252,15 +252,15 @@ onMounted(async () => {
   }
 })
 </script>
-
 <template>
   <div
     :class="[
-      'lg:w-72 lg:fixed lg:inset-y-0 lg:flex lg:flex-col transition-transform ease-in-out duration-500 sticky top-0',
-      sidebarStore.sidebarOpen ? '-translate-x-sidebarTranlate' : '',
+      'lg:w-72 lg:fixed lg:inset-y-0 lg:flex lg:flex-col transition-transform ease-in-out duration-500 sticky top-0 z-50 bg-gray-900',
+      sidebarStore.sidebarOpen ? '-translate-x-full' : '',
     ]"
   >
-    <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-900 px-6 pb-4">
+    <div class="flex grow flex-col gap-y-5 overflow-y-auto px-6 pb-4 ring-1 ring-gray-700">
+      <!-- 用户头像和菜单 -->
       <div class="flex h-16 shrink-0 items-center group">
         <Menu as="div" class="relative">
           <MenuButton class="-m-1.5 flex items-center p-1.5">
@@ -275,33 +275,31 @@ onMounted(async () => {
                 {{ authStore.userInfo?.username || '未登录用户' }}
               </span>
               <ChevronDownIcon class="ml-2 size-5 text-gray-400" aria-hidden="true" />
-
               <component
                 :is="sideUtils.isVipActive.value ? 'iconVipAct' : 'iconVip'"
-                class="h-6 w-auto ml-2"
+                class="h-6 w-auto ml-2 hover:cursor-pointer"
                 @click="handleVipClick()"
-              ></component>
+              />
             </span>
           </MenuButton>
-
           <AccountSelect :account-select="accountSelect" @action="handleAction" />
         </Menu>
 
-        <iconLeftArrow
-          class="h-4 w-auto ml-auto hidden group-hover:block group-hover:opacity-100 transition-opacity duration-800 opacity-0"
+        <IconLeftArrow
+          class="h-4 w-auto ml-auto hidden group-hover:block group-hover:opacity-100 transition-opacity duration-300 opacity-0 hover:cursor-pointer"
           @click="sidebarStore.toggleSidebar"
         />
       </div>
 
-      <!--  右键菜单栏    -->
+      <!-- 右键菜单栏 -->
       <RightClickRightClickSelect
-        class="absolute"
+        class="absolute z-[99] min-w-[160px] shadow-lg bg-base-100 rounded-box"
         :menu-items="rightClickSelectMenuItems"
         :menu-position="rightClickStore.menuPosition"
         v-if="rightClickStore.isRightClickActive"
       />
-      <!--  右键菜单栏    -->
 
+      <!-- 导航列表 -->
       <nav class="relative flex flex-1 flex-col">
         <ul role="list" class="flex flex-1 flex-col gap-y-7">
           <sideList
@@ -309,32 +307,118 @@ onMounted(async () => {
             @right-click="handleRightClick"
             @left-click="handleLeftClick"
           />
-          <!--  点击添加后，出现输入框，并在列表底部  -->
+
+          <!-- 输入框 -->
           <input
             type="text"
             v-model="inputForm.name"
             placeholder="请输入名称"
-            class="input input-bordered input-sm w-4/5"
+            class="input input-bordered input-sm w-4/5 bg-base-100 text-base-content focus:ring-2 focus:ring-primary mt-2"
             v-if="inputStore.isInputActive"
             @keyup.enter.prevent="handleEnterKey"
             @blur="handleBlur"
             v-focus="true"
           />
-          <!--  点击添加后，出现输入框，并在列表底部  -->
 
-          <!-- 底部的设置图标  -->
+          <!-- 底部设置 -->
           <li class="mt-auto">
             <a
               href="#"
-              class="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold text-gray-400 hover:bg-gray-800 hover:text-white"
+              class="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold text-gray-400 hover:bg-gray-800 hover:text-white transition-colors duration-200"
             >
               <Cog6ToothIcon class="size-6 shrink-0" aria-hidden="true" />
               Settings
             </a>
           </li>
-          <!-- 底部的设置  -->
         </ul>
       </nav>
     </div>
   </div>
 </template>
+
+
+<!--<template>-->
+<!--  <div-->
+<!--    :class="[-->
+<!--      'lg:w-72 lg:fixed lg:inset-y-0 lg:flex lg:flex-col transition-transform ease-in-out duration-500 sticky top-0',-->
+<!--      sidebarStore.sidebarOpen ? '-translate-x-sidebarTranslate' : '',-->
+<!--    ]"-->
+<!--  >-->
+<!--    <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-900 px-6 pb-4">-->
+<!--      <div class="flex h-16 shrink-0 items-center group">-->
+<!--        <Menu as="div" class="relative">-->
+<!--          <MenuButton class="-m-1.5 flex items-center p-1.5">-->
+<!--            <span class="sr-only">打开菜单</span>-->
+<!--            <img-->
+<!--              class="size-8 rounded-full bg-gray-50"-->
+<!--              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"-->
+<!--              alt=""-->
+<!--            />-->
+<!--            <span class="hidden lg:flex lg:items-center">-->
+<!--              <span class="ml-4 text-sm/6 font-semibold text-gray-400" aria-hidden="true">-->
+<!--                {{ authStore.userInfo?.username || '未登录用户' }}-->
+<!--              </span>-->
+<!--              <ChevronDownIcon class="ml-2 size-5 text-gray-400" aria-hidden="true" />-->
+
+<!--              <component-->
+<!--                :is="sideUtils.isVipActive.value ? 'iconVipAct' : 'iconVip'"-->
+<!--                class="h-6 w-auto ml-2"-->
+<!--                @click="handleVipClick()"-->
+<!--              ></component>-->
+<!--            </span>-->
+<!--          </MenuButton>-->
+
+<!--          <AccountSelect :account-select="accountSelect" @action="handleAction" />-->
+<!--        </Menu>-->
+
+<!--        <iconLeftArrow-->
+<!--          class="h-4 w-auto ml-auto hidden group-hover:block group-hover:opacity-100 transition-opacity duration-800 opacity-0"-->
+<!--          @click="sidebarStore.toggleSidebar"-->
+<!--        />-->
+<!--      </div>-->
+
+<!--      &lt;!&ndash;  右键菜单栏    &ndash;&gt;-->
+<!--      <RightClickRightClickSelect-->
+<!--        class="absolute"-->
+<!--        :menu-items="rightClickSelectMenuItems"-->
+<!--        :menu-position="rightClickStore.menuPosition"-->
+<!--        v-if="rightClickStore.isRightClickActive"-->
+<!--      />-->
+<!--      &lt;!&ndash;  右键菜单栏    &ndash;&gt;-->
+
+<!--      <nav class="relative flex flex-1 flex-col">-->
+<!--        <ul role="list" class="flex flex-1 flex-col gap-y-7">-->
+<!--          <sideList-->
+<!--            :navigation="sideUtils.navigation"-->
+<!--            @right-click="handleRightClick"-->
+<!--            @left-click="handleLeftClick"-->
+<!--          />-->
+<!--          &lt;!&ndash;  点击添加后，出现输入框，并在列表底部  &ndash;&gt;-->
+<!--          <input-->
+<!--            type="text"-->
+<!--            v-model="inputForm.name"-->
+<!--            placeholder="请输入名称"-->
+<!--            class="input input-bordered input-sm w-4/5"-->
+<!--            v-if="inputStore.isInputActive"-->
+<!--            @keyup.enter.prevent="handleEnterKey"-->
+<!--            @blur="handleBlur"-->
+<!--            v-focus="true"-->
+<!--          />-->
+<!--          &lt;!&ndash;  点击添加后，出现输入框，并在列表底部  &ndash;&gt;-->
+
+<!--          &lt;!&ndash; 底部的设置图标  &ndash;&gt;-->
+<!--          <li class="mt-auto">-->
+<!--            <a-->
+<!--              href="#"-->
+<!--              class="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold text-gray-400 hover:bg-gray-800 hover:text-white"-->
+<!--            >-->
+<!--              <Cog6ToothIcon class="size-6 shrink-0" aria-hidden="true" />-->
+<!--              Settings-->
+<!--            </a>-->
+<!--          </li>-->
+<!--          &lt;!&ndash; 底部的设置  &ndash;&gt;-->
+<!--        </ul>-->
+<!--      </nav>-->
+<!--    </div>-->
+<!--  </div>-->
+<!--</template>-->

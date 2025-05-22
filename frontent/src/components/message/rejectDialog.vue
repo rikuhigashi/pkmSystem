@@ -27,19 +27,19 @@ defineExpose({ open })
 
 <template>
   <dialog class="modal" :class="{ 'modal-open': show }">
-    <div class="modal-box">
+    <div class="modal-box max-w-md">
       <h3 class="font-bold text-lg mb-4">请输入拒绝原因</h3>
       <textarea
         v-model="reason"
-        class="textarea textarea-bordered w-full h-32"
+        class="textarea textarea-bordered w-full min-h-[120px]"
         placeholder="请详细说明拒绝原因..."
         required
       ></textarea>
-      <div class="modal-action">
+      <div class="modal-action flex justify-end gap-2 mt-4">
         <button class="btn btn-ghost" @click="show = false">取消</button>
         <button
           class="btn btn-error"
-          :disabled="!reason.trim()"
+          :class="{ 'opacity-50 cursor-not-allowed': !reason.trim() }"
           @click="submit"
         >
           确认拒绝

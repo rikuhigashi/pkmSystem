@@ -56,61 +56,52 @@ onUnmounted(() => {
     refreshTimer = null
   }
 })
-
 </script>
 
 <template>
   <div class="dropdown dropdown-end">
-    <label tabindex="0" class="btn btn-ghost btn-circle">
+    <label tabindex="0" class="btn btn-ghost btn-circle hover:bg-gray-100">
       <BellIcon class="w-6 h-6" />
+      <span
+        v-if="notifications.length"
+        class="badge badge-xs badge-error absolute -top-1 -right-1 animate-pulse"
+      ></span>
     </label>
 
-    <div tabindex="0" class="mt-3 z-1 card card-compact dropdown-content w-96 bg-base-100 shadow">
-      <div class="card-body max-h-[480px] overflow-y-auto">
-        <div class="flex items-center justify-between mb-2">
-          <h3 class="card-title">通知中心</h3>
-          <button
-            @click.stop="fetchNotifications"
-            class="btn btn-xs btn-ghost"
-            :class="{ loading: isLoading }"
-            :disabled="isLoading"
-          >
-            <ArrowPathIcon class="w-4 h-4" />
-          </button>
-        </div>
+    <div tabindex="0" class="dropdown-content w-80 sm:w-96">
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body p-4 max-h-[70vh]">
+          <div class="flex items-center justify-between mb-2 px-2">
+            <h3 class="text-lg font-semibold">通知中心</h3>
+            <button
+              @click.stop="fetchNotifications"
+              class="btn btn-circle btn-sm btn-ghost"
+              :disabled="isLoading"
+            >
+              <ArrowPathIcon class="w-4 h-4" :class="{ 'animate-spin': isLoading }" />
+            </button>
+          </div>
 
-        <!-- 加载状态 -->
-        <div v-if="isLoading" class="space-y-2">
-          <div v-for="i in 3" :key="i" class="animate-pulse flex space-x-4">
-            <div class="flex-1 space-y-2 py-1">
-              <div class="h-3 bg-gray-200 rounded"></div>
-              <div class="h-2 bg-gray-200 rounded w-1/2"></div>
+          <!-- 加载状态 -->
+          <div v-if="isLoading" class="space-y-3 px-2">
+            <div v-for="i in 3" :key="i" class="flex items-center space-x-3">
+              <div class="skeleton h-12 w-12 rounded-full"></div>
+              <div class="flex-1 space-y-2">
+                <div class="skeleton h-4 w-3/4"></div>
+                <div class="skeleton h-3 w-1/2"></div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- 错误状态 -->
-        <div v-else-if="error" class="text-center py-4 text-red-500 text-sm">
-          {{ error }}
-        </div>
-
-        <!-- 空状态 -->
-        <div v-else-if="!notifications.length" class="text-gray-500 text-center py-4">
-          暂无新通知
-        </div>
-
-        <!-- 通知列表 -->
-        <div v-else class="divide-y">
-          <div
-            v-for="n in notifications"
-            :key="n.id"
-            class="p-3 hover:bg-gray-50 transition-colors"
-          >
-            <div class="text-sm font-medium">
-              {{ n.content }}
-            </div>
-            <div class="text-xs text-gray-500 mt-1">
-              {{ formatTime(n.createdAt) }}
+          <!-- 通知项布局 -->
+          <div v-else class="divide-y divide-gray-200">
+            <div
+              v-for="n in notifications"
+              :key="n.id"
+              class="p-3 hover:bg-gray-50 active:bg-gray-100 transition-colors cursor-pointer"
+            >
+              <div class="text-sm line-clamp-2">{{ n.content }}</div>
+              <div class="text-xs text-gray-500 mt-1">{{ formatTime(n.createdAt) }}</div>
             </div>
           </div>
         </div>
@@ -118,3 +109,5 @@ onUnmounted(() => {
     </div>
   </div>
 </template>
+
+

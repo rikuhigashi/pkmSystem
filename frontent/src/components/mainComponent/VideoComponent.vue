@@ -1,20 +1,43 @@
 <template>
   <node-view-wrapper
     as="div"
-    class="video-container"
-    :class="{ selected }"
+    class="relative inline-block min-w-[400px] max-w-full my-4 mx-auto p-3 bg-base-100 rounded-box border border-base-300"
+    :class="{ 'ring ring-primary/50': selected }"
     :style="{ width: containerWidth }"
+    style="will-change: width; backface-visibility: hidden;"
   >
     <iframe
       :src="src"
       :width="currentWidth"
       :height="parsedHeight"
       allowfullscreen
-      class="video-iframe"
+      class="w-[calc(100%-24px)] h-[calc(400px-24px)] mx-3 my-3 rounded-box bg-base-content aspect-video"
     />
-    <div v-if="selected" class="resize-handle" @mousedown="startResize" />
+    <div
+      v-if="selected"
+      class="absolute bottom-3 right-3 w-4 h-4 bg-primary border-2 border-base-100 rounded-full cursor-nwse-resize translate-x-1/2 translate-y-1/2 z-10"
+      @mousedown="startResize"
+    />
   </node-view-wrapper>
 </template>
+
+<!--<template>-->
+<!--  <node-view-wrapper-->
+<!--    as="div"-->
+<!--    class="video-container"-->
+<!--    :class="{ selected }"-->
+<!--    :style="{ width: containerWidth }"-->
+<!--  >-->
+<!--    <iframe-->
+<!--      :src="src"-->
+<!--      :width="currentWidth"-->
+<!--      :height="parsedHeight"-->
+<!--      allowfullscreen-->
+<!--      class="video-iframe"-->
+<!--    />-->
+<!--    <div v-if="selected" class="resize-handle" @mousedown="startResize" />-->
+<!--  </node-view-wrapper>-->
+<!--</template>-->
 
 <script lang="ts">
 import { NodeViewWrapper, nodeViewProps } from '@tiptap/vue-3'
@@ -135,47 +158,3 @@ export default defineComponent({
 })
 </script>
 
-<style scoped>
-.video-container {
-  position: relative;
-  display: inline-block;
-  min-width: 400px;
-  max-width: 100%;
-  margin: 1rem auto;
-  padding: 12px;
-  background: #f5f5f5;
-  border-radius: 12px;
-  will-change: width;
-  backface-visibility: hidden;
-}
-
-.video-iframe {
-  width: calc(100% - 24px);
-  height: calc(400px - 24px);
-  margin: 12px;
-  aspect-ratio: 16/9;
-  border-radius: 8px;
-  background: #000;
-  transition: inherit;
-}
-
-.resize-handle {
-  position: absolute;
-  right: 12px;
-  bottom: 12px;
-  width: 16px;
-  height: 16px;
-  background: #4f46e5;
-  border: 2px solid white;
-  border-radius: 50%;
-  cursor: nwse-resize;
-  transform: translate(50%, 50%);
-  z-index: 10;
-}
-
-.selected {
-  outline: 3px solid rgba(99, 102, 241, 0.5);
-  background: rgba(99, 102, 241, 0.05);
-  outline-offset: 2px;
-}
-</style>

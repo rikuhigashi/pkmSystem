@@ -1,9 +1,8 @@
 <!-- 登录页面公用按钮 -->
-
 <template>
   <button
     :type="type"
-    class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+    class="btn btn-primary w-full flex justify-center rounded-md px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-dui-indigo-700 focus:outline-none focus:ring-2 focus:ring-dui-indigo-600 focus:ring-offset-2 transition-colors duration-150"
   >
     <slot name="buttonName"></slot>
   </button>

@@ -1,5 +1,5 @@
 <template>
-  <div ref="editorRef" class="tiptap-container"></div>
+  <div ref="editorRef"     class="p-4 border rounded-lg border-base-300 bg-base-100 prose-img:max-w-full prose-img:h-auto prose-img:my-2 prose-img:rounded-lg prose-img:shadow-md"></div>
 </template>
 
 <script setup lang="ts">
@@ -40,16 +40,4 @@ watch(() => props.content, (newContent) => {
 })
 </script>
 
-<style>
-.tiptap-container {
-  @apply p-4 border rounded-lg;
-}
 
-.tiptap-container img {
-  @apply max-w-full h-auto my-2;
-}
-
-.tiptap-container :deep(.ProseMirror) {
-  @apply min-h-[300px]! !p-4;
-}
-</style>

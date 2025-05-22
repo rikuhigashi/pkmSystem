@@ -49,10 +49,17 @@ const adjustedMenuPosition = () => {
   }
 }
 
+// 右键事件阻止默认行为
+const handleContextMenu = (e: MouseEvent) => {
+  e.preventDefault()
+}
+
 onMounted(() => {
   nextTick(() => {
     adjustedMenuPosition()
   })
+  document.addEventListener('contextmenu', handleContextMenu)
+  return () => document.removeEventListener('contextmenu', handleContextMenu)
 })
 
 watch(
@@ -69,44 +76,36 @@ watch(
   <teleport to="body">
     <div
       ref="menuRef"
-      v-bind="$attrs"
-      class="absolute z-50"
-      v-if="props.menuItems.length"
+      class="fixed z-[999] origin-top"
       :style="{ top: `${adjustedPosition.top}px`, left: `${adjustedPosition.left}px` }"
-      @contextmenu.prevent
     >
       <transition
-        enter-active-class="duration-1000 ease-in-out transform transition-all"
-        enter-from-class="opacity-0 translate-y-4 scale-95"
-        enter-to-class="opacity-100 translate-y-0 scale-100"
-        leave-active-class="duration-1000 ease-in-out transform transition-all"
-        leave-from-class="opacity-100 translate-y-0 scale-100"
-        leave-to-class="opacity-0 translate-y-4 scale-95"
+        enter-active-class="transition duration-100 ease-out"
+        leave-active-class="transition duration-75 ease-in"
+        enter-from-class="opacity-0 scale-95"
+        leave-to-class="opacity-0 scale-95"
       >
-        <div
-          class="mt-2 w-40 origin-top-right divide-y divide-gray-300 rounded-md bg-linear-to-br from-gray-50 to-gray-200 shadow-lg ring-1 ring-black/5 focus:outline-none"
-        >
-          <div class="py-1" v-for="(group, index) in props.menuItems" :key="index">
-            <span
-              draggable="false"
-              :class="[
-                item.show() ? 'text-gray-700 hover:text-blue-500' : 'hidden',
-                'group flex items-center px-4 py-2 text-sm cursor-pointer',
-              ]"
-              v-for="(item, index) in group"
-              :key="index"
+        <div  v-if="menuItems.length" class="min-w-[160px] rounded-lg bg-white shadow-xl ring-1 ring-gray-100 py-2">
+          <div
+            v-for="(group, index) in props.menuItems"
+            :key="index"
+            class="border-t border-gray-100 first:border-0"
+          >
+            <button
+              v-for="(item, idx) in group"
+              :key="idx"
+              v-show="item.show()"
               @click="item.onClick"
+              class="flex w-full items-center px-4 py-2 text-sm hover:bg-gray-50 transition-colors"
             >
-              <component
-                :is="item.icon"
-                :class="['mr-3 size-5 text-gray-400 group-hover:text-blue-400']"
-                aria-hidden="true"
-              />
+              <component :is="item.icon" class="size-4 text-gray-400 mr-3" />
               {{ item.label }}
-            </span>
+            </button>
           </div>
         </div>
       </transition>
     </div>
   </teleport>
 </template>
+
+

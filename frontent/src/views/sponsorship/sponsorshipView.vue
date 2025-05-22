@@ -70,12 +70,11 @@
           </li>
         </ul>
         <button
-          :aria-describedby="tier.id"
           :class="[
             tier.featured
               ? 'bg-indigo-600 text-white shadow-sm hover:bg-indigo-500'
               : 'text-indigo-600 ring-1 ring-indigo-200 ring-inset hover:ring-indigo-300',
-            'mt-8 block rounded-md px-3.5 py-2.5 text-center text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:mt-10',
+            'mt-8 block rounded-md px-3.5 py-2.5 text-center text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:mt-10 transition-all duration-200 hover:shadow-md disabled:opacity-70 disabled:cursor-not-allowed',
           ]"
           @click="handlePayment(tier.priceMonthly)"
           :disabled="isLoading"
@@ -145,13 +144,12 @@ const handlePayment = async (price: string) => {
     const validOrderNo = orderNo as string
     const validPayForm = payForm as string
 
-
     // 处理支付表单
     const formContainer = document.createElement('div')
     formContainer.innerHTML = validPayForm
     document.body.appendChild(formContainer)
 
-     // 提交支付表单
+    // 提交支付表单
     const form = formContainer.querySelector('form')
     if (form) {
       form.submit()
@@ -198,12 +196,9 @@ const handlePayment = async (price: string) => {
           clearInterval(interval)
           alert('支付状态查询超时')
         }
-
       } catch (error) {
         console.error('支付状态查询失败:', error)
       }
-
-
     }
     const interval = setInterval(checkStatus, 3000)
   } catch (error) {
@@ -235,34 +230,3 @@ const tiers = [
   },
 ]
 </script>
-
-<style scoped>
-button {
-  transition: all 0.2s ease;
-  cursor: pointer;
-  width: 100%;
-}
-
-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
-}
-
-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-</style>

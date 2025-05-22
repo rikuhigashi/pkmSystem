@@ -1,93 +1,114 @@
 <template>
-  <div class="container mx-auto p-6 space-y-8">
-    <div class="flex justify-between items-center">
+  <div class="container mx-auto p-6 space-y-6">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <h1 class="text-2xl font-bold">待审核数据</h1>
-      <div class="flex items-center gap-4">
+
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div class="join w-full sm:w-96">
+          <input
+            v-model="searchKeyword"
+            type="text"
+            placeholder="搜索名称"
+            class="input input-bordered join-item w-full"
+            @keyup.enter="fetchData"
+          />
+          <button class="btn btn-primary join-item" @click="fetchData">
+            搜索
+          </button>
+        </div>
+
         <button
-          class="btn btn-ghost btn-circle"
+          class="btn btn-ghost btn-square"
           @click="fetchData"
           :disabled="loading"
         >
           <icon-refresh
             v-if="!loading"
-            class="w-6 h-6 text-gray-600 hover:text-primary"
+            class="size-6 text-gray-600 hover:text-primary"
           />
           <span v-else class="loading loading-spinner"></span>
         </button>
-
-        <div class="join">
-          <input
-            v-model="searchKeyword"
-            type="text"
-            placeholder="搜索名称"
-            class="input input-bordered join-item"
-            @keyup.enter="fetchData"
-          />
-          <button class="btn btn-primary join-item" @click="fetchData">搜索</button>
-        </div>
       </div>
     </div>
+
     <!-- 加载状态 -->
-    <div v-if="loading" class="text-center">
+    <div v-if="loading" class="flex justify-center p-8">
       <span class="loading loading-dots loading-lg"></span>
     </div>
 
     <!-- 空状态 -->
-    <div v-else-if="dataList.length === 0" class="text-center text-gray-500">暂无待审核数据</div>
+    <div v-else-if="dataList.length === 0" class="text-center p-8 text-gray-500">
+      暂无待审核数据
+    </div>
 
     <!-- 数据表格 -->
-    <div v-else class="overflow-x-auto">
-      <table class="table table-zebra">
-        <thead>
+    <div v-else class="space-y-4">
+      <div class="overflow-x-auto rounded-lg border">
+        <table class="table table-zebra">
+          <thead class="bg-gray-50">
           <tr>
-            <th>ID</th>
-            <th>名称</th>
-            <th>图标</th>
-            <th>过期时间</th>
-            <th>状态</th>
-            <th>操作</th>
+            <th class="px-4 py-3">ID</th>
+            <th class="px-4 py-3">名称</th>
+            <th class="px-4 py-3">图标</th>
+            <th class="px-4 py-3">过期时间</th>
+            <th class="px-4 py-3">状态</th>
+            <th class="px-4 py-3">操作</th>
           </tr>
-        </thead>
-        <tbody>
+          </thead>
+          <tbody>
           <tr v-for="item in dataList" :key="item.id">
-            <td>{{ item.id }}</td>
-            <td>{{ item.name }}</td>
-            <td>
+            <td class="px-4 py-3">{{ item.id }}</td>
+            <td class="px-4 py-3">{{ item.name }}</td>
+            <td class="px-4 py-3">
               <div class="flex items-center gap-1">
                 <span v-if="item.icon" class="text-xl">{{ item.icon }}</span>
-                <span v-else>无图标</span>
+                <span v-else class="text-gray-400">无图标</span>
               </div>
             </td>
-            <td>{{ formatDate(item.expiredAt) }}</td>
-            <td>
-              <span :class="statusClass(item.status)">{{ item.status }}</span>
+            <td class="px-4 py-3">{{ formatDate(item.expiredAt) }}</td>
+            <td class="px-4 py-3">
+                <span
+                  class="px-2 py-1 rounded-md text-sm"
+                  :class="{
+                    'bg-orange-100 text-orange-800': item.status === 'PENDING',
+                    'bg-green-100 text-green-800': item.status === 'APPROVED',
+                    'bg-red-100 text-red-800': item.status === 'REJECTED'
+                  }"
+                >
+                  {{ item.status }}
+                </span>
             </td>
-            <td>
+            <td class="px-4 py-3">
               <div class="flex gap-2">
                 <button
                   class="btn btn-sm btn-success"
-                  @click="handleApprove(item.id)"
                   :disabled="item.status !== 'PENDING'"
+                  @click="handleApprove(item.id)"
                 >
                   同意
                 </button>
                 <button
                   class="btn btn-sm btn-error"
-                  @click="handleReject(item.id)"
                   :disabled="item.status !== 'PENDING'"
+                  @click="handleReject(item.id)"
                 >
                   拒绝
                 </button>
-
-                <button class="btn btn-sm btn-info" @click="openDetail(item)">查看</button>
+                <button
+                  class="btn btn-sm btn-info"
+                  @click="openDetail(item)"
+                >
+                  查看
+                </button>
               </div>
             </td>
           </tr>
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </div>
 
       <!-- 分页 -->
-      <div class="flex justify-center mt-4" v-if="totalPages > 1">
+      <div v-if="totalPages > 1" class="flex justify-center">
         <div class="join">
           <button
             v-for="page in totalPages"
@@ -102,10 +123,10 @@
       </div>
     </div>
 
-    <!-- 查看模态框 -->
+    <!-- 模态框 -->
     <dialog ref="modal" class="modal" @click="handleOutsideClick">
-      <div class="modal-box w-11/12 max-w-7xl">
-        <h3 class="font-bold text-lg mb-4">详情预览 - {{ selectedItem?.name }}</h3>
+      <div class="modal-box max-w-4xl">
+        <h3 class="text-lg font-bold mb-4">详情预览 - {{ selectedItem?.name }}</h3>
         <div v-if="selectedItem" class="prose max-w-none">
           <TiptapViewer :content="selectedItem.tiptapJson" />
         </div>
@@ -115,11 +136,132 @@
       </div>
     </dialog>
   </div>
-
   <RejectDialog ref="rejectDialog" @confirmed="handleRejectConfirm" />
-
-
 </template>
+
+
+<!--<template>-->
+<!--  <div class="container mx-auto p-6 space-y-8">-->
+<!--    <div class="flex justify-between items-center">-->
+<!--      <h1 class="text-2xl font-bold">待审核数据</h1>-->
+<!--      <div class="flex items-center gap-4">-->
+<!--        <button-->
+<!--          class="btn btn-ghost btn-circle"-->
+<!--          @click="fetchData"-->
+<!--          :disabled="loading"-->
+<!--        >-->
+<!--          <icon-refresh-->
+<!--            v-if="!loading"-->
+<!--            class="w-6 h-6 text-gray-600 hover:text-primary"-->
+<!--          />-->
+<!--          <span v-else class="loading loading-spinner"></span>-->
+<!--        </button>-->
+
+<!--        <div class="join">-->
+<!--          <input-->
+<!--            v-model="searchKeyword"-->
+<!--            type="text"-->
+<!--            placeholder="搜索名称"-->
+<!--            class="input input-bordered join-item"-->
+<!--            @keyup.enter="fetchData"-->
+<!--          />-->
+<!--          <button class="btn btn-primary join-item" @click="fetchData">搜索</button>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--    &lt;!&ndash; 加载状态 &ndash;&gt;-->
+<!--    <div v-if="loading" class="text-center">-->
+<!--      <span class="loading loading-dots loading-lg"></span>-->
+<!--    </div>-->
+
+<!--    &lt;!&ndash; 空状态 &ndash;&gt;-->
+<!--    <div v-else-if="dataList.length === 0" class="text-center text-gray-500">暂无待审核数据</div>-->
+
+<!--    &lt;!&ndash; 数据表格 &ndash;&gt;-->
+<!--    <div v-else class="overflow-x-auto">-->
+<!--      <table class="table table-zebra">-->
+<!--        <thead>-->
+<!--          <tr>-->
+<!--            <th>ID</th>-->
+<!--            <th>名称</th>-->
+<!--            <th>图标</th>-->
+<!--            <th>过期时间</th>-->
+<!--            <th>状态</th>-->
+<!--            <th>操作</th>-->
+<!--          </tr>-->
+<!--        </thead>-->
+<!--        <tbody>-->
+<!--          <tr v-for="item in dataList" :key="item.id">-->
+<!--            <td>{{ item.id }}</td>-->
+<!--            <td>{{ item.name }}</td>-->
+<!--            <td>-->
+<!--              <div class="flex items-center gap-1">-->
+<!--                <span v-if="item.icon" class="text-xl">{{ item.icon }}</span>-->
+<!--                <span v-else>无图标</span>-->
+<!--              </div>-->
+<!--            </td>-->
+<!--            <td>{{ formatDate(item.expiredAt) }}</td>-->
+<!--            <td>-->
+<!--              <span :class="statusClass(item.status)">{{ item.status }}</span>-->
+<!--            </td>-->
+<!--            <td>-->
+<!--              <div class="flex gap-2">-->
+<!--                <button-->
+<!--                  class="btn btn-sm btn-success"-->
+<!--                  @click="handleApprove(item.id)"-->
+<!--                  :disabled="item.status !== 'PENDING'"-->
+<!--                >-->
+<!--                  同意-->
+<!--                </button>-->
+<!--                <button-->
+<!--                  class="btn btn-sm btn-error"-->
+<!--                  @click="handleReject(item.id)"-->
+<!--                  :disabled="item.status !== 'PENDING'"-->
+<!--                >-->
+<!--                  拒绝-->
+<!--                </button>-->
+
+<!--                <button class="btn btn-sm btn-info" @click="openDetail(item)">查看</button>-->
+<!--              </div>-->
+<!--            </td>-->
+<!--          </tr>-->
+<!--        </tbody>-->
+<!--      </table>-->
+
+<!--      &lt;!&ndash; 分页 &ndash;&gt;-->
+<!--      <div class="flex justify-center mt-4" v-if="totalPages > 1">-->
+<!--        <div class="join">-->
+<!--          <button-->
+<!--            v-for="page in totalPages"-->
+<!--            :key="page"-->
+<!--            class="join-item btn"-->
+<!--            :class="{ 'btn-active': currentPage === page }"-->
+<!--            @click="changePage(page)"-->
+<!--          >-->
+<!--            {{ page }}-->
+<!--          </button>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </div>-->
+
+<!--    &lt;!&ndash; 查看模态框 &ndash;&gt;-->
+<!--    <dialog ref="modal" class="modal" @click="handleOutsideClick">-->
+<!--      <div class="modal-box w-11/12 max-w-7xl">-->
+<!--        <h3 class="font-bold text-lg mb-4">详情预览 - {{ selectedItem?.name }}</h3>-->
+<!--        <div v-if="selectedItem" class="prose max-w-none">-->
+<!--          <TiptapViewer :content="selectedItem.tiptapJson" />-->
+<!--        </div>-->
+<!--        <div class="modal-action">-->
+<!--          <button class="btn" @click="closeModal">关闭</button>-->
+<!--        </div>-->
+<!--      </div>-->
+<!--    </dialog>-->
+<!--  </div>-->
+
+<!--  <RejectDialog ref="rejectDialog" @confirmed="handleRejectConfirm" />-->
+
+
+<!--</template>-->
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
@@ -172,15 +314,7 @@ const handleOutsideClick = (event: MouseEvent) => {
   }
 }
 
-// 状态样式
-const statusClass = (status: string) => {
-  return {
-    'text-warning': status === 'PENDING',
-    'text-success': status === 'APPROVED',
-    'text-error': status === 'REJECTED',
-    badge: true,
-  }
-}
+
 
 // 分页切换
 const changePage = (page: number) => {
@@ -244,23 +378,4 @@ const formatDate = (dateString: string) => {
 onMounted(fetchData)
 </script>
 
-<style scoped>
 
-.badge {
-  @apply px-2 py-1 rounded-md text-sm;
-}
-
-.text-warning {
-  @apply bg-orange-100 text-orange-800;
-}
-
-.text-success {
-  @apply bg-green-100 text-green-800;
-}
-
-.text-error {
-  @apply bg-red-100 text-red-800;
-}
-
-
-</style>

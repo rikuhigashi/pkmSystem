@@ -1,8 +1,7 @@
 <template>
-  <!--  -->
   <div
     ref="colorPickerRef"
-    class="fixed z-999 select-none pointer-events-auto bg-white shadow-lg p-2 rounded"
+    class="fixed z-[999] select-none bg-base-100 shadow-lg p-2 rounded-box border border-base-300"
     v-if="props.visible"
     :style="{
       top: `${position.top}px`,
@@ -10,17 +9,42 @@
     }"
   >
     <div class="flex justify-between items-center mb-2">
-      <span class="text-sm font-medium h-5">颜色选择</span>
-      <icon-revoke class="text-sm font-medium h-5 w-5" @click="handleClear"></icon-revoke>
+      <span class="text-sm font-medium text-base-content">颜色选择</span>
+      <button class="btn btn-circle btn-ghost btn-xs" @click="handleClear">
+        <IconRevoke class="w-4 h-4 text-base-content" />
+      </button>
     </div>
 
     <Chrome
-      class="pointer-events-auto"
+      class="!w-full"
       v-model="color"
       @update:modelValue="handleColorChange"
-    ></Chrome>
+    />
   </div>
 </template>
+<!--<template>-->
+
+<!--  <div-->
+<!--    ref="colorPickerRef"-->
+<!--    class="fixed z-999 select-none pointer-events-auto bg-white shadow-lg p-2 rounded"-->
+<!--    v-if="props.visible"-->
+<!--    :style="{-->
+<!--      top: `${position.top}px`,-->
+<!--      left: `${position.left}px`,-->
+<!--    }"-->
+<!--  >-->
+<!--    <div class="flex justify-between items-center mb-2">-->
+<!--      <span class="text-sm font-medium h-5">颜色选择</span>-->
+<!--      <icon-revoke class="text-sm font-medium h-5 w-5" @click="handleClear"></icon-revoke>-->
+<!--    </div>-->
+
+<!--    <Chrome-->
+<!--      class="pointer-events-auto"-->
+<!--      v-model="color"-->
+<!--      @update:modelValue="handleColorChange"-->
+<!--    ></Chrome>-->
+<!--  </div>-->
+<!--</template>-->
 
 <script lang="ts" setup>
 import { Chrome } from '@ckpack/vue-color'

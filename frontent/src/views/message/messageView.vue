@@ -35,25 +35,37 @@ onMounted(fetchNotifications)
 
 <template>
   <div class="dropdown dropdown-end">
-    <label tabindex="0" class="btn btn-ghost btn-circle">
+    <label tabindex="0" class="btn btn-ghost btn-circle hover:bg-gray-100">
       <div class="indicator">
         <BellIcon class="w-6 h-6" />
-        <span v-if="unreadCount" class="badge badge-sm indicator-item bg-red-500 text-white">
-          {{ unreadCount }}
-        </span>
+        <span
+          v-if="unreadCount"
+          class="badge badge-sm badge-error indicator-item animate-pulse"
+        >{{ unreadCount }}</span>
       </div>
     </label>
-    <div tabindex="0" class="mt-3 z-1 card card-compact dropdown-content w-96 bg-base-100 shadow">
-      <div class="card-body max-h-96 overflow-y-auto">
-        <h3 class="card-title">通知</h3>
-        <div v-for="n in notifications" :key="n.id"
-             class="p-2 hover:bg-gray-50 cursor-pointer border-b"
-             :class="{ 'bg-blue-50': !n.read }"
-             @click="markAsRead(n.id)">
-          <div class="text-sm">{{ n.content }}</div>
-          <div class="text-xs text-gray-500">{{ new Date(n.createdAt).toLocaleString() }}</div>
+    <div tabindex="0" class="dropdown-content w-80 sm:w-96"> <!-- 响应式宽度 -->
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body p-4 max-h-[70vh]">
+          <h3 class="text-lg font-semibold mb-2">通知</h3>
+          <div class="space-y-2">
+            <div
+              v-for="n in notifications"
+              :key="n.id"
+              class="p-3 rounded-lg transition-colors"
+              :class="{
+                'bg-blue-50/50 hover:bg-blue-100': !n.read,
+                'hover:bg-gray-50': n.read
+              }"
+              @click="markAsRead(n.id)"
+            >
+              <div class="text-sm line-clamp-2">{{ n.content }}</div>
+              <div class="text-xs text-gray-500 mt-1">
+                {{ new Date(n.createdAt).toLocaleDateString() }}
+              </div>
+            </div>
+          </div>
         </div>
-        <div v-if="!notifications.length" class="text-gray-500 text-center py-4">暂无新通知</div>
       </div>
     </div>
   </div>

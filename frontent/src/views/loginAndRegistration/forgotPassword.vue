@@ -3,7 +3,7 @@
 import AuthLayout from '@/components/loginAndRegistration/authLayout.vue'
 import AuthButton from '@/components/loginAndRegistration/authButton.vue'
 import InputField from '@/components/loginAndRegistration/InputField.vue'
-import InputFieldButton from '@/components/loginAndRegistration/InputFieldButton.vue'
+import Alert from '@/components/appAlert.vue'
 // ------------------- components -------------------
 
 // ------------------- vue -------------------
@@ -28,17 +28,28 @@ const alertStore = useAlertStore()
 
 const countdown = ref(0) // 倒计时
 const isSending = ref(false) // 是否正在发送验证码
+const emailError = ref(false)
+const emailErrorMessage = ref('')
+const codeError = ref(false)
+
+const validateEmail = () => {
+  const emailValid = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(
+    resetPasswordFormData.value.email,
+  )
+  emailError.value = !emailValid
+  emailErrorMessage.value = emailValid ? '' : '邮箱格式不正确'
+}
 
 // 点击获取验证码按钮
 const handleSendCode = async () => {
-  const email = resetPasswordFormData.value.email.trim().toLowerCase();
+  if (emailError.value) return
+
+  const email = resetPasswordFormData.value.email.trim()
 
   try {
     isSending.value = true
 
-    const response = await sendResetPasswordCode({ email });
-
-    // const response = await sendResetPasswordCode({ email: resetPasswordFormData.value.email })
+    const response = await sendResetPasswordCode({ email })
 
     if (response.success) {
       alertStore.showAlert('验证码已发送', 'success')
@@ -53,8 +64,6 @@ const handleSendCode = async () => {
           countdown.value = 0
         }
       }, 1000)
-
-
     } else {
       alertStore.showAlert('发送验证码失败', 'error')
     }
@@ -73,7 +82,8 @@ const handleSubmit = async () => {
       code: resetPasswordFormData.value.code,
     })
 
-    if (res.success) {
+    if (res.success && res.data?.resetToken) {
+      localStorage.setItem("resetToken", res.data.resetToken)
       await router.replace('/resetPassword')
     } else {
       alertStore.showAlert('验证码错误或信息未填写完全', 'error')
@@ -87,42 +97,60 @@ const handleSubmit = async () => {
 <template>
   <auth-layout>
     <template #header>
-      <h2 class="mt-6 text-center text-2xl/9 font-bold tracking-tight text-gray-900">忘记密码</h2>
+      <h2 class="text-center text-2xl font-bold text-gray-900">忘记密码</h2>
     </template>
 
-    <form class="space-y-6" @submit.prevent="handleSubmit">
-      <InputFieldButton
-        id="email"
-        type="email"
-        label="电子邮件"
-        :button-value="countdown > 0 ? `${countdown}秒后重试` : '获取验证码'"
-        @send-code="handleSendCode"
-        v-model="resetPasswordFormData.email"
-        autocomplete="email"
-        required
-        placeholder="请输入您的电子邮件地址"
-      />
+    <form class="space-y-4" @submit.prevent="handleSubmit">
+      <!-- 邮箱输入 -->
 
+      <div class="form-control w-full">
+        <label class="label">
+          <span class="label-text">电子邮件</span>
+        </label>
+
+        <div class="validator flex">
+          <input
+            type="email"
+            v-model="resetPasswordFormData.email"
+            class="input input-bordered flex-1"
+            :class="{ 'input-error': emailError }"
+            placeholder="example@domain.com"
+            required
+            @input="validateEmail"
+          />
+          <button
+            type="button"
+            class="btn btn-primary border-l-0 rounded-l-none w-32"
+            @click="handleSendCode"
+            :disabled="countdown > 0"
+          >
+            {{ countdown > 0 ? `${countdown}秒` : '获取验证码' }}
+          </button>
+        </div>
+        <div v-if="emailError" class="validator-hint text-error text-xs mt-1">
+          {{ emailErrorMessage }}
+        </div>
+
+      </div>
+
+      <!-- 验证码输入 -->
       <InputField
         id="verificationCode"
         label="验证码"
         type="text"
         v-model="resetPasswordFormData.code"
+        :error="codeError"
+        error-message="验证码错误"
         required
         placeholder="请输入6位验证码"
       />
-
       <AuthButton :type="'submit'">
         <template #buttonName>下一步</template>
       </AuthButton>
     </form>
 
-    <router-link
-      to="/"
-      class="font-semibold text-indigo-600 hover:text-indigo-500 flex justify-center mt-5"
-      >返回登录
-    </router-link>
+    <router-link to="/" class="link link-primary flex justify-center mt-4"> 返回登录</router-link>
 
-    <AppAlert />
+    <Alert />
   </auth-layout>
 </template>

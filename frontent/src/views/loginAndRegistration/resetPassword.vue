@@ -3,112 +3,109 @@
 import AuthLayout from '@/components/loginAndRegistration/authLayout.vue'
 import AuthButton from '@/components/loginAndRegistration/authButton.vue'
 import InputField from '@/components/loginAndRegistration/InputField.vue'
-import { useAuthForm } from '@/views/loginAndRegistration/configs/useAuthForm'
-import { ref } from 'vue'
+import {useAuthForm} from '@/views/loginAndRegistration/configs/useAuthForm'
+import {computed, ref, watch} from 'vue'
+import Alert from '@/components/appAlert.vue'
+import type { AxiosError } from 'axios'
 // ------------------- components -------------------
 
-// ------------------- vue -------------------
-
-// ------------------- vue -------------------
-
-// ------------------- api -------------------
-
-// ------------------- api -------------------
-
 // ------------------- store -------------------
-import { useAlertStore } from '@/stores/alert'
-import {resetPassword} from "@/API/login/loginAPI";
-import router from "@/router";
-const {  isLoading } = useAuthForm()
+import {useAlertStore} from '@/stores/alert'
+import {resetPassword} from '@/API/login/loginAPI'
+import router from '@/router'
+
+const {isLoading} = useAuthForm()
 
 const alertStore = useAlertStore()
-const { resetPasswordFormData } = useAuthForm()
+const {resetPasswordFormData} = useAuthForm()
 // ------------------- store -------------------
 
-const passwordError = ref(false) // 密码错误标志
+const newPasswordError = ref(false)
+const confirmPasswordError = ref(false)
+const isFormValid = ref(false)
+
+// 实时密码强度验证
+const passwordHints = computed(() => {
+  if (!resetPasswordFormData.value.newPassword) return []
+  return [
+    {text: '至少8个字符', valid: resetPasswordFormData.value.newPassword.length >= 8},
+    {text: '包含大写字母', valid: /[A-Z]/.test(resetPasswordFormData.value.newPassword)},
+    {text: '包含特殊字符（!@#$%^&*?.）', valid: /[!@#$%^&*?.]/.test(resetPasswordFormData.value.newPassword)}
+  ]
+})
+
+// 实时密码匹配验证
+watch(
+  () => [
+    resetPasswordFormData.value.newPassword,
+    resetPasswordFormData.value.confirmPassword
+  ],
+  ([newPass, confirmPass]) => {
+    newPasswordError.value = !passwordHints.value.every(hint => hint.valid)
+    confirmPasswordError.value = newPass !== confirmPass && confirmPass.length > 0
+    isFormValid.value = !newPasswordError.value && !confirmPasswordError.value
+  }
+)
 
 const handleSubmit = async () => {
-
-  const MIN_PASSWORD_LENGTH = 6;
-
-  // 判断两处密码是否相同
-  if (resetPasswordFormData.value.newPassword !== resetPasswordFormData.value.confirmPassword) {
-    passwordError.value = true
-    alertStore.showAlert('密码不一致', 'error')
-    return
-  }
-
-  if (resetPasswordFormData.value.newPassword.length < MIN_PASSWORD_LENGTH) {
-      alertStore.showAlert('密码至少需要6个字符', 'error');
-      return;
-  }
-
+  if (!isFormValid.value) return
 
   try {
     isLoading.value = true
     const res = await resetPassword({
-      newPassword: resetPasswordFormData.value.newPassword
+      newPassword: resetPasswordFormData.value.newPassword,
+
     })
     if (res.success) {
       alertStore.showAlert('密码重置成功，请登录', 'success')
       await router.replace('/')
     }
   } catch (error) {
+    const axiosError = error as AxiosError<{ message?: string }>
     alertStore.showAlert('重置失败，请重试', 'error')
-    console.error(error)
+    return {
+      success: false,
+      error:axiosError.response?.data?.message || '重置失败',
+    }
   } finally {
     isLoading.value = false
   }
-
 }
 </script>
 
 <template>
   <auth-layout>
     <template #header>
-      <h2 class="mt-6 text-center text-2xl/9 font-bold tracking-tight text-gray-900">重置密码</h2>
+      <h2 class="text-center text-2xl font-bold text-base-content">重置密码</h2>
     </template>
 
-    <form class="space-y-6" @submit.prevent="handleSubmit">
+    <form class="space-y-4" @submit.prevent="handleSubmit">
       <InputField
-        id="verificationCode"
         label="新密码"
         type="password"
-        required
-        minlength="6"
-        placeholder="请输入新密码"
         v-model="resetPasswordFormData.newPassword"
-        :class="[
-          passwordError ? 'input-error tooltip-open tooltip tooltip-bottom w-full text-left ' : '',
-        ]"
-        data-tip="两处的密码不一致"
+        required
+        placeholder="••••••••"
+        :hints="passwordHints"
+        :error="newPasswordError"
+        error-message="密码强度不足"
       />
 
       <InputField
-        id="resetVerificationCode"
-        label="再次输入新密码"
+        label="确认密码"
         type="password"
-        required
-        minlength="6"
-        placeholder="请再次输入新密码"
         v-model="resetPasswordFormData.confirmPassword"
-        :class="[
-          passwordError ? 'input-error tooltip-open tooltip tooltip-bottom w-full text-left ' : '',
-        ]"
-        data-tip="两处的密码不一致"
+        required
+        placeholder="••••••••"
+        :error="confirmPasswordError"
+        error-message="两次输入密码不一致"
       />
 
-      <AuthButton :type="'submit'">
-        <template #buttonName>下一步</template>
+      <AuthButton :type="'submit'" :disabled="!isFormValid">
+        <template #buttonName>重置密码</template>
       </AuthButton>
     </form>
 
-    <router-link
-      to="/"
-      class="font-semibold text-indigo-600 hover:text-indigo-500 flex justify-center mt-5"
-      >返回登录
-    </router-link>
-
-    <AppAlert />
+    <Alert />
   </auth-layout>
 </template>

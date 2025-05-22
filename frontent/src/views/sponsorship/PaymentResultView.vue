@@ -1,16 +1,16 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex items-center justify-center">
-    <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
-      <div class="text-center">
-        <CheckCircleIcon class="mx-auto h-16 w-16 text-green-500" />
-        <h2 class="mt-4 text-2xl font-bold text-gray-900">支付成功</h2>
-        <p class="mt-2 text-gray-600">订单号：{{ orderNo }}</p>
+  <div class="min-h-screen bg-gray-50 grid place-items-center p-4"> <!-- 使用grid布局 -->
+    <div class="bg-white p-8 rounded-xl shadow-xl max-w-md w-full transition-all"> <!-- 统一圆角 -->
+      <div class="text-center space-y-4">
+        <CheckCircleIcon class="mx-auto h-16 w-16 text-green-500 animate-pop-in" /> <!-- 添加入场动画 -->
+        <h2 class="text-2xl font-bold text-gray-900">支付成功</h2>
+        <p class="text-gray-600 break-all">{{ orderNo }}</p> <!-- 长订单号换行 -->
         <div class="mt-6">
           <button
             @click="returnHome"
-            class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-500"
+            class="btn btn-primary w-full"
           >
-            返回首页
+          返回首页
           </button>
         </div>
       </div>

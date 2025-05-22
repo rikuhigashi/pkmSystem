@@ -5,7 +5,6 @@ import type { AxiosError } from 'axios'
 export const login = async (data: { email: string; password: string }) => {
   try {
     const res = await apiClient.post('/api/auth/login', data)
-    console.log(res.data.token)
     localStorage.setItem('authToken', res.data.token)
     return {
       success: true,
@@ -22,25 +21,6 @@ export const login = async (data: { email: string; password: string }) => {
     }
   }
 }
-
-// export const login = async (data: { email: string; password: string }) => {
-//   try {
-//     const res = await apiClient.post('/api/auth/login', {
-//       email: data.email,
-//       password: data.password
-//     })
-//     localStorage.setItem('authToken', res.data.token)
-//
-//     console.log(res.data)
-//     return { success: true, data: res.data }
-//   } catch (error) {
-//     const axiosError = error as AxiosError<{ message: string }>
-//     return {
-//       success: false,
-//       error: axiosError.response?.data || '登录失败，请检查网络连接',
-//     }
-//   }
-// }
 
 // ================= 注册 ==================
 // 注册
@@ -111,8 +91,15 @@ export const verifyResetCode = async (data: { email: string; code: string }) => 
 // 重置密码
 export const resetPassword = async (data: { newPassword: string }) => {
   try {
-    const res = await apiClient.post('/api/auth/reset-password', data)
+    const token = localStorage.getItem("resetToken")
+    const res = await apiClient.post('/api/auth/reset-password', data, {
+      headers: {
+        "Reset-Token": token
+      }
+    })
 
+    // 清除 token
+    localStorage.removeItem("resetToken")
     return { success: true, data: res.data }
   } catch (error) {
     const axiosError = error as AxiosError<{ message: string }>
@@ -133,12 +120,6 @@ export const logoutAPI = async () => {
     console.error('退出错误:', e)
   }
 }
-// export const logoutAPI = async () => {
-//   try {
-//     await apiClient.post('/api/auth/logout')
-//   } catch (e) {
-//     console.error(e)
-//   }
-// }
+
 
 

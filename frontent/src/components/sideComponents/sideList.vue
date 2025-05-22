@@ -106,7 +106,7 @@ const saveEdit = () => {
           item.current
             ? 'bg-gray-800 text-white ring-2 ring-inset ring-blue-500'
             : 'text-gray-400 hover:bg-gray-800 hover:text-white',
-          'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold cursor-pointer',
+          'group flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold cursor-pointer transition-colors duration-200',
         ]"
       >
         <component :is="item.iconComponent" class="size-6 shrink-0" aria-hidden="true" />
@@ -118,17 +118,20 @@ const saveEdit = () => {
             v-if="inputStore.isEditingActive && rightClickStore.selectItemId === item.id"
             :class="[
               inputStore.isInputError ? 'input-error' : '',
-              'input input-bordered input-sm w-4/5 text-black',
+              'input input-bordered input-sm w-4/5 text-base-content bg-base-100 focus:ring-2 focus:ring-primary',
             ]"
             @blur="handleBlur"
             @keyup.enter="handleEnterKey()"
             v-focus="true"
           />
-          <span v-else>{{ item.name }}</span>
+          <span v-else class="truncate">{{ item.name }}</span>
         </div>
       </a>
     </li>
   </ul>
+</template>
+
+
 
   <!-- <li v-if="props.group && props.group.length > 0">
       <div class="text-xs/6 font-semibold text-gray-400">Your teams</div>
@@ -144,4 +147,4 @@ const saveEdit = () => {
           </li>
       </ul>
   </li> -->
-</template>
+

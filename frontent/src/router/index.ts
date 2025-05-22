@@ -19,7 +19,7 @@ const router = createRouter({
     {
       path: '/home',
       name: 'home',
-      component: () => import('@/views/homeView.vue'),
+      component: () => import('@/views/HomeView.vue'),
       meta: { requiresAuth: true }, //标记需要登录
     },
 
@@ -33,12 +33,12 @@ const router = createRouter({
       path: '/registerView',
       name: 'registerView',
       component: () => import('@/views/loginAndRegistration/registerView.vue'),
-      meta: { standalone: true },
+      meta: { standalone: true, shouldRedirectIfLoggedIn: true },
     },
     {
       path: '/forgotPassword',
       name: 'forgotPassword',
-      component: () => import('@/views/loginAndRegistration/resetPassword.vue'),
+      component: () => import('@/views/loginAndRegistration/forgotPassword.vue'),
       meta: { standalone: true },
     },
     {
@@ -76,22 +76,48 @@ const router = createRouter({
       path: '/payment/success',
       name: 'paymentSuccess',
       component: () => import('@/views/sponsorship/PaymentResultView.vue'),
-      meta: { requiresAuth: true }
-    }
+      meta: { requiresAuth: true },
+    },
   ],
 })
 
+// router.beforeEach(async (to, from, next) => {
+//   const authStore = userAuthStore()
+//   // const isAuthenticated = authStore.isLoggedIn
+//
+//   await authStore.checkSession();
+//
+//
+//
+//   if (to.name === 'login' && authStore.isLoggedIn) {
+//     next({ name: 'home' })
+//   } else if (to.meta.requiresAuth && !authStore.isLoggedIn) {
+//     next({ name: 'login' })
+//   } else {
+//     next()
+//   }
+// })
+
 router.beforeEach(async (to, from, next) => {
   const authStore = userAuthStore()
-  // const isAuthenticated = authStore.isLoggedIn
+  await authStore.checkSession()
 
-  await authStore.checkSession();
+  if (to.meta.shouldRedirectIfLoggedIn && authStore.isLoggedIn) {
+    return next({ name: 'home' })
+  }
 
-
-
-  if (to.name === 'login' && authStore.isLoggedIn) {
+  // 已登录用户访问登录/注册/忘记密码页面时重定向到首页
+  if (
+    (to.name === 'login' ||
+      to.name === 'registerView' ||
+      to.name === 'forgotPassword' ||
+      to.name === 'resetPassword') &&
+    authStore.isLoggedIn
+  ) {
     next({ name: 'home' })
-  } else if (to.meta.requiresAuth && !authStore.isLoggedIn) {
+  }
+  // 需要登录的页面未登录时跳转登录页
+  else if (to.meta.requiresAuth && !authStore.isLoggedIn) {
     next({ name: 'login' })
   } else {
     next()

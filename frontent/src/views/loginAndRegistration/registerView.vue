@@ -3,131 +3,116 @@
 import AuthLayout from '@/components/loginAndRegistration/authLayout.vue'
 import AuthButton from '@/components/loginAndRegistration/authButton.vue'
 import InputField from '@/components/loginAndRegistration/InputField.vue'
-import InputFieldButton from '@/components/loginAndRegistration/InputFieldButton.vue'
+import Alert from '@/components/appAlert.vue'
 // ------------------- components -------------------
 
 // ------------------- vue -------------------
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 // ------------------- vue -------------------
 
 // ------------------- api -------------------
-import { sendVerificationCode } from '@/API/login/loginAPI'
+import { register, sendVerificationCode } from '@/API/login/loginAPI'
 // ------------------- api -------------------
 
 // ------------------- store -------------------
 import { useAlertStore } from '@/stores/alert'
 import { useAuthForm } from '@/views/loginAndRegistration/configs/useAuthForm'
-
+import { useRouter } from 'vue-router'
+import type { AxiosError } from 'axios'
 const alertStore = useAlertStore()
-const { registerFormData, authStore, isLoading } = useAuthForm()
+const { registerFormData, isLoading } = useAuthForm()
 // ------------------- store -------------------
 
-const passwordError = ref(false) // 密码错误标志
+const router = useRouter()
+const countdown = ref(0)
+const emailError = ref(false)
+const codeError = ref(false)
+const showVerificationField = ref(false)
 
-// 注册提交
-const handleSubmit = async () => {
-  const MIN_PASSWORD_LENGTH = 6
+// 邮箱验证正则
+const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/
 
-  if (registerFormData.value.password !== registerFormData.value.confirmPassword) {
-    alertStore.showAlert('密码不一致', 'error')
+// 密码强度提示
+const passwordHints = computed(() => {
+  if (!registerFormData.value.password) return []
+  return [
+    { text: '至少8个字符', valid: registerFormData.value.password.length >= 8 },
+    { text: '包含大写字母', valid: /[A-Z]/.test(registerFormData.value.password) },
+    {
+      text: '包含特殊字符（!@#$%^&*?.）',
+      valid: /[!@#$%^&*?.]/.test(registerFormData.value.password),
+    },
+  ]
+})
+
+// 实时邮箱验证
+watch(
+  () => registerFormData.value.email,
+  (email) => {
+    emailError.value = !emailRegex.test(email)
+  },
+)
+
+// 发送验证码
+const handleSendCode = async () => {
+  if (emailError.value || !registerFormData.value.email.trim()) {
+    alertStore.showAlert('请输入有效的邮箱地址', 'error')
     return
-  } else if (registerFormData.value.password.length < MIN_PASSWORD_LENGTH) {
-    alertStore.showAlert('密码至少需要6个字符', 'error')
+  }
+
+  try {
+    const res = await sendVerificationCode(registerFormData.value.email)
+    if (res.success) {
+      showVerificationField.value = true
+      startCountdown()
+      alertStore.showAlert('验证码已发送', 'success')
+    }
+  } catch (error) {
+    const axiosError = error as AxiosError<{ message?: string }>
+    alertStore.showAlert(axiosError.response?.data?.message || '发送失败，请稍后重试', 'error')
+  }
+}
+
+const startCountdown = () => {
+  countdown.value = 60
+  const timer = setInterval(() => {
+    if (countdown.value <= 0) clearInterval(timer)
+    else countdown.value--
+  }, 1000)
+}
+
+// 提交注册
+const handleSubmit = async () => {
+  const errors = {
+    email: !emailRegex.test(registerFormData.value.email),
+    code: !registerFormData.value.code,
+    password: !passwordHints.value.every((hint) => hint.valid),
+    confirm: registerFormData.value.password !== registerFormData.value.confirmPassword,
+  }
+
+  if (Object.values(errors).some(Boolean)) {
+    alertStore.showAlert('请检查表单填写是否正确', 'error')
     return
   }
 
   try {
     isLoading.value = true
-    const res = await authStore.registerUser({
+    const res = await register({
       email: registerFormData.value.email,
-      username: registerFormData.value.username,
       password: registerFormData.value.password,
-      confirmPassword: registerFormData.value.confirmPassword,
+      username: registerFormData.value.username,
       code: registerFormData.value.code,
     })
+
     if (res.success) {
-      alertStore.showAlert('注册成功', 'success')
-    } else {
-      alertStore.showAlert('注册失败,验证码或其他信息错误', 'error')
+      alertStore.showAlert('注册成功，请登录', 'success')
+      await router.push('/')
     }
   } catch (error) {
-    console.error(error)
+    console.error('注册失败:', error)
+    alertStore.showAlert('注册失败，请检查验证码和信息', 'error')
   } finally {
     isLoading.value = false
-  }
-
-  // // 密码一致性检查
-  // if (registerFormData.value.password !== registerFormData.value.confirmPassword) {
-  //   passwordError.value = true
-  //   return
-  // }
-  //
-  // 验证码必填检查
-  if (!registerFormData.value.code) {
-    alertStore.showAlert('请输入验证码', 'error')
-    return
-  }
-  //
-  // alertStore.showAlert('注册成功，请登录', 'success')
-  //
-  // await handleBasicAuth('/register')
-  // await router.replace('/')
-}
-
-const countdown = ref(0) // 倒计时
-const isSending = ref(false) // 是否正在发送验证码
-
-const showVerificationField = ref(false) // 显示验证码输入框
-
-const handleSendCode = async () => {
-  // if (!registerFormData.value.email) {
-  //   alertStore.showAlert('请输入邮箱地址', 'error');
-  //   return;
-  // }
-
-  // 邮箱格式验证
-  // const email = registerFormData.value.email;
-  // if (!email) {
-  //   alertStore.showAlert('请输入邮箱地址', 'error');
-  //   return;
-  // }
-  // const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  // if (!emailRegex.test(email)) {
-  //   alertStore.showAlert('邮箱格式不正确', 'error');
-  //   return;
-  // }
-
-  // 发送验证码成功后显示输入框
-  showVerificationField.value = false
-  try {
-    isSending.value = true
-    const response = await sendVerificationCode(registerFormData.value.email)
-
-    showVerificationField.value = true
-
-    if (response.success) {
-      alertStore.showAlert('验证码已发送', 'success')
-      showVerificationField.value = true
-
-      countdown.value = 60
-      const timer = setInterval(() => {
-        countdown.value--
-        if (countdown.value <= 0) {
-          clearInterval(timer)
-          isSending.value = false
-          countdown.value = 0
-        }
-      }, 1000)
-    } else {
-      showVerificationField.value = false
-
-      alertStore.showAlert('发送失败', 'error')
-    }
-  } catch (error) {
-    alertStore.showAlert('网络错误，请重试', 'error')
-    console.error(error)
-  } finally {
-    isSending.value = false
   }
 }
 </script>
@@ -135,81 +120,93 @@ const handleSendCode = async () => {
 <template>
   <auth-layout>
     <template #header>
-      <h2 class="mt-6 text-center text-2xl/9 font-bold tracking-tight text-gray-900">注册账号</h2>
+      <h2 class="text-center text-2xl font-bold text-base-content">注册账号</h2>
     </template>
 
-    <form class="space-y-6" @submit.prevent="handleSubmit">
-      <InputFieldButton
-        id="email"
-        type="email"
-        label="电子邮件"
-        :button-value="countdown > 0 ? `${countdown}秒后重试` : '获取验证码'"
-        autocomplete="email"
-        required
-        placeholder="请输入您的电子邮件地址"
-        v-model="registerFormData.email"
-        @send-code="handleSendCode"
-      />
+    <form class="space-y-4" @submit.prevent="handleSubmit">
+      <!-- 邮箱输入 -->
+      <div class="validator flex">
+        <input
+          type="email"
+          v-model="registerFormData.email"
+          class="input input-bordered flex-1"
+          :class="{ 'input-error': emailError }"
+          placeholder="example@domain.com"
+          required
+          @input="emailError = !emailRegex.test(registerFormData.email)"
+        />
+        <button
+          type="button"
+          class="btn btn-primary border-l-0 rounded-l-none w-32"
+          @click="handleSendCode"
+          :disabled="countdown > 0"
+        >
+          {{ countdown > 0 ? `${countdown}秒` : '获取验证码' }}
+        </button>
+      </div>
+      <div v-if="emailError" class="validator-hint text-error text-xs mt-1">
+        请输入有效的邮箱地址
+      </div>
 
+      <!-- 验证码 -->
       <InputField
         v-if="showVerificationField"
-        id="verificationCode"
         label="验证码"
         type="text"
+        v-model="registerFormData.code"
         required
         placeholder="请输入6位验证码"
-        v-model="registerFormData.code"
+        :error="codeError"
+        error-message="验证码不能为空"
       />
 
+      <!-- 用户名 -->
       <InputField
-        id="user"
         label="用户名"
         type="text"
-        autocomplete="username"
-        required
-        placeholder="请输入您的用户名"
         v-model="registerFormData.username"
-      />
-      <InputField
-        id="password"
-        label="密码"
-        type="password"
-        autocomplete="current-password"
         required
-        minlength="6"
-        placeholder="请输入密码"
-        v-model="registerFormData.password"
-        :class="[
-          passwordError ? 'input-error tooltip-open tooltip tooltip-bottom w-full text-left ' : '',
-        ]"
-        data-tip="两处的密码不一致"
-      />
-      <InputField
-        id="confirm-password"
-        label="再次输入密码"
-        type="password"
-        autocomplete="current-password"
-        required
-        minlength="6"
-        placeholder="请输入再次密码"
-        v-model="registerFormData.confirmPassword"
-        :class="[
-          passwordError ? 'input-error tooltip-open tooltip tooltip-bottom w-full text-left' : '',
-        ]"
-        data-tip="两处的密码不一致"
+        placeholder="请输入用户名"
+        autocomplete="username"
       />
 
-      <AuthButton :type="'submit'">
-        <template #buttonName>下一步</template>
+      <!-- 密码 -->
+      <InputField
+        label="密码"
+        type="password"
+        v-model="registerFormData.password"
+        required
+        placeholder="••••••••"
+        :hints="passwordHints"
+        :error="!passwordHints.every((hint) => hint.valid)"
+      />
+
+      <!-- 确认密码 -->
+      <InputField
+        label="确认密码"
+        type="password"
+        v-model="registerFormData.confirmPassword"
+        required
+        placeholder="••••••••"
+        :error="registerFormData.password !== registerFormData.confirmPassword"
+        error-message="两次输入密码不一致"
+      />
+
+      <AuthButton
+        :type="'submit'"
+        :disabled="isLoading || !passwordHints.every((hint) => hint.valid)"
+        class="w-full"
+      >
+        <template #buttonName>
+          <span v-if="isLoading" class="loading loading-spinner"></span>
+          {{ isLoading ? '注册中...' : '立即注册' }}
+        </template>
       </AuthButton>
     </form>
 
-    <router-link
-      to="/"
-      class="font-semibold text-indigo-600 hover:text-indigo-500 flex justify-center mt-5"
-      >返回登录
-    </router-link>
-
-    <AppAlert />
+    <div class="mt-6 text-center text-sm">
+      <router-link to="/" class="link link-primary">已有账号？立即登录</router-link>
+    </div>
+    <Alert />
   </auth-layout>
 </template>

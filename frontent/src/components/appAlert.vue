@@ -4,8 +4,6 @@ import { useAlertStore } from '@/stores/alert'
 const alertStore = useAlertStore()
 </script>
 
-<!--:class="`alert alert-${alertStore.type} shadow-lg fixed top-4 z-50 w-1/4 transition-all duration-300 `"-->
-
 <template>
   <transition
     name="slide-fade"
@@ -17,7 +15,7 @@ const alertStore = useAlertStore()
     <div
       v-if="alertStore.show"
       :class="[
-        `alert shadow-lg fixed top-4 z-99 w-1/4 transition-all duration-300 `,
+        `alert shadow-lg fixed top-4 z-[99] max-w-md  w-1/4`,
         {
           'alert-info': alertStore.type === 'info',
           'alert-success': alertStore.type === 'success',

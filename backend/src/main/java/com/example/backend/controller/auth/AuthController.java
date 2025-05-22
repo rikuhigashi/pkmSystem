@@ -193,8 +193,7 @@ public class AuthController {
     @PostMapping("/reset-password")
     public ResponseEntity<?> resetPassword(
             @RequestBody ResetPasswordRequest request,
-            @CookieValue(name = "resetToken", required = false) String token,
-            HttpServletResponse response
+            @RequestHeader("Reset-Token") String token
     ) {
         if (token == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "未找到有效令牌");
@@ -219,12 +218,12 @@ public class AuthController {
         //   删除令牌
         passwordResetTokenRepository.delete(resetToken);
 
-        Cookie cookie = new Cookie("resetToken", null);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(0); // 立即过期
-        response.addCookie(cookie);
+//        Cookie cookie = new Cookie("resetToken", null);
+//        cookie.setHttpOnly(true);
+//        cookie.setSecure(true);
+//        cookie.setPath("/");
+//        cookie.setMaxAge(0); // 立即过期
+//        response.addCookie(cookie);
 
 
         return ResponseEntity.ok("密码重置成功");
@@ -278,7 +277,6 @@ public class AuthController {
         String token = UUID.randomUUID().toString();
         PasswordResetToken resetToken = new PasswordResetToken();
         resetToken.setToken(token);
-//        resetToken.setUser(userRepository.findByEmail(request.email()).get());
         resetToken.setUser(user);
         resetToken.setExpirationTime(Instant.now().plus(5, ChronoUnit.MINUTES));
         passwordResetTokenRepository.save(resetToken);
@@ -287,16 +285,19 @@ public class AuthController {
         codeRepository.delete(codeEntry);
 
         // 将令牌写入 HTTP-only Cookie
-        Cookie cookie = new Cookie("resetToken", token);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true); // 仅在 HTTPS 下发送
-        cookie.setPath("/");
-        cookie.setMaxAge(300);// 设置 Cookie 的过期时间为 5 分钟
-        response.addCookie(cookie);
+//        Cookie cookie = new Cookie("resetToken", token);
+//        cookie.setHttpOnly(true);
+//        cookie.setSecure(true); // 仅在 HTTPS 下发送
+//        cookie.setPath("/");
+//        cookie.setMaxAge(300);// 设置 Cookie 的过期时间为 5 分钟
+//        response.addCookie(cookie);
 
 
 //        return ResponseEntity.ok(Map.of("token", token));
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "resetToken", token
+        ));
     }
 
 

@@ -95,8 +95,7 @@ public class SecurityConfig {
         )); // 前端地址
         config.setAllowedMethods(List.of("*"));
         config.setAllowCredentials(true); // 允许携带 Cookie
-
-        config.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type"));
+        config.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type","Reset-Token"));
         config.setExposedHeaders(List.of("Authorization", "Content-Length"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

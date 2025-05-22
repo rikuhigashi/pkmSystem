@@ -2,39 +2,52 @@
   <AuthLayout>
     <!--  header  -->
     <template #header>
-      <!--      <img class="mx-auto h-10 w-auto" src="/plus-assets/img/logos/mark.svg?color=indigo&shade=600" alt="Your Company" />-->
       <h2 class="mt-6 text-center text-2xl/9 font-bold tracking-tight text-gray-900">账号登录</h2>
     </template>
-    <!--  main  -->
 
     <form class="space-y-6" @submit.prevent="handleSubmit">
-      <InputField
-        id="email"
-        label="电子邮件"
-        type="email"
-        autocomplete="email"
-        required
-        placeholder="电子邮箱"
-        v-model="formData.email"
-      />
+
+      <div class="form-control w-full">
+        <label for="email" class="label">
+          <span class="label-text">电子邮件</span>
+        </label>
+        <input
+          id="email"
+          type="email"
+          v-model="formData.email"
+          class="input input-bordered w-full validator"
+          :class="{ 'input-error': emailError }"
+          placeholder="example@domain.com"
+          required
+          @input="validateEmail"
+        />
+
+        <div v-if="emailError" class="validator-hint text-error text-xs mt-1">
+          {{ emailErrorMessage }}
+        </div>
+      </div>
+
       <InputField
         id="password"
         label="密码"
         type="password"
+        v-model="formData.password"
+        :error="passwordError"
+        :error-message="passwordErrorMessage"
+        :hints="passwordHints"
+        placeholder="••••••••"
         autocomplete="current-password"
         required
-        placeholder="密码"
-        v-model="formData.password"
       />
 
       <div class="flex items-center justify-between">
         <div class="form-control">
           <label class="label cursor-pointer">
-            <!--            checked="checked"-->
-            <input type="checkbox" class="checkbox checkbox-primary" />
+            <input type="checkbox" class="checkbox" />
             <span class="label-text ml-2">记住我</span>
           </label>
         </div>
+
 
         <div class="text-sm/6">
           <router-link
@@ -42,13 +55,11 @@
             class="font-semibold text-indigo-600 hover:text-indigo-500"
             >忘记密码
           </router-link>
-          <!--          <a href="#" class="font-semibold text-indigo-600 hover:text-indigo-500">忘记密码</a>-->
         </div>
       </div>
 
       <AuthButton :type="'submit'">
         <template #buttonName>{{ isLoading ? '登录中...' : '登录' }}</template>
-        <!--        <template #buttonName>登录</template>-->
       </AuthButton>
     </form>
 
@@ -86,11 +97,10 @@
         <router-link to="/registerView" class="font-semibold text-indigo-600 hover:text-indigo-500"
           >立刻注册
         </router-link>
-        <!--        <a href="#" class="font-semibold text-indigo-600 hover:text-indigo-500">立刻注册</a>-->
       </p>
     </template>
 
-    <AppAlert />
+    <Alert />
   </AuthLayout>
 </template>
 
@@ -105,29 +115,89 @@ import AuthIcons from '@/assets/icons/authIcon/AuthIcons.vue'
 
 import { useAuthForm } from '@/views/loginAndRegistration/configs/useAuthForm'
 import { useAlertStore } from '@/stores/alert'
+import {computed, ref} from "vue";
+import Alert from "@/components/appAlert.vue";
+import router from "@/router";
 
 const alertStore = useAlertStore()
 const { formData, authStore, isLoading, errorMessage } = useAuthForm()
 
 // --------------------  组件引入 --------------------
 
+
+const emailError = ref(false)
+const emailErrorMessage = ref('')
+const passwordError = ref(false)
+const passwordErrorMessage = ref('')
+
+const validateEmail = () => {
+  const emailValid = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(formData.value.email)
+  emailError.value = !emailValid
+  emailErrorMessage.value = emailValid ? '' : '请输入有效的电子邮件地址'
+}
+
+
+const passwordHints = computed(() => {
+  // 仅在密码输入后显示提示
+  if (formData.value.password.length === 0) return []
+
+  return [
+    {
+      text: '至少8个字符',
+      valid: formData.value.password.length >= 8
+    },
+    {
+      text: '包含大写字母',
+      valid: /[A-Z]/.test(formData.value.password)
+    },
+    {
+      text: '包含特殊字符（!@#$%^&*?.）',
+      valid: /[!@#$%^&*?.]/.test(formData.value.password)
+    }
+  ]
+})
+
+const validateForm = () => {
+  let valid = true
+
+  // 邮箱验证
+  const emailValid = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(formData.value.email)
+  emailError.value = !emailValid
+  emailErrorMessage.value = emailValid ? '' : '请输入有效的电子邮件地址'
+  valid = valid && emailValid
+
+  // 密码验证
+  if (formData.value.password.length > 0) {
+    const lengthValid = formData.value.password.length >= 8
+    const uppercaseValid = /[A-Z]/.test(formData.value.password)
+    const symbolValid = /[!@#$%^&*?.]/.test(formData.value.password)
+
+    passwordError.value = !(lengthValid && uppercaseValid && symbolValid)
+    valid = valid && lengthValid && uppercaseValid && symbolValid
+  } else {
+    passwordError.value = false
+  }
+
+  return valid
+}
+
 // --------------------  登录逻辑 --------------------
 
 const handleSubmit = async () => {
-
+  if (!validateForm()) return
   try {
     isLoading.value = true
    const res =  await authStore.loginUser(formData.value.email, formData.value.password)
     if (res.success){
       alertStore.showAlert("登录成功", "success")
-
+      await router.replace({ name: '/home' })
     }else {
-      alertStore.showAlert('用户不存在', 'error')
+      alertStore.showAlert('账号或密码错误', 'error')
       errorMessage.value = '登录失败'
     }
 
   } catch (error) {
-    alertStore.showAlert('用户名或密码错误', 'error')
+    alertStore.showAlert('用户不存在', 'error')
     errorMessage.value = '登录失败'
     console.error(error)
   } finally {
