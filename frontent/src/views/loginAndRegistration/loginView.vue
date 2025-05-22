@@ -190,7 +190,7 @@ const handleSubmit = async () => {
    const res =  await authStore.loginUser(formData.value.email, formData.value.password)
     if (res.success){
       alertStore.showAlert("登录成功", "success")
-      await router.replace({ name: '/home' })
+      await router.replace({ name: 'home' })
     }else {
       alertStore.showAlert('账号或密码错误', 'error')
       errorMessage.value = '登录失败'

@@ -1,7 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 import tailwindForms from '@tailwindcss/forms'
 import typography from '@tailwindcss/typography'
-import forms from '@tailwindcss/forms'
 
 export default {
   content: [
@@ -27,14 +26,22 @@ export default {
       },
     },
   },
-  plugins: [tailwindForms, typography, forms],
+  plugins: [tailwindForms, typography],
   daisyui: {
     themes: [
       {
         light: {
-          primary: '#4f46e5',
-          secondary: '#4338ca',
-          accent: '#6366f1',
+          "primary": "229 100% 55%",
+          "secondary": "251 89% 67%",
+          "accent": "328 85% 57%",
+          "neutral": "210 20% 98%",
+          "base-100": "0 0% 100%",
+          "base-content": "215 28% 17%",
+
+          // 圆角配置
+          "--rounded-box": "0.5rem",
+          "--rounded-btn": "0.5rem",
+          "--rounded-badge": "1.9rem"
         },
       },
     ],
@@ -184,5 +191,8 @@ export default {
     { pattern: /text-(base-content|gray-400)/ },
     { pattern: /bg-base-*/ },
     { pattern: /text-base-*/ },
+    { pattern: /p-[0-9]/ },
+    { pattern: /px-[0-9]/ },
+    { pattern: /py-[0-9]/ },
   ],
 }

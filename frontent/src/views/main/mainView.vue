@@ -12,7 +12,7 @@
           maxWidth: 'none',
           placement: 'top',
           animation: 'fade',
-          appendTo: 'parent'
+          appendTo: 'parent',
         }"
         :should-show="shouldShowBubble"
       >
@@ -107,7 +107,6 @@ import OrderedList from '@tiptap/extension-ordered-list'
 import ImageResize from 'tiptap-extension-resize-image'
 import type { Editor } from '@tiptap/core'
 import Placeholder from '@tiptap/extension-placeholder'
-
 // -------------- tipTap各种导入 --------------
 
 // -------------- 高光代码块 --------------
@@ -149,23 +148,23 @@ const CustomImage = ImageResize.extend({
       ...this.parent?.(),
       width: {
         default: '100%',
-        parseHTML: element => {
+        parseHTML: (element) => {
           const currentWidth = element.getAttribute('width')
           return currentWidth || '100%'
         },
         renderHTML: ({ width }) => ({ width }),
-        updateDOM: (element:HTMLElement, value:string) => {
+        updateDOM: (element: HTMLElement, value: string) => {
           element.setAttribute('width', value)
         },
       },
       height: {
         default: 'auto',
-        parseHTML: element => {
+        parseHTML: (element) => {
           const existingStyle = element.getAttribute('style') || ''
           return `${existingStyle}; max-width: 600px; height: auto;`
         },
         renderHTML: ({ height }) => ({ height }),
-        updateDOM: (element:HTMLElement, value:string) => {
+        updateDOM: (element: HTMLElement, value: string) => {
           element.setAttribute('height', value)
         },
       },
@@ -173,7 +172,7 @@ const CustomImage = ImageResize.extend({
         default: 'max-width: 600px; height: auto;',
         parseHTML: (element) => element.getAttribute('style'),
         renderHTML: ({ style }) => ({ style }),
-        updateDOM: (element:HTMLElement, value:string) => {
+        updateDOM: (element: HTMLElement, value: string) => {
           element.setAttribute('style', value)
         },
       },
@@ -192,8 +191,7 @@ const CustomImage = ImageResize.extend({
 
 // ------------------- tiptap编辑器配置 -------------------
 
-
- const editor = useEditor({
+const editor = useEditor({
   onUpdate: ({ editor }) => {
     // 获取到编辑器内部内容
 
@@ -225,9 +223,9 @@ const CustomImage = ImageResize.extend({
         }
         return ''
       },
-      showOnlyWhenEditable: true,    // 在可编辑时显示
-      showOnlyCurrent: true,         // 在当前空节点显示
-      emptyNodeClass: 'is-empty'
+      showOnlyWhenEditable: true, // 在可编辑时显示
+      showOnlyCurrent: true, // 在当前空节点显示
+      emptyNodeClass: 'is-empty',
     }),
     TextStyle,
     Color,
@@ -278,65 +276,67 @@ const handleDrop = async (event: DragEvent) => {
     src: '',
     width: '100%',
     height: 'auto',
-    style: 'max-width: 600px; height: auto;'
+    style: 'max-width: 600px; height: auto;',
   }
 
   for (const file of Array.from(files)) {
     if (file.type.startsWith('image/')) {
       const base64 = await readFileAsBase64(file)
 
-      editor.value!.chain().focus().command(({ tr }) => {
-        const node = editor.value!.schema.nodes.image.create({
-          ...currentImageAttrs,
-          src: base64,
-          style: `${currentImageAttrs.style}; --img-width: ${currentImageAttrs.width}; --img-height: ${currentImageAttrs.height};`
+      editor
+        .value!.chain()
+        .focus()
+        .command(({ tr }) => {
+          const node = editor.value!.schema.nodes.image.create({
+            ...currentImageAttrs,
+            src: base64,
+            style: `${currentImageAttrs.style}; --img-width: ${currentImageAttrs.width}; --img-height: ${currentImageAttrs.height};`,
+          })
+          tr.replaceSelectionWith(node)
+          return true
         })
-        tr.replaceSelectionWith(node)
-        return true
-      }).run()
+        .run()
     }
   }
-
 }
 
 // 读取文件为Base64
 const readFileAsBase64 = (file: File): Promise<string> => {
   return new Promise((resolve) => {
-    const reader = new FileReader();
+    const reader = new FileReader()
     reader.onload = async (e) => {
-      const base64 = e.target?.result as string;
+      const base64 = e.target?.result as string
       // 压缩
-      const compressedBase64 = await compressBase64Image(base64, 0.8);
-      resolve(compressedBase64);
-    };
-    reader.readAsDataURL(file);
-  });
-};
+      const compressedBase64 = await compressBase64Image(base64, 0.8)
+      resolve(compressedBase64)
+    }
+    reader.readAsDataURL(file)
+  })
+}
 
 // Base64图片压缩工具函数
 const compressBase64Image = async (base64: string, quality: number): Promise<string> => {
   return new Promise((resolve) => {
-    const img = new Image();
-    img.src = base64;
+    const img = new Image()
+    img.src = base64
     img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d')!;
-      canvas.width = img.width;
-      canvas.height = img.height;
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')!
+      canvas.width = img.width
+      canvas.height = img.height
 
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
 
       // 根据图片类型选择压缩格式
-      const isPNG = base64.startsWith('data:image/png');
-      const mimeType = isPNG ? 'image/png' : 'image/jpeg';
+      const isPNG = base64.startsWith('data:image/png')
+      const mimeType = isPNG ? 'image/png' : 'image/jpeg'
 
-      ctx.drawImage(img, 0, 0);
+      ctx.drawImage(img, 0, 0)
       // 转换为JPEG并压缩质量
-      resolve(canvas.toDataURL(mimeType, isPNG ? 1.0 : quality));
-    };
-  });
-};
-
+      resolve(canvas.toDataURL(mimeType, isPNG ? 1.0 : quality))
+    }
+  })
+}
 
 const handleDragOver = (event: DragEvent) => {
   event.dataTransfer!.dropEffect = 'copy'
@@ -671,7 +671,6 @@ const toolbarButtons: toolbarItem[] = [
     isActive: () => editor.value?.isActive('superscript') ?? false,
     disabled: () => !editor.value?.can().chain().focus().toggleSuperscript().run(),
   },
-
 ]
 
 // ------------------- 工具栏按钮配置 -------------------
@@ -694,7 +693,7 @@ const handleBlur = () => {
 import colorSelect from '@/components/mainComponent/colorSelect.vue'
 import type { toolbarItem } from '@/views/main/types/mainTypes'
 import DropdownMenu from '@/components/mainComponent/DropdownMenu.vue'
-import {VideoExtension} from "@/extensions/video";
+import { VideoExtension } from '@/extensions/video'
 
 const showColorPicker = ref(false)
 const colorPickerPosition = ref({ top: 0, left: 0 })
@@ -771,11 +770,9 @@ watch(
 )
 
 onMounted(() => {
-
   if (editor.value && !editor.value.getHTML()) {
     editor.value.commands.insertContent('<p></p><p></p>')
   }
-
 })
 
 onBeforeUnmount(() => {
@@ -783,10 +780,15 @@ onBeforeUnmount(() => {
 })
 </script>
 
-<style scoped>
+<style >
 /* 代码块容器 */
 .ProseMirror pre {
-  @apply bg-[#1a1a1a] text-[#e0e0e0] p-4 rounded-lg my-4 overflow-x-auto;
+  background-color: #1a1a1a;
+  color: #e0e0e0;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+  overflow-x: auto;
 }
 
 /* 代码行样式 */
@@ -875,7 +877,8 @@ onBeforeUnmount(() => {
 }
 
 .editor-container {
-  @apply relative overflow-visible;
+  position: relative;
+  overflow: visible;
 }
 
 .prose-paragraph {
@@ -885,7 +888,16 @@ onBeforeUnmount(() => {
 }
 
 .prose-img {
-  @apply max-w-[600px] h-auto block my-4 mx-auto transition-all duration-300  rounded-lg;
+  max-width: 600px;
+  height: auto;
+  display: block;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  margin-left: auto;
+  margin-right: auto;
+  transition-property: all;
+  transition-duration: 300ms;
+  border-radius: 0.5rem;
 }
 
 .editor-container img {
@@ -894,18 +906,21 @@ onBeforeUnmount(() => {
 }
 
 .resize-handle {
-  @apply absolute w-3 h-3 border-2 rounded-full cursor-nwse-resize;
+  position: absolute;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-width: 2px;
+  border-radius: 9999px;
+  cursor: nwse-resize;
   border-color: rgba(255, 255, 255, 0.9);
   background-color: rgba(79, 70, 229, 0.5);
   bottom: -6px;
   right: -6px;
-  box-shadow:none;
+  box-shadow: none;
 }
 
 /* 选中状态 */
 .selected-image {
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5);
 }
-
-
 </style>
