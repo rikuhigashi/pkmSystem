@@ -14,14 +14,14 @@ RUN yum install -y file unzip findutils && \
 # 配置镜像源
 RUN sed -i '/repositories {/a \    maven { url "https://maven.aliyun.com/repository/public" }' build.gradle
 
-# 构建项目（明确生成可执行 JAR）
+# 构建项目
 RUN chmod +x gradlew && \
     ./gradlew --no-daemon --stacktrace --info -x test bootJar
 
 # 验证 JAR 文件结构
-RUN jar tf build/libs/backend-0.0.1-SNAPSHOT.jar | grep BackendApplication.class
+RUN jar tf build/libs/backend-0.0.1-SNAPSHOT.jar | grep BOOT-INF/lib/spring-boot
 
-# 解压主 JAR（严格匹配 Spring Boot 结构）
+# 解压主 JAR
 RUN mkdir -p build/dependency && \
     (cd build/dependency; jar -xf ../libs/backend-0.0.1-SNAPSHOT.jar)
 
@@ -43,13 +43,12 @@ RUN ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime && \
 USER appuser
 WORKDIR /app
 
-# 精确复制文件结构
+# 精确复制依赖到标准路径
 COPY --from=builder --chown=appuser:appuser /workspace/app/build/dependency/BOOT-INF/lib ./lib/
-COPY --from=builder --chown=appuser:appuser /workspace/app/build/dependency/META-INF ./META-INF/
-COPY --from=builder --chown=appuser:appuser /workspace/app/build/dependency/BOOT-INF/classes ./BOOT-INF/classes/
+COPY --from=builder --chown=appuser:appuser /workspace/app/build/dependency/BOOT-INF/classes ./
 
-# 启动命令
+# 修正类路径配置
 ENV JAVA_TOOL_OPTIONS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError -Duser.timezone=UTC"
-ENTRYPOINT ["java", "-cp", "BOOT-INF/classes:BOOT-INF/lib/*", "com.example.backend.BackendApplication"]
+ENTRYPOINT ["java", "-cp", ".:lib/*", "com.example.backend.BackendApplication"]
 
 EXPOSE 10000
