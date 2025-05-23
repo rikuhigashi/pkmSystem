@@ -1,14 +1,19 @@
 # ===== 构建阶段 =====
 FROM gradle:8.7-jdk21 AS build
 WORKDIR /app
-COPY . .
 
-# 清理Gradle缓存并构建
-RUN rm -rf ~/.gradle && \
-    gradle build -x test --no-daemon \
+# 分步复制文件
+COPY build.gradle settings.gradle gradle.properties ./
+COPY src src
+
+# 分步构建
+RUN gradle dependencies --no-daemon --refresh-dependencies \
     -Dorg.gradle.jvmargs="-Xmx512m -XX:MaxMetaspaceSize=256m" \
-    -Dorg.gradle.parallel=true \
-    -Dorg.gradle.caching=true
+    -Dorg.gradle.parallel=false
+
+RUN gradle build -x test --no-daemon \
+    -Dorg.gradle.jvmargs="-Xmx512m -XX:MaxMetaspaceSize=256m" \
+    -Dorg.gradle.parallel=false
 
 # ===== 运行阶段 =====
 FROM eclipse-temurin:21-jre-jammy
