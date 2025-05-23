@@ -3,25 +3,27 @@ FROM amazoncorretto:23 as builder
 
 WORKDIR /workspace/app
 
-# 1. 确保文件完整性（使用校验和验证）
+# 复制必要文件
 COPY gradle/wrapper gradle/wrapper
 COPY gradlew build.gradle settings.gradle ./
 COPY src src
 
-# 2. 显式赋予权限并验证文件
-RUN chmod +x gradlew && \
-    { file gradlew | grep -q "shell script" || exit 1; } && \
-    ./gradlew --version
-
-# 3. 安装必要系统工具
-RUN yum install -y unzip findutils && \
+# 安装 file 命令依赖
+RUN yum install -y file unzip && \
     yum clean all
 
-# 4. 优化依赖下载（使用阿里云镜像）
+# 验证文件并执行构建
+RUN chmod +x gradlew && \
+    { file gradlew | grep -q "Bourne-Again shell script" || exit 1; } && \
+    ./gradlew --version
+
+# 配置阿里云镜像加速
 RUN sed -i 's/mavenCentral()/maven { url "https://maven.aliyun.com/repository/public" }/g' build.gradle
+
+# 执行构建
 RUN ./gradlew --no-daemon --stacktrace --info -x test assemble
 
-# 5. 提取依赖
+# 提取依赖
 RUN mkdir -p build/dependency && \
     (cd build/dependency; jar -xf ../libs/*.jar)
 
