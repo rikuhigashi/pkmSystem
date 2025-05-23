@@ -1,46 +1,58 @@
-# 构建阶段
+# 构建阶段：使用 Amazon Corretto 23 并优化构建流程
 FROM amazoncorretto:23 as builder
 
 WORKDIR /workspace/app
 
-COPY gradle gradle
-COPY gradlew .
-COPY build.gradle .
-COPY settings.gradle .
+# 1. 复制最小化构建文件（保留缓存优化）
+COPY gradle/wrapper gradle/wrapper
+COPY gradlew build.gradle settings.gradle ./
 COPY src src
 
+# 2. 预下载依赖（加速后续构建）
+RUN ./gradlew --no-daemon dependencies
+
+# 3. 分阶段构建（避免单层过大）
 RUN chmod +x gradlew && \
-    ./gradlew --no-daemon --stacktrace --info -x test build && \
+    ./gradlew --no-daemon --stacktrace --info -x test clean assemble && \
     mkdir -p build/dependency && \
     (cd build/dependency; jar -xf ../libs/*.jar)
 
-# 运行阶段
+# 运行阶段：优化后的生产镜像
 FROM amazoncorretto:23
 
-# 安装用户管理工具
-RUN yum install -y shadow-utils && \
-    yum clean all
+# 1. 安装必要工具（兼容 Amazon Linux 2023）
+RUN yum install -y shadow-utils tzdata && \
+    yum clean all && \
+    rm -rf /var/cache/yum
 
-# 时区配置
+# 2. 时区与安全配置
 ENV TZ=UTC
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-
-# 创建用户和目录
-RUN useradd -m appuser && \
-    mkdir -p /app/uploads && \
+RUN ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime && \
+    echo "$TZ" > /etc/timezone && \
+    useradd --system --user-group --create-home --shell /sbin/nologin appuser && \
+    mkdir -p /app/{lib,classes} && \
     chown -R appuser:appuser /app
 
 USER appuser
 WORKDIR /app
 
-# 复制依赖
+# 3. 分层次复制依赖（优化镜像层缓存）
 ARG DEPENDENCY=/workspace/app/build/dependency
-COPY --from=builder --chown=appuser:appuser ${DEPENDENCY}/BOOT-INF/lib ./lib
-COPY --from=builder --chown=appuser:appuser ${DEPENDENCY}/META-INF ./META-INF
+COPY --from=builder --chown=appuser:appuser ${DEPENDENCY}/BOOT-INF/lib ./lib/
+COPY --from=builder --chown=appuser:appuser ${DEPENDENCY}/META-INF ./
 COPY --from=builder --chown=appuser:appuser ${DEPENDENCY}/BOOT-INF/classes ./
 
-EXPOSE 10000
+# 4. 现代化 JVM 参数（适配容器编排）
+ENV JAVA_TOOL_OPTIONS="-XX:+UseContainerSupport \
+                      -XX:MaxRAMPercentage=75 \
+                      -XX:+ExitOnOutOfMemoryError \
+                      -Djava.security.egd=file:/dev/./urandom \
+                      -Duser.timezone=UTC"
 
-ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError -Duser.timezone=UTC"
+# 5. 健康检查与优雅停机
+HEALTHCHECK --interval=30s --timeout=3s \
+  CMD curl -f http://localhost:10000/actuator/health || exit 1
+
+EXPOSE 10000
 
 ENTRYPOINT ["java", "-cp", "app:app/lib/*", "com.example.backend.BackendApplication"]
