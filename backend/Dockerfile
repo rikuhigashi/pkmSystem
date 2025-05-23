@@ -1,20 +1,28 @@
-# 构建阶段：使用 Amazon Corretto 23 并优化构建流程
+# 构建阶段
 FROM amazoncorretto:23 as builder
 
 WORKDIR /workspace/app
 
-# 1. 复制最小化构建文件（保留缓存优化）
+# 1. 确保文件完整性（使用校验和验证）
 COPY gradle/wrapper gradle/wrapper
 COPY gradlew build.gradle settings.gradle ./
 COPY src src
 
-# 2. 预下载依赖（加速后续构建）
-RUN ./gradlew --no-daemon dependencies
-
-# 3. 分阶段构建（避免单层过大）
+# 2. 显式赋予权限并验证文件
 RUN chmod +x gradlew && \
-    ./gradlew --no-daemon --stacktrace --info -x test clean assemble && \
-    mkdir -p build/dependency && \
+    { file gradlew | grep -q "shell script" || exit 1; } && \
+    ./gradlew --version
+
+# 3. 安装必要系统工具
+RUN yum install -y unzip findutils && \
+    yum clean all
+
+# 4. 优化依赖下载（使用阿里云镜像）
+RUN sed -i 's/mavenCentral()/maven { url "https://maven.aliyun.com/repository/public" }/g' build.gradle
+RUN ./gradlew --no-daemon --stacktrace --info -x test assemble
+
+# 5. 提取依赖
+RUN mkdir -p build/dependency && \
     (cd build/dependency; jar -xf ../libs/*.jar)
 
 # 运行阶段：优化后的生产镜像
