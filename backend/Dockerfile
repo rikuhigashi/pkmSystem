@@ -14,54 +14,42 @@ RUN yum install -y file unzip findutils && \
 # 配置镜像源
 RUN sed -i '/repositories {/a \    maven { url "https://maven.aliyun.com/repository/public" }' build.gradle
 
-# 构建项目
+# 构建项目（明确生成可执行 JAR）
 RUN chmod +x gradlew && \
     ./gradlew --no-daemon --stacktrace --info -x test bootJar
 
-# 验证 JAR 文件
-RUN ls -l build/libs/ && \
-    [ "$(ls -A build/libs/*.jar 2>/dev/null)" ] || exit 1
+# 验证 JAR 文件结构
+RUN jar tf build/libs/backend-0.0.1-SNAPSHOT.jar | grep BackendApplication.class
 
-# 解压主 JAR
+# 解压主 JAR（严格匹配 Spring Boot 结构）
 RUN mkdir -p build/dependency && \
     (cd build/dependency; jar -xf ../libs/backend-0.0.1-SNAPSHOT.jar)
 
-# 运行阶段：优化后的生产镜像
+# 运行阶段
 FROM amazoncorretto:23
 
-# 安装必要工具（兼容 Amazon Linux 2023）
+# 安装必要工具
 RUN yum install -y shadow-utils tzdata && \
-    yum clean all && \
-    rm -rf /var/cache/yum
+    yum clean all
 
 # 时区与安全配置
 ENV TZ=UTC
 RUN ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime && \
     echo "$TZ" > /etc/timezone && \
     useradd --system --user-group --create-home --shell /sbin/nologin appuser && \
-    mkdir -p /app/{lib,classes} && \
+    mkdir -p /app && \
     chown -R appuser:appuser /app
 
 USER appuser
 WORKDIR /app
 
-# 分层次复制依赖（优化镜像层缓存）
-ARG DEPENDENCY=/workspace/app/build/dependency
+# 精确复制文件结构
 COPY --from=builder --chown=appuser:appuser /workspace/app/build/dependency/BOOT-INF/lib ./lib/
-COPY --from=builder --chown=appuser:appuser /workspace/app/build/dependency/META-INF ./
-COPY --from=builder --chown=appuser:appuser /workspace/app/build/dependency/BOOT-INF/classes .
+COPY --from=builder --chown=appuser:appuser /workspace/app/build/dependency/META-INF ./META-INF/
+COPY --from=builder --chown=appuser:appuser /workspace/app/build/dependency/BOOT-INF/classes ./BOOT-INF/classes/
 
-# 现代化 JVM 参数（适配容器编排）
-ENV JAVA_TOOL_OPTIONS="-XX:+UseContainerSupport \
-                      -XX:MaxRAMPercentage=75 \
-                      -XX:+ExitOnOutOfMemoryError \
-                      -Djava.security.egd=file:/dev/./urandom \
-                      -Duser.timezone=UTC"
-
-# 健康检查与优雅停机
-HEALTHCHECK --interval=30s --timeout=3s \
-  CMD curl -f http://localhost:10000/actuator/health || exit 1
+# 启动命令
+ENV JAVA_TOOL_OPTIONS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError -Duser.timezone=UTC"
+ENTRYPOINT ["java", "-cp", "BOOT-INF/classes:BOOT-INF/lib/*", "com.example.backend.BackendApplication"]
 
 EXPOSE 10000
-
-ENTRYPOINT ["java", "-cp", "app:app/lib/*", "com.example.backend.BackendApplication"]
