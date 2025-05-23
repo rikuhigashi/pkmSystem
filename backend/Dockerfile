@@ -17,7 +17,7 @@ RUN chmod +x gradlew && \
     (cd build/dependency; jar -xf ../libs/*.jar)
 
 # 运行阶段：与构建阶段一致
-FROM eclipse-temurin:23-jre-jammy
+FROM eclipse-temurin:23-jdk-jammy
 
 # 时区配置（与代码中的UTC一致）
 ENV TZ=UTC
