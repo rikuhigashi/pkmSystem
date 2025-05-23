@@ -7,30 +7,24 @@ COPY gradle/wrapper gradle/wrapper
 COPY gradlew build.gradle settings.gradle ./
 COPY src src
 
-# 安装必要工具（新增 findutils）
+# 安装必要工具
 RUN yum install -y file unzip findutils && \
     yum clean all
 
-# 文件验证
+# 配置镜像源
+RUN sed -i '/repositories {/a \    maven { url "https://maven.aliyun.com/repository/public" }' build.gradle
+
+# 构建项目
 RUN chmod +x gradlew && \
-    { file gradlew | grep -q "POSIX shell script" || exit 1; } && \
-    ./gradlew --version
+    ./gradlew --no-daemon --stacktrace --info -x test bootJar
 
-# 配置阿里云镜像加速
-RUN sed -i 's#mavenCentral()#maven { url "https://maven.aliyun.com/repository/public" }#g' build.gradle
-
-# 执行构建
-RUN ./gradlew --no-daemon --stacktrace --info -x test assemble
-
-# 检查生成的 JAR 文件路径
+# 验证 JAR 文件
 RUN ls -l build/libs/ && \
-    { test -f build/libs/*.jar || exit 1; }
+    [ "$(ls -A build/libs/*.jar 2>/dev/null)" ] || exit 1
 
-# 提取依赖
-# 解压 JAR 文件并验证目录结构
+# 解压主 JAR
 RUN mkdir -p build/dependency && \
-    (cd build/dependency; jar -xf ../libs/*.jar) && \
-    ls -l build/dependency/BOOT-INF/
+    (cd build/dependency; jar -xf ../libs/backend-0.0.1-SNAPSHOT.jar)
 
 # 运行阶段：优化后的生产镜像
 FROM amazoncorretto:23
@@ -55,7 +49,7 @@ WORKDIR /app
 ARG DEPENDENCY=/workspace/app/build/dependency
 COPY --from=builder --chown=appuser:appuser /workspace/app/build/dependency/BOOT-INF/lib ./lib/
 COPY --from=builder --chown=appuser:appuser /workspace/app/build/dependency/META-INF ./
-COPY --from=builder --chown=appuser:appuser /workspace/app/build/dependency/BOOT-INF/classes ./
+COPY --from=builder --chown=appuser:appuser /workspace/app/build/dependency/BOOT-INF/classes .
 
 # 4. 现代化 JVM 参数（适配容器编排）
 ENV JAVA_TOOL_OPTIONS="-XX:+UseContainerSupport \
