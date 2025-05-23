@@ -1,19 +1,22 @@
 # 构建阶段
-FROM eclipse-temurin:21-jdk-jammy as builder
+# 构建阶段
+FROM eclipse-temurin:22-jdk-jammy as builder
 
 WORKDIR /workspace/app
 
-# 使用Gradle包装器确保构建一致性
-COPY gradle gradle
+# 优先复制构建必需的最小文件集
+COPY gradle/wrapper gradle/wrapper
 COPY gradlew .
 COPY build.gradle .
 COPY settings.gradle .
 COPY src src
 
-# 提升构建速度（根据Render环境调整）
+# 增加构建调试信息
 RUN chmod +x gradlew && \
-    ./gradlew build --no-daemon -x test && \
-    mkdir -p build/dependency && (cd build/dependency; jar -xf ../libs/*.jar)
+    ./gradlew --stacktrace --info --no-daemon -x test build && \
+    mkdir -p build/dependency && \
+    (cd build/dependency; jar -xf ../libs/*-SNAPSHOT.jar)
+
 
 # 运行阶段
 FROM eclipse-temurin:21-jre-jammy
