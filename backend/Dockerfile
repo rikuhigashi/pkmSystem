@@ -1,8 +1,10 @@
 # ===== 构建阶段 =====
-FROM gradle:8.7-jdk23 AS build
+FROM gradle:8.7-jdk21 AS build
 WORKDIR /app
 COPY . .
-# 使用阿里云镜像加速 + 内存限制
+
+# 配置阿里云镜像加速 + 内存限制
+RUN sed -i 's/mavenCentral()/maven { url "https:\/\/maven.aliyun.com\/repository\/public" }\n    mavenCentral()/g' build.gradle
 RUN gradle build -x test --no-daemon -Dorg.gradle.jvmargs="-Xmx512m"
 
 # ===== 运行阶段 =====
