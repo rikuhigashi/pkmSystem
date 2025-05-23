@@ -17,7 +17,7 @@ RUN chmod +x gradlew && \
     ./gradlew --version
 
 # 配置阿里云镜像加速
-RUN sed -i 's/mavenCentral()/maven { url "https://maven.aliyun.com/repository/public" }/g' build.gradle
+RUN sed -i 's#mavenCentral()#maven { url "https://maven.aliyun.com/repository/public" }#g' build.gradle
 
 # 执行构建
 RUN ./gradlew --no-daemon --stacktrace --info -x test assemble
