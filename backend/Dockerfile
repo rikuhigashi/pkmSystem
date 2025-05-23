@@ -3,18 +3,17 @@ FROM amazoncorretto:23 as builder
 
 WORKDIR /workspace/app
 
-# 复制必要文件
 COPY gradle/wrapper gradle/wrapper
 COPY gradlew build.gradle settings.gradle ./
 COPY src src
 
-# 安装 file 命令依赖
+# 安装必要工具（已确认包含 file 命令）
 RUN yum install -y file unzip && \
     yum clean all
 
-# 验证文件并执行构建
+# 修正后的文件验证
 RUN chmod +x gradlew && \
-    { file gradlew | grep -q "Bourne-Again shell script" || exit 1; } && \
+    { file gradlew | grep -q "POSIX shell script" || exit 1; } && \
     ./gradlew --version
 
 # 配置阿里云镜像加速
