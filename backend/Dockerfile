@@ -22,9 +22,15 @@ RUN sed -i 's#mavenCentral()#maven { url "https://maven.aliyun.com/repository/pu
 # 执行构建
 RUN ./gradlew --no-daemon --stacktrace --info -x test assemble
 
+# 检查生成的 JAR 文件路径
+RUN ls -l build/libs/ && \
+    { test -f build/libs/*.jar || exit 1; }
+
 # 提取依赖
+# 解压 JAR 文件并验证目录结构
 RUN mkdir -p build/dependency && \
-    (cd build/dependency; jar -xf ../libs/*.jar)
+    (cd build/dependency; jar -xf ../libs/*.jar) && \
+    ls -l build/dependency/BOOT-INF/
 
 # 运行阶段：优化后的生产镜像
 FROM amazoncorretto:23
@@ -47,9 +53,9 @@ WORKDIR /app
 
 # 3. 分层次复制依赖（优化镜像层缓存）
 ARG DEPENDENCY=/workspace/app/build/dependency
-COPY --from=builder --chown=appuser:appuser ${DEPENDENCY}/BOOT-INF/lib ./lib/
-COPY --from=builder --chown=appuser:appuser ${DEPENDENCY}/META-INF ./
-COPY --from=builder --chown=appuser:appuser ${DEPENDENCY}/BOOT-INF/classes ./
+COPY --from=builder --chown=appuser:appuser /workspace/app/build/dependency/BOOT-INF/lib ./lib/
+COPY --from=builder --chown=appuser:appuser /workspace/app/build/dependency/META-INF ./
+COPY --from=builder --chown=appuser:appuser /workspace/app/build/dependency/BOOT-INF/classes ./
 
 # 4. 现代化 JVM 参数（适配容器编排）
 ENV JAVA_TOOL_OPTIONS="-XX:+UseContainerSupport \
