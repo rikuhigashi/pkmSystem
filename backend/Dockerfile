@@ -29,12 +29,12 @@ RUN mkdir -p build/dependency && \
 # 运行阶段：优化后的生产镜像
 FROM amazoncorretto:23
 
-# 1. 安装必要工具（兼容 Amazon Linux 2023）
+# 安装必要工具（兼容 Amazon Linux 2023）
 RUN yum install -y shadow-utils tzdata && \
     yum clean all && \
     rm -rf /var/cache/yum
 
-# 2. 时区与安全配置
+# 时区与安全配置
 ENV TZ=UTC
 RUN ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime && \
     echo "$TZ" > /etc/timezone && \
@@ -45,20 +45,20 @@ RUN ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime && \
 USER appuser
 WORKDIR /app
 
-# 3. 分层次复制依赖（优化镜像层缓存）
+# 分层次复制依赖（优化镜像层缓存）
 ARG DEPENDENCY=/workspace/app/build/dependency
 COPY --from=builder --chown=appuser:appuser /workspace/app/build/dependency/BOOT-INF/lib ./lib/
 COPY --from=builder --chown=appuser:appuser /workspace/app/build/dependency/META-INF ./
 COPY --from=builder --chown=appuser:appuser /workspace/app/build/dependency/BOOT-INF/classes .
 
-# 4. 现代化 JVM 参数（适配容器编排）
+# 现代化 JVM 参数（适配容器编排）
 ENV JAVA_TOOL_OPTIONS="-XX:+UseContainerSupport \
                       -XX:MaxRAMPercentage=75 \
                       -XX:+ExitOnOutOfMemoryError \
                       -Djava.security.egd=file:/dev/./urandom \
                       -Duser.timezone=UTC"
 
-# 5. 健康检查与优雅停机
+# 健康检查与优雅停机
 HEALTHCHECK --interval=30s --timeout=3s \
   CMD curl -f http://localhost:10000/actuator/health || exit 1
 
