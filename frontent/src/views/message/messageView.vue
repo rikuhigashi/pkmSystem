@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { BellIcon } from '@heroicons/vue/24/outline'
-import { getNotifications } from '@/API/admin/adminAPI'
+import {getDeleteNotification, getNotifications} from '@/API/admin/adminAPI'
 import { ref, onMounted } from 'vue'
+import { TrashIcon } from '@heroicons/vue/24/outline'
 
 interface Notification {
   id: number
@@ -18,31 +19,46 @@ const fetchNotifications = async () => {
   const res = await getNotifications()
   if (res.success) {
     notifications.value = res.data
-    unreadCount.value = notifications.value.filter((n) => !n.read).length
+    unreadCount.value = notifications.value.filter(n => !n.read).length
   }
 }
 
 const markAsRead = (id: number) => {
-  const index = notifications.value.findIndex((n) => n.id === id)
+  const index = notifications.value.findIndex(n => n.id === id)
   if (index !== -1) {
     notifications.value[index].read = true
     unreadCount.value--
   }
 }
 
+// 删除方法
+const deleteNotification = async (id: number) => {
+  const res = await getDeleteNotification(id)
+  if (res.success) {
+    const index = notifications.value.findIndex(n => n.id === id)
+    if (index !== -1) {
+      if (!notifications.value[index].read) unreadCount.value--
+      notifications.value.splice(index, 1)
+    }
+  }
+}
+
 onMounted(fetchNotifications)
 </script>
+
 
 <template>
   <div class="dropdown dropdown-end">
     <label tabindex="0" class="btn btn-ghost btn-circle hover:bg-gray-100">
       <div class="indicator">
         <BellIcon class="w-6 h-6" />
-        <span v-if="unreadCount" class="badge badge-sm badge-error indicator-item animate-pulse">{{
-          unreadCount
-        }}</span>
+        <span
+          v-if="unreadCount"
+          class="badge badge-sm badge-error indicator-item animate-pulse"
+        >{{ unreadCount }}</span>
       </div>
     </label>
+
 
     <div tabindex="0" class="dropdown-content w-80 sm:w-96">
       <div class="card bg-base-100 shadow-xl">
@@ -56,14 +72,12 @@ onMounted(fetchNotifications)
               class="group relative p-3 rounded-lg transition-colors duration-200"
               :class="{
                 'bg-blue-50/50 hover:bg-blue-100': !n.read,
-                'hover:bg-gray-50': n.read,
+                'hover:bg-gray-50': n.read
               }"
               @click="markAsRead(n.id)"
             >
               <!-- 删除按钮容器 -->
-              <div
-                class="absolute right-2 top-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20"
-              >
+              <div class="absolute right-2 top-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
                 <button
                   @click.stop="deleteNotification(n.id)"
                   class="p-1 rounded-full hover:bg-gray-200/80 transition-colors duration-150"
