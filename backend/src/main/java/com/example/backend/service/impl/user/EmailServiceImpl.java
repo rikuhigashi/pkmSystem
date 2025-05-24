@@ -3,7 +3,6 @@ package com.example.backend.service.impl.user;
 import com.example.backend.service.user.EmailService;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -18,7 +17,7 @@ public class EmailServiceImpl implements EmailService {
 //    @Override
 //    public void sendVerificationEmail(String to, String code) {
 
-    /// /        String verificationLink = "http://localhost:5173/verify-email?token=" + token;
+    //       //String verificationLink = "http://localhost:5173/verify-email?token=" + token;
 //        SimpleMailMessage message = new SimpleMailMessage();
 //        message.setTo(to);
 //        message.setSubject("【PKMSystem】邮箱验证码通知");

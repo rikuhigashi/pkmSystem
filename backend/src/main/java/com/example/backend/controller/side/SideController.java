@@ -4,7 +4,7 @@ import com.example.backend.dto.side.SidedatumDto;
 import com.example.backend.entity.side.Sidedatum;
 import com.example.backend.entity.user.User;
 import com.example.backend.repository.user.UserRepository;
-import com.example.backend.service.side.SideService;
+import com.example.backend.service.impl.side.SideServiceImpl;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -13,18 +13,17 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 
 @RestController
 @RequestMapping("/sideData")
 public class SideController {
 
-    private final SideService sideService;
+    private final SideServiceImpl sideService;
     private final UserRepository userRepository;
 
     @Autowired
-    public SideController(SideService sideService, UserRepository userRepository) {
+    public SideController(SideServiceImpl sideService, UserRepository userRepository) {
         this.sideService = sideService;
         this.userRepository = userRepository;
     }

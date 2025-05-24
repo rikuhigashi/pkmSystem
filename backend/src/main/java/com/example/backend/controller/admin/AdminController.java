@@ -4,9 +4,7 @@ package com.example.backend.controller.admin;
 import com.example.backend.dto.common.PageResponse;
 import com.example.backend.dto.user.AdminSidedatumDto;
 import com.example.backend.dto.user.AdminUserDto;
-import com.example.backend.entity.message.Notification;
 import com.example.backend.entity.side.Sidedatum;
-import com.example.backend.entity.user.User;
 import com.example.backend.repository.message.NotificationRepository;
 import com.example.backend.repository.user.UserRepository;
 import com.example.backend.service.impl.side.SideServiceImpl;
@@ -20,8 +18,6 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -39,8 +35,6 @@ public class AdminController {
 
     private final UserServiceImpl userService;
     private final SideServiceImpl sideService;
-    private final UserRepository userRepository;
-    private final NotificationRepository notificationRepository;
 
     /**
      * 获取所有用户及其数据
@@ -115,18 +109,38 @@ public class AdminController {
         return dto;
     }
 
-    @GetMapping("/user/notifications")
-    @PreAuthorize("hasRole('USER')")
-    public List<Notification> getUserNotifications(
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
-        log.info("当前请求用户：{}", userDetails.getUsername());
 
-
-        User user = userRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("用户不存在"));
-        log.info("数据库用户ID：{}", user.getId());
-        return notificationRepository.findByUserOrderByCreatedAtDesc(user);
-    }
+//    /**
+//     * 用户获取通知
+//     */
+//    @GetMapping("/user/notifications")
+//    @PreAuthorize("hasRole('USER')")
+//    public List<Notification> getUserNotifications(
+//            @AuthenticationPrincipal UserDetails userDetails
+//    ) {
+//        log.info("当前请求用户：{}", userDetails.getUsername());
+//
+//
+//        User user = userRepository.findByEmail(userDetails.getUsername())
+//                .orElseThrow(() -> new RuntimeException("用户不存在"));
+//        log.info("数据库用户ID：{}", user.getId());
+//        return notificationRepository.findByUserOrderByCreatedAtDesc(user);
+//    }
+//
+//    /**
+//     * 删除通知
+//     * @param id 通知ID
+//     */
+//    @DeleteMapping("/user/notifications/{id}")
+//    @PreAuthorize("hasRole('USER')")
+//    public ResponseEntity<Void> deleteNotification(
+//            @PathVariable Integer id,
+//            @AuthenticationPrincipal UserDetails userDetails
+//    ) {
+//        User user = userRepository.findByEmail(userDetails.getUsername())
+//                .orElseThrow(() -> new RuntimeException("用户不存在"));
+//        notificationRepository.deleteByIdAndUser(id, user);
+//        return ResponseEntity.ok().build();
+//    }
 
 }

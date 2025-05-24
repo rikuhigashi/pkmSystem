@@ -11,11 +11,9 @@ import com.example.backend.repository.user.PasswordResetTokenRepository;
 import com.example.backend.repository.user.UserRepository;
 import com.example.backend.service.impl.side.SideServiceImpl;
 import com.example.backend.service.impl.user.EmailServiceImpl;
-import com.example.backend.service.side.SideService;
 import com.example.backend.utils.security.CodeGenerator;
 import com.example.backend.utils.security.JwtUtils;
 import com.example.backend.utils.side.DefaultTiptapContentFactory;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,7 +33,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -404,100 +401,6 @@ public class AuthController {
 
         return codeEntry;
     }
-
-
-
-
-    // 在 AuthController.java 中添加静态内部类
-    private static class TiptapBuilder {
-        private final List<Map<String, Object>> content = new ArrayList<>();
-
-        public TiptapBuilder addHeading(String text, int level) {
-            content.add(Map.of(
-                    "type", "heading",
-                    "attrs", Map.of("level", level),
-                    "content", List.of(Map.of("type", "text", "text", text))
-            ));
-            return this;
-        }
-
-        public TiptapBuilder addParagraphWithMarks(String baseText, Object... markPairs) {
-            List<Object> paragraphContent = new ArrayList<>();
-            StringBuilder currentText = new StringBuilder();
-
-            for (int i = 0; i < markPairs.length; i += 2) {
-                if (i > 0) paragraphContent.add(Map.of("type", "text", "text", " "));
-
-                String text = (String) markPairs[i];
-                String markType = (String) markPairs[i+1];
-
-                paragraphContent.add(Map.of(
-                        "type", "text",
-                        "text", text,
-                        "marks", List.of(Map.of("type", markType))
-                ));
-            }
-
-            content.add(Map.of(
-                    "type", "paragraph",
-                    "content", paragraphContent
-            ));
-            return this;
-        }
-
-        public TiptapBuilder addBulletList(Map<String, String> items) {
-            List<Map<String, Object>> listItems = new ArrayList<>();
-
-            items.forEach((text, example) -> {
-                listItems.add(Map.of(
-                        "type", "listItem",
-                        "content", List.of(
-                                Map.of(
-                                        "type", "paragraph",
-                                        "content", List.of(
-                                                Map.of("type", "text", "text", text),
-                                                Map.of("type", "text", "text", " ("),
-                                                example,
-                                                Map.of("type", "text", "text", ")")
-                                        )
-                                )
-                        )
-                ));
-            });
-
-            content.add(Map.of(
-                    "type", "bulletList",
-                    "content", listItems
-            ));
-            return this;
-        }
-
-        public TiptapBuilder addImage(String src, String alt, String title) {
-            content.add(Map.of(
-                    "type", "paragraph",
-                    "content", List.of(
-                            Map.of(
-                                    "type", "image",
-                                    "attrs", Map.of(
-                                            "src", src,
-                                            "alt", alt,
-                                            "title", title
-                                    )
-                            )
-                    )
-            ));
-            return this;
-        }
-
-        public Map<String, Object> build() {
-            return Map.of(
-                    "type", "doc",
-                    "content", content
-            );
-        }
-    }
-
-
 
 
 }

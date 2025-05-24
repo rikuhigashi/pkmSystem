@@ -1,7 +1,7 @@
 <!-- NotificationPanel.vue -->
 <script setup lang="ts">
-import { BellIcon, ArrowPathIcon } from '@heroicons/vue/24/outline'
-import { getNotifications } from '@/API/admin/adminAPI'
+import { BellIcon, ArrowPathIcon,XMarkIcon  } from '@heroicons/vue/24/outline'
+import {getDeleteNotification, getNotifications} from '@/API/admin/adminAPI'
 import { ref, onMounted, onUnmounted } from 'vue'
 
 interface Notification {
@@ -43,6 +43,18 @@ const formatTime = (dateString: string) => {
   if (diff < 86400 * 1000) return `${Math.floor(diff / 3600000)}小时前`
   return date.toLocaleDateString()
 }
+
+const handleDelete = async (id: number) => {
+  try {
+    const res = await getDeleteNotification(id)
+    if (res.success) {
+      notifications.value = notifications.value.filter(n => n.id !== id)
+    }
+  } catch {
+    error.value = '删除通知失败'
+  }
+}
+
 
 // 初始化数据和定时器
 onMounted(() => {
@@ -93,17 +105,30 @@ onUnmounted(() => {
             </div>
           </div>
 
+
           <!-- 通知项布局 -->
-          <div v-else class="divide-y divide-gray-200">
-            <div
-              v-for="n in notifications"
-              :key="n.id"
-              class="p-3 hover:bg-gray-50 active:bg-gray-100 transition-colors cursor-pointer"
-            >
-              <div class="text-sm line-clamp-2">{{ n.content }}</div>
-              <div class="text-xs text-gray-500 mt-1">{{ formatTime(n.createdAt) }}</div>
+          <div
+            v-for="n in notifications"
+            :key="n.id"
+            class="p-3 hover:bg-gray-50 active:bg-gray-100 transition-colors cursor-pointer group relative"
+          >
+            <div class="flex justify-between items-start">
+              <div class="flex-1">
+                <div class="text-sm line-clamp-2 pr-5">{{ n.content }}</div>
+                <div class="text-xs text-gray-500 mt-1">{{ formatTime(n.createdAt) }}</div>
+              </div>
+              <button
+                @click.stop="handleDelete(n.id)"
+                class="absolute right-2 top-2 p-1 text-gray-400 hover:text-error rounded-full transition-colors opacity-0 group-hover:opacity-100"
+              >
+                <XMarkIcon class="w-4 h-4" />
+                <span class="sr-only">删除通知</span>
+              </button>
             </div>
           </div>
+
+
+
         </div>
       </div>
     </div>

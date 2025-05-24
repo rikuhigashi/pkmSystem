@@ -70,16 +70,31 @@ export const rejectData = async (id: number, reason: string) => {
 }
 
 
-// 获取通知
+// 用户获取通知
 export const getNotifications = async () => {
   try {
-    const res = await apiClient.get('/admin/user/notifications')
+    // const res = await apiClient.get('/admin/user/notifications')
+    const res = await apiClient.get('/user/notifications')
     return { success: true, data: res.data }
   } catch (error) {
     const axiosError = error as AxiosError<{ message: string }>
     return {
       success: false,
       error: axiosError.response?.data || '获取通知失败',
+    }
+  }
+}
+
+// 用户删除通知
+export const getDeleteNotification = async (id: number) => {
+  try {
+    const res = await apiClient.delete(`/user/notifications/${id}`)
+    return { success: true, data: res.data }
+  } catch (error) {
+    const axiosError = error as AxiosError<{ message: string }>
+    return {
+      success: false,
+      error: axiosError.response?.data || '删除通知失败',
     }
   }
 }

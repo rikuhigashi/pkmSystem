@@ -33,7 +33,6 @@ const sidebarStore = useSidebarStore()
         <button class="btn btn-ghost btn-circle">
           <BellIcon class="size-6" />
         </button>
-
         <Menu as="div" class="relative">
           <MenuButton class="btn btn-ghost flex items-center gap-1">
             <div class="avatar">

@@ -206,7 +206,6 @@ public class PaymentServiceImpl implements PaymentService {
                         order.setTransactionId(tradeNo);
 
                         // 激活用户VIP状态
-
                         User user = order.getUser();
                         user.setVipActive(true);
 

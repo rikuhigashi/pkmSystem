@@ -108,7 +108,7 @@ public class SideServiceImpl implements SideService {
             throw new IllegalStateException("必须保留至少一个文档");
         }
 
-        // 2. 删除操作
+        // 删除操作
         sidedatumRepository.delete(sidedatum); // 或 deleteById(id)
 
 
@@ -221,7 +221,7 @@ public class SideServiceImpl implements SideService {
             );
         }
 
-        // 按过期时间筛选（expiredAt <= expiredBefore）
+        // 按过期时间筛选
         if (expiredBefore != null) {
             spec = spec.and((root, query, cb) ->
                     cb.lessThanOrEqualTo(root.get("expiredAt"), expiredBefore)

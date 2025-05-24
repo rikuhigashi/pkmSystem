@@ -31,17 +31,17 @@ export default {
     themes: [
       {
         light: {
-          "primary": "229 100% 55%",
-          "secondary": "251 89% 67%",
-          "accent": "328 85% 57%",
-          "neutral": "210 20% 98%",
-          "base-100": "0 0% 100%",
-          "base-content": "215 28% 17%",
+          primary: '229 100% 55%',
+          secondary: '251 89% 67%',
+          accent: '328 85% 57%',
+          neutral: '210 20% 98%',
+          'base-100': '0 0% 100%',
+          'base-content': '215 28% 17%',
 
           // 圆角配置
-          "--rounded-box": "0.5rem",
-          "--rounded-btn": "0.5rem",
-          "--rounded-badge": "1.9rem"
+          '--rounded-box': '0.5rem',
+          '--rounded-btn': '0.5rem',
+          '--rounded-badge': '1.9rem',
         },
       },
     ],
@@ -68,13 +68,16 @@ export default {
     },
   },
   safelist: [
-    // 基础类
+    // 基础样式
     'ring-1',
     'ring-gray-300',
-    'focus:ring-2',
-    'focus:ring-indigo-600',
+    'shadow-sm',
+    'rounded-md',
+    'rounded-box',
+    'z-[99]',
+    'pr-4',
 
-    // 验证器相关
+    // 表单验证 & 状态提示
     'validator',
     'validator-invalid',
     'validator-hint',
@@ -83,116 +86,95 @@ export default {
     'text-error',
     'text-success',
 
-    // 样式相关
-    'shadow-sm',
-    'rounded-md',
-    // 表格相关
+    // 按钮与状态
+    'btn-active',
+    'btn-lg',
+    'input-lg',
+    'form-control',
+    'label',
+    'checkbox',
+    'link',
+    'alert',
+
+    // 表格 & 分页
     'px-4',
     'py-3',
-    'rounded-md',
-    // 分页状态
-    'btn-active',
-    // 加载动画
+
+    // 动画 & 过渡
     'loading-spinner',
     'loading-dots',
-    'rounded-box',
-    'z-[99]',
+    'animate-pop-in',
+    'transition',
+    'transition-all',
+    'duration-200',
+    'hover:shadow-lg',
+    'shadow-md',
+    'group-hover:opacity-100',
+    'opacity-0',
 
-    // 色彩相关
-    { pattern: /bg-(indigo)-(600|700)/ },
-    { pattern: /text-(gray)-(900|700)/ },
-    { pattern: /text-(success|error)/ },
+    // 色彩（基础、状态、组件主题）
+    { pattern: /bg-(indigo|gray|orange|green|red)-(100|600|700|800)/ },
+    { pattern: /text-(gray|success|error|orange|green|red)-(400|700|800|900)/ },
+    { pattern: /border-(gray|success|error|primary|secondary|accent)/ },
+    { pattern: /(bg|text|border)-(primary|secondary|accent|success|error)/ },
+    { pattern: /(bg|text|border)-dui-(indigo|gray)-/ },
+    { pattern: /focus:ring-(indigo-500|dui-.+|2)/ },
+
+    // 间距与布局（统一分类）
+    { pattern: /(mt|space|gap|py|px|pl|pr|pt|pb|ml|mr)-/ },
+    { pattern: /(mt|text)-(1|xs)/ },
+
+    // Flex & Grid 布局
+    { pattern: /(flex|items|justify|space)-(x|y|between|center)/ },
+    { pattern: /(grid|sm:grid-cols-2)/ },
+
+    // Tailwind 尺寸类
+    { pattern: /(size|w|h)-(4|6|8)/ },
+    { pattern: /w-4|h-4/ },
+    { pattern: /(min-w-\[160px\]|min-h-\[120px\]|max-h-\[70vh\])/ },
+    { pattern: /(max-w-md|max-w-xs|max-w-5xl)/ },
+
+    // 文本控制
+    { pattern: /line-clamp-2/ },
+    { pattern: /text-base-content/ },
+    { pattern: /text-base-.*/ },
+    { pattern: /text-gray-700/ },
+    { pattern: /text-(base-content|gray-400|error)/ },
+
+    // 基础背景
+    { pattern: /bg-base-100/ },
+    { pattern: /bg-(base-100|gray-900)/ },
+    { pattern: /bg-base-.*/ },
+
+    // 伪类和状态变化
+    { pattern: /(hover|focus):/ },
+    { pattern: /(focus:ring-2|focus:ring-indigo-500)/ },
+    { pattern: /(transition|duration|opacity)-/, variants: ['group-hover', 'hover', 'focus'] },
     { pattern: /(border|text)-(error|success)/, variants: ['focus', 'hover'] },
 
-    // 动画和过渡相关
-    { pattern: /(opacity|duration|transition)-/, variants: ['group-hover', 'hover', 'focus'] },
-
-    // 间距和布局相关
-    { pattern: /(mt|text)-(1|xs)/ },
-    { pattern: /(flex|items|justify|space)-(x|y|between)/ },
-
-    // dui 样式相关
-    { pattern: /(bg|text|border)-dui-(indigo|gray)-/ },
-    { pattern: /focus:ring-dui-/ },
-
-    // 通用表单元素
-    { pattern: /(btn|input|form-control|label|checkbox|link)/ },
-    { pattern: /(alert|validator|validator-hint)/ },
-
-    // 色彩分类样式
-    { pattern: /(bg|text|border)-(primary|secondary|accent|success|error)/ },
-
-    // 间距和布局相关（更多）
-    { pattern: /(mt|space|gap|py|px|pl|pr|pt|pb|ml|mr)-/ },
-
-    // 输入框状态
-    { pattern: /(input-error|input-success)/ },
-
-    // 按钮、输入框等控件样式
-    { pattern: /(btn|input|form-control|label|checkbox|link|alert)/ },
-
-    // 验证器和输入框状态
-    { pattern: /(validator|validator-hint|input-error|input-success)/ },
-
-    // 色彩样式
-    { pattern: /(bg|text|border)-(primary|secondary|accent|success|error|indigo|gray)/ },
-    { pattern: /(text|bg)-(indigo|gray)-(600|700|900)/ },
-
-    // 间距和布局（更多）
-    { pattern: /(mt|space|gap|py|px|pl|pr|pt|pb|ml|mr)-/ },
-
-    // 布局相关
-    { pattern: /(flex|items|justify|between|center)/ },
-
-    // 过渡动画
-    { pattern: /(transition|duration|opacity)-/ },
-
-    // 伪类样式
-    { pattern: /(hover|focus):/ },
+    // DaisyUI 元素
     { pattern: /(modal|modal-box|modal-action)/ },
     { pattern: /(join|join-item)/ },
-    { pattern: /btn-active/ },
     { pattern: /(badge|text-warning|text-success|text-error)/ },
-    { pattern: /(bg|text)-(orange|green|red)-(100|800)/ },
-    { pattern: /(bg|hover:bg)-(purple)-(500|600)/ },
-    { pattern: /(size|w|h)-(4|6|8)/ },
-    { pattern: /z-\[99\]/ },
-    { pattern: /(max-w-md|max-w-xs)/ },
-    { pattern: /(line-clamp-2)/ },
-    { pattern: /(bg-blue-50\/50)/ },
-    { pattern: /(min-h-\[120px\])/ },
-    { pattern: /(max-h-\[70vh\])/ },
-    { pattern: /animate-pop-in/ },
-    { pattern: /ring-gray-100/ },
-    { pattern: /(min-w-\[160px\])/ },
-    { pattern: /(space-y-4|space-y-6)/ },
-    { pattern: /(rounded-xl|rounded-2xl)/ },
+
+    //  特效样式
     { pattern: /bg-gradient-to-tr/ },
     { pattern: /from-(indigo|purple)-50\/50/ },
-    { pattern: /border-t/ },
-    { pattern: /(grid|sm:grid-cols-2)/ },
-    { pattern: /(max-w-5xl)/ },
-    { pattern: /input-lg/ },
-    { pattern: /btn-lg/ },
-    { pattern: /(focus:ring-2|focus:ring-indigo-500)/ },
-    { pattern: /(shadow-md|hover:shadow-lg)/ },
-    { pattern: /(transition-all|duration-200)/ },
-    { pattern: /(text-gray-700|cursor-not-allowed)/ },
-    // 状态颜色
-    { pattern: /bg-(orange|green|red)-100/ },
-    { pattern: /text-(orange|green|red)-800/ },
+    { pattern: /bg-blue-50\/50/ },
+
+    //  位置和层级
+    { pattern: /z-\[99\]/ },
     { pattern: /-translate-x-/ },
-    { pattern: /ring-(blue|gray)-/ },
-    { pattern: /text-base-content/ },
-    { pattern: /bg-base-100/ },
-    { pattern: /-translate-x-/ },
-    { pattern: /ring-(primary|gray)/ },
-    { pattern: /bg-(base-100|gray-900)/ },
-    { pattern: /text-(base-content|gray-400)/ },
-    { pattern: /bg-base-*/ },
-    { pattern: /text-base-*/ },
-    { pattern: /p-[0-9]/ },
-    { pattern: /px-[0-9]/ },
-    { pattern: /py-[0-9]/ },
+    { pattern: /ring-(blue|gray|primary)/ },
+    { pattern: /cursor-not-allowed/ },
+
+    //  Padding（数字）
+    { pattern: /p-\d+/ },
+    { pattern: /px-\d+/ },
+    { pattern: /py-\d+/ },
+    { pattern: /space-y-(4|6)/ },
+
+    //  圆角
+    { pattern: /(rounded-xl|rounded-2xl)/ },
   ],
 }

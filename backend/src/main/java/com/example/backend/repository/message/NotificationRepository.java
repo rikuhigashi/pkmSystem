@@ -12,4 +12,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Inte
     List<Notification> findByExpireAtBefore(Instant expireAt);
 
     List<Notification> findByUserOrderByCreatedAtDesc(User user);
+
+    void deleteByIdAndUser(Integer id, User user);
 }
