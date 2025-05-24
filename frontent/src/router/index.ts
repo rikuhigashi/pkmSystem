@@ -77,6 +77,7 @@ const router = createRouter({
       name: 'paymentSuccess',
       component: () => import('@/views/sponsorship/PaymentResultView.vue'),
       meta: { requiresAuth: true },
+      props: (route) => ({ orderNo: route.query.orderNo })
     },
   ],
 })

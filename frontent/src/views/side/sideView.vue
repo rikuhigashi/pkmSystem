@@ -259,6 +259,14 @@ onMounted(async () => {
       sidebarStore.sidebarOpen ? '-translate-x-full' : '',
     ]"
   >
+    <!-- 右键菜单栏 -->
+    <RightClickRightClickSelect
+      class="absolute z-[99] min-w-[160px] shadow-lg bg-base-100 rounded-box"
+      :menu-items="rightClickSelectMenuItems"
+      :menu-position="rightClickStore.menuPosition"
+      v-if="rightClickStore.isRightClickActive"
+    />
+
     <div class="flex grow flex-col gap-y-5 overflow-y-auto px-6 pb-4 ring-1 ring-gray-700">
       <!-- 用户头像和菜单 -->
       <div class="flex h-16 shrink-0 items-center group">
@@ -291,13 +299,7 @@ onMounted(async () => {
         />
       </div>
 
-      <!-- 右键菜单栏 -->
-      <RightClickRightClickSelect
-        class="absolute z-[99] min-w-[160px] shadow-lg bg-base-100 rounded-box"
-        :menu-items="rightClickSelectMenuItems"
-        :menu-position="rightClickStore.menuPosition"
-        v-if="rightClickStore.isRightClickActive"
-      />
+
 
       <!-- 导航列表 -->
       <nav class="relative flex flex-1 flex-col">

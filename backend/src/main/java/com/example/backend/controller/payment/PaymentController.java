@@ -78,7 +78,7 @@ public class PaymentController {
         String orderNo = params.get("out_trade_no");
         return ResponseEntity.status(HttpStatus.FOUND)
 //                .header(HttpHeaders.LOCATION, "http://localhost:5173/payment/success?orderNo=" + orderNo)
-                .header(HttpHeaders.LOCATION, "https://ecd2-171-39-22-163.ngrok-free.app/payment/success?orderNo=" + params.get("out_trade_no"))
+                .header(HttpHeaders.LOCATION, "https://pkm-system.vercel.app/payment/success?orderNo=" + orderNo)
                 .build();
     }
 
