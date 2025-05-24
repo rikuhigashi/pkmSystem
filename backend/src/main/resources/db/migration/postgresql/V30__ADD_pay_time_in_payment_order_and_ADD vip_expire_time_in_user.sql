@@ -1,0 +1,5 @@
+ALTER TABLE payment_order
+    ADD pay_time TIMESTAMP WITHOUT TIME ZONE NULL;
+
+ALTER TABLE "user"
+    ADD vip_expire_time TIMESTAMP WITHOUT TIME ZONE NULL;

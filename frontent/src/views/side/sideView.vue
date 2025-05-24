@@ -11,6 +11,7 @@ import { useRightClickStore } from '@/stores/rightClick'
 import { userInputStore } from '@/stores/inputState'
 import { useEditorStore } from '@/stores/main/editorStore'
 import { userAuthStore } from '@/stores/auth'
+import { userVipStore } from '@/stores/vip'
 // ==================== import store ====================
 
 // ==================== userStore ====================
@@ -19,6 +20,7 @@ const rightClickStore = useRightClickStore()
 const inputStore = userInputStore()
 const editorStore = useEditorStore()
 const authStore = userAuthStore()
+const useVipStore = userVipStore()
 // ==================== userStore ====================
 
 // ==================== import interface ====================
@@ -41,16 +43,15 @@ const { Cog6ToothIcon, PencilSquareIcon, TrashIcon, DocumentDuplicateIcon } = si
 
 import { ChevronDownIcon } from '@heroicons/vue/20/solid'
 import { onMounted } from 'vue'
-import IconLeftArrow from "@/assets/icons/iconLeftArrow.vue";
-import router from "@/router";
+import IconLeftArrow from '@/assets/icons/iconLeftArrow.vue'
+import router from '@/router'
 
 // ==================== method ====================
 
 const handleVipClick = () => {
-  if (!sideUtils.isVipActive.value) {
+  if (!useVipStore.isVipActive) {
     router.replace('/sponsorshipView')
     // console.log(authStore.userInfo?.vipActive)
-
   }
 }
 
@@ -86,10 +87,10 @@ const accountSelect = [
   { name: '消息通知', href: '/home', isNew: true },
   { name: '意见反馈', href: '/home', isNew: false },
   { name: '赞助我', href: '/sponsorshipView', isNew: false },
-  { name: '退出登录',action: 'logout', isNew: false },
+  { name: '退出登录', action: 'logout', isNew: false },
 ]
 
-const handleAction =async (action: string) => {
+const handleAction = async (action: string) => {
   if (action === 'logout') {
     await authStore.logout()
   }
@@ -284,7 +285,7 @@ onMounted(async () => {
               </span>
               <ChevronDownIcon class="ml-2 size-5 text-gray-400" aria-hidden="true" />
               <component
-                :is="sideUtils.isVipActive.value ? 'iconVipAct' : 'iconVip'"
+                :is="useVipStore.isVipActive ? 'iconVipAct' : 'iconVip'"
                 class="h-6 w-auto ml-2 hover:cursor-pointer"
                 @click="handleVipClick()"
               />
@@ -298,8 +299,6 @@ onMounted(async () => {
           @click="sidebarStore.toggleSidebar"
         />
       </div>
-
-
 
       <!-- 导航列表 -->
       <nav class="relative flex flex-1 flex-col">
@@ -337,90 +336,3 @@ onMounted(async () => {
     </div>
   </div>
 </template>
-
-
-<!--<template>-->
-<!--  <div-->
-<!--    :class="[-->
-<!--      'lg:w-72 lg:fixed lg:inset-y-0 lg:flex lg:flex-col transition-transform ease-in-out duration-500 sticky top-0',-->
-<!--      sidebarStore.sidebarOpen ? '-translate-x-sidebarTranslate' : '',-->
-<!--    ]"-->
-<!--  >-->
-<!--    <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-900 px-6 pb-4">-->
-<!--      <div class="flex h-16 shrink-0 items-center group">-->
-<!--        <Menu as="div" class="relative">-->
-<!--          <MenuButton class="-m-1.5 flex items-center p-1.5">-->
-<!--            <span class="sr-only">打开菜单</span>-->
-<!--            <img-->
-<!--              class="size-8 rounded-full bg-gray-50"-->
-<!--              src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"-->
-<!--              alt=""-->
-<!--            />-->
-<!--            <span class="hidden lg:flex lg:items-center">-->
-<!--              <span class="ml-4 text-sm/6 font-semibold text-gray-400" aria-hidden="true">-->
-<!--                {{ authStore.userInfo?.username || '未登录用户' }}-->
-<!--              </span>-->
-<!--              <ChevronDownIcon class="ml-2 size-5 text-gray-400" aria-hidden="true" />-->
-
-<!--              <component-->
-<!--                :is="sideUtils.isVipActive.value ? 'iconVipAct' : 'iconVip'"-->
-<!--                class="h-6 w-auto ml-2"-->
-<!--                @click="handleVipClick()"-->
-<!--              ></component>-->
-<!--            </span>-->
-<!--          </MenuButton>-->
-
-<!--          <AccountSelect :account-select="accountSelect" @action="handleAction" />-->
-<!--        </Menu>-->
-
-<!--        <iconLeftArrow-->
-<!--          class="h-4 w-auto ml-auto hidden group-hover:block group-hover:opacity-100 transition-opacity duration-800 opacity-0"-->
-<!--          @click="sidebarStore.toggleSidebar"-->
-<!--        />-->
-<!--      </div>-->
-
-<!--      &lt;!&ndash;  右键菜单栏    &ndash;&gt;-->
-<!--      <RightClickRightClickSelect-->
-<!--        class="absolute"-->
-<!--        :menu-items="rightClickSelectMenuItems"-->
-<!--        :menu-position="rightClickStore.menuPosition"-->
-<!--        v-if="rightClickStore.isRightClickActive"-->
-<!--      />-->
-<!--      &lt;!&ndash;  右键菜单栏    &ndash;&gt;-->
-
-<!--      <nav class="relative flex flex-1 flex-col">-->
-<!--        <ul role="list" class="flex flex-1 flex-col gap-y-7">-->
-<!--          <sideList-->
-<!--            :navigation="sideUtils.navigation"-->
-<!--            @right-click="handleRightClick"-->
-<!--            @left-click="handleLeftClick"-->
-<!--          />-->
-<!--          &lt;!&ndash;  点击添加后，出现输入框，并在列表底部  &ndash;&gt;-->
-<!--          <input-->
-<!--            type="text"-->
-<!--            v-model="inputForm.name"-->
-<!--            placeholder="请输入名称"-->
-<!--            class="input input-bordered input-sm w-4/5"-->
-<!--            v-if="inputStore.isInputActive"-->
-<!--            @keyup.enter.prevent="handleEnterKey"-->
-<!--            @blur="handleBlur"-->
-<!--            v-focus="true"-->
-<!--          />-->
-<!--          &lt;!&ndash;  点击添加后，出现输入框，并在列表底部  &ndash;&gt;-->
-
-<!--          &lt;!&ndash; 底部的设置图标  &ndash;&gt;-->
-<!--          <li class="mt-auto">-->
-<!--            <a-->
-<!--              href="#"-->
-<!--              class="group -mx-2 flex gap-x-3 rounded-md p-2 text-sm/6 font-semibold text-gray-400 hover:bg-gray-800 hover:text-white"-->
-<!--            >-->
-<!--              <Cog6ToothIcon class="size-6 shrink-0" aria-hidden="true" />-->
-<!--              Settings-->
-<!--            </a>-->
-<!--          </li>-->
-<!--          &lt;!&ndash; 底部的设置  &ndash;&gt;-->
-<!--        </ul>-->
-<!--      </nav>-->
-<!--    </div>-->
-<!--  </div>-->
-<!--</template>-->

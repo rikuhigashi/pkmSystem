@@ -3,4 +3,5 @@ export interface UserInfo {
   username: string
   email: string
   vipActive?: boolean
+  vipExpireDate?: string
 }

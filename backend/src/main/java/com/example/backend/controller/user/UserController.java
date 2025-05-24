@@ -16,7 +16,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -50,11 +52,19 @@ public class UserController {
     }
 
 
+    /**
+     * VIP状态
+     */
     @GetMapping("/vip-status")
-    public ResponseEntity<Boolean> getVipStatus(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<Map<String, Object>> getVipStatus(@AuthenticationPrincipal UserDetails userDetails) {
         User user = userRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        return ResponseEntity.ok(user.isVipActive());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("active", user.isVipActive());
+        response.put("expireDate", user.getVipExpireTime());
+
+        return ResponseEntity.ok(response);
     }
 
 

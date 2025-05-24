@@ -111,9 +111,12 @@
 
 <script setup lang="ts">
 import { CheckIcon } from '@heroicons/vue/20/solid'
-import { ref } from 'vue'
+import {ref, watch} from 'vue'
 import { checkPaymentStatus, createPaymentOrder } from '@/API/payment/paymentAPI'
 import router from '@/router'
+import {userVipStore} from '@/stores/vip'
+
+const useVipStore = userVipStore()
 
 const isLoading = ref(false)
 
@@ -229,4 +232,19 @@ const tiers = [
     featured: false,
   },
 ]
+
+
+watch(
+  () => useVipStore.isVipActive,
+  (newVal) => {
+    if (newVal) {
+      // 更新VIP图标状态
+      const vipIcon = document.querySelector('.vip-status-icon')
+      if (vipIcon) {
+        vipIcon.classList.remove('text-gray-400')
+        vipIcon.classList.add('text-gold', 'animate-pulse')
+      }
+    }
+  }
+)
 </script>

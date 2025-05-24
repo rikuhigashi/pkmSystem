@@ -45,6 +45,8 @@ public class PaymentOrder {
     private String transactionId;     // 第三方支付号
 
 
+    @Column(name = "pay_time")
+    private LocalDateTime payTime;
 
     public enum PayType {
         ALIPAY, WECHAT

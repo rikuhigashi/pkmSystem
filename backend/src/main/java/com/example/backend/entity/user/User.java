@@ -14,6 +14,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -72,6 +73,9 @@ public class User {
 
     @Column
     private boolean vipActive; // VIP字段
+
+    @Column(name = "vip_expire_time")
+    private LocalDateTime vipExpireTime;
 
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singleton(

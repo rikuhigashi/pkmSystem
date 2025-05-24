@@ -12,6 +12,7 @@ import com.example.backend.dto.payment.PaymentResponseDTO;
 import com.example.backend.entity.payment.PaymentOrder;
 import com.example.backend.entity.user.User;
 import com.example.backend.repository.payment.PaymentOrderRepository;
+import com.example.backend.repository.user.UserRepository;
 import com.example.backend.service.payment.PaymentService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ import java.util.stream.Collectors;
 public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentOrderRepository paymentOrderRepository;
+    private final UserRepository userRepository;
 
     @Value("${alipay.app-id}")
     private String appId;
@@ -193,7 +195,12 @@ public class PaymentServiceImpl implements PaymentService {
 
         return paymentOrderRepository.findByOrderNo(outTradeNo)
                 .map(order -> {
-                    log.info("订单当前状态: {}", order.getStatus());
+                    // 验证订单状态
+                    if (order.getStatus() != PaymentOrder.OrderStatus.CREATED) {
+                        log.warn("订单已处理，忽略重复通知，订单号: {}", outTradeNo);
+                        return true;
+                    }
+
                     // 验证金额一致性
                     if (order.getAmount().compareTo(totalAmount) != 0) {
                         log.error("金额不一致，订单号: {}，通知金额: {}", outTradeNo, totalAmount);
@@ -201,20 +208,22 @@ public class PaymentServiceImpl implements PaymentService {
                     }
 
                     // 更新订单状态
-                    if (order.getStatus() == PaymentOrder.OrderStatus.CREATED) {
-                        order.setStatus(PaymentOrder.OrderStatus.SUCCESS);
-                        order.setTransactionId(tradeNo);
+                    order.setStatus(PaymentOrder.OrderStatus.SUCCESS);
+                    order.setTransactionId(tradeNo);
+                    order.setPayTime(LocalDateTime.now());
 
-                        // 激活用户VIP状态
-                        User user = order.getUser();
-                        user.setVipActive(true);
+                    // 激活用户VIP状态
+                    User user = userRepository.findById(order.getUser().getId())
+                            .orElseThrow(() -> new RuntimeException("用户不存在"));
 
-                        paymentOrderRepository.save(order);
 
-                        log.info("支付成功处理，订单号: {}", outTradeNo);
-                        return true;
-                    }
-                    log.warn("订单已处理，忽略重复通知，订单号: {}", outTradeNo);
+                    user.setVipActive(true); // 激活VIP状态
+                    user.setVipExpireTime(LocalDateTime.now().plusDays(30)); // 设置VIP过期时间为30天后
+
+                    userRepository.save(user);
+                    paymentOrderRepository.save(order);
+
+                    log.info("支付成功处理，订单号: {}", outTradeNo);
                     return true;
                 })
                 .orElseGet(() -> {

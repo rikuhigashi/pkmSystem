@@ -9,4 +9,5 @@ alipay:
     MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAipPSIlRGpCXCOVJNpY90+W7QYtbGjuse0oRK/lpzUthni8GlmDQk2NaIyFSYEOzKsKB3aZZ0mW0dMxJMdN+2T86lf8B53S3M+lBS6tOGXgWkX5Afim5YMB7P1V0+4PDWaD0KibOSZG0/x2/L/g0QPot+i7d9d8l5EpsmOzf8GJaEE9Kuh/utp5Jh0JMMmm7xGQKU+Kskz8vDU+OGlxUruem7f5/BJpBLVtszoSo3zh6z0R2gC1bDdNFpyjxTkZGwjpnOSb/b0A9p7Cc33vy5y7OyO2byr8MSvGsOArX3GVgI8yAh70+f8D7gdQQ/4NRubX4mjFZIq13HX/pUU/azBQIDAQAB
     -----END PUBLIC KEY-----
 #  notify-url: http://localhost:8080/api/payment/alipay/notify
-  notify-url: https://ecd2-171-39-22-163.ngrok-free.app/api/payment/alipay/notify
+  return-url: https://pkm-system.vercel.app/payment/success
+  notify-url: https://pkmsystem.onrender.com/api/payment/alipay/notify
