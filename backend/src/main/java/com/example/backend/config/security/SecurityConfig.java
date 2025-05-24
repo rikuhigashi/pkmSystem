@@ -91,7 +91,8 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 //        config.setAllowedOrigins(List.of("http://localhost:5173")); // 前端地址
         config.setAllowedOrigins(Arrays.asList(
-                "http://localhost:5173"
+                "http://localhost:5173",
+                "https://pkm-system.vercel.app"
         )); // 前端地址
         config.setAllowedMethods(List.of("*"));
         config.setAllowCredentials(true); // 允许携带 Cookie
