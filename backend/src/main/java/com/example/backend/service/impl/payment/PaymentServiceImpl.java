@@ -49,6 +49,9 @@ public class PaymentServiceImpl implements PaymentService {
     @Value("${alipay.notify-url}")
     private String notifyUrl;
 
+    @Value("${alipay.return-url}")
+    private String returnUrl;
+
     private static final String GATEWAY_URL = "https://openapi-sandbox.dl.alipaydev.com/gateway.do";
     private static final String CHARSET = "UTF-8";
     private static final String FORMAT = "JSON";
@@ -67,6 +70,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     /**
      * 验证支付宝签名
+     *
      * @param params 支付宝回调请求的所有参数
      * @return 验证结果
      */
@@ -160,14 +164,14 @@ public class PaymentServiceImpl implements PaymentService {
 
             // 设置业务参数
             request.setBizContent(new JSONObject()
-                    .fluentPut("out_trade_no", orderNo)
-                    .fluentPut("product_code", PRODUCT_CODE)
-                    .fluentPut("total_amount", requestDTO.getAmount().setScale(2, RoundingMode.HALF_UP))
-                    .fluentPut("subject", requestDTO.getSubject())
+                            .fluentPut("out_trade_no", orderNo)
+                            .fluentPut("product_code", PRODUCT_CODE)
+                            .fluentPut("total_amount", requestDTO.getAmount().setScale(2, RoundingMode.HALF_UP))
+                            .fluentPut("subject", requestDTO.getSubject())
 //                    .fluentPut("return_url", "http://localhost:5173/payment/success")
-                   .fluentPut("return_url", "https://ecd2-171-39-22-163.ngrok-free.app/payment/success")
-                    .fluentPut("notify_url", notifyUrl)
-                    .toString()
+                            .fluentPut("return_url", returnUrl)
+                            .fluentPut("notify_url", notifyUrl)
+                            .toString()
             );
 
             // 获取支付表单
