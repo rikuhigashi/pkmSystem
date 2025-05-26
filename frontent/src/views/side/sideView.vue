@@ -166,42 +166,6 @@ const rightClickSelectMenuItems = [
       show: () => !!rightClickStore.copiedItem,
     },
   ],
-  // [
-  //   {
-  //     icon: ArchiveBoxIcon,
-  //     label: '档案',
-  //     onClick: () => {
-  //       console.log('档案')
-  //     },
-  //     show: () => true,
-  //   },
-  //   {
-  //     icon: ArrowRightCircleIcon,
-  //     label: '移动',
-  //     onClick: () => {
-  //       console.log('移动')
-  //     },
-  //     show: () => true,
-  //   },
-  // ],
-  // [
-  //   {
-  //     icon: UserPlusIcon,
-  //     label: '共享',
-  //     onClick: () => {
-  //       console.log('共享')
-  //     },
-  //     show: () => true,
-  //   },
-  //   {
-  //     icon: HeartIcon,
-  //     label: '添加到收藏夹',
-  //     onClick: () => {
-  //       console.log('添加到收藏夹')
-  //     },
-  //     show: () => true,
-  //   },
-  // ],
   [
     {
       icon: TrashIcon,
@@ -213,6 +177,8 @@ const rightClickSelectMenuItems = [
       show: () => true,
     },
   ],
+
+
 ]
 // 点击右键出现的菜单内容
 

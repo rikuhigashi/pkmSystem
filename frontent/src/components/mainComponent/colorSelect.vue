@@ -22,29 +22,6 @@
     />
   </div>
 </template>
-<!--<template>-->
-
-<!--  <div-->
-<!--    ref="colorPickerRef"-->
-<!--    class="fixed z-999 select-none pointer-events-auto bg-white shadow-lg p-2 rounded"-->
-<!--    v-if="props.visible"-->
-<!--    :style="{-->
-<!--      top: `${position.top}px`,-->
-<!--      left: `${position.left}px`,-->
-<!--    }"-->
-<!--  >-->
-<!--    <div class="flex justify-between items-center mb-2">-->
-<!--      <span class="text-sm font-medium h-5">颜色选择</span>-->
-<!--      <icon-revoke class="text-sm font-medium h-5 w-5" @click="handleClear"></icon-revoke>-->
-<!--    </div>-->
-
-<!--    <Chrome-->
-<!--      class="pointer-events-auto"-->
-<!--      v-model="color"-->
-<!--      @update:modelValue="handleColorChange"-->
-<!--    ></Chrome>-->
-<!--  </div>-->
-<!--</template>-->
 
 <script lang="ts" setup>
 import { Chrome } from '@ckpack/vue-color'
