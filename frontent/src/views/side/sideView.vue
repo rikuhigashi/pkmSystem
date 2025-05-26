@@ -50,7 +50,7 @@ import router from '@/router'
 
 const handleVipClick = () => {
   if (!useVipStore.isVipActive) {
-    router.replace('/sponsorshipView')
+    router.push('/sponsorshipView')
     // console.log(authStore.userInfo?.vipActive)
   }
 }

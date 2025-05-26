@@ -20,28 +20,20 @@ export const userAuthStore = defineStore('auth', () => {
     try {
       const res = await login({ email, password })
       if (res.data) {
+        isLoggedIn.value = true
+        userInfo.value = {
+          id: res.data.id,
+          username: res.data.username,
+          email: res.data.email,
+          vipActive: res.data.vipActive,
+          role: res.data.role
+        }
 
-        if (res.data.role == 'ADMIN') {
-          isLoggedIn.value = true
-          // userInfo.value = res.data.username
-          userInfo.value = {
-            id: res.data.id,
-            username: res.data.username,
-            email: res.data.email,
-            vipActive: res.data.vipActive,
-          }
-          await router.replace('/adminDashboard')
+        // 根据角色跳转
+        if (res.data.role === 'ADMIN') {
+          await router.replace({ name: 'adminDashboard' })
         } else {
-          isLoggedIn.value = true
-          // userInfo.value = res.data.username
-          userInfo.value = {
-            id: res.data.id,
-            username: res.data.username,
-            email: res.data.email,
-            vipActive: res.data.vipActive,
-          }
-          // 不是管理员，重定向到普通用户页面
-          await router.replace('/home')
+          await router.replace({ name: 'home' })
         }
       }
       return res

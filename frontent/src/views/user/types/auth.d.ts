@@ -4,4 +4,5 @@ export interface UserInfo {
   email: string
   vipActive?: boolean
   vipExpireDate?: string
+  role?:string
 }

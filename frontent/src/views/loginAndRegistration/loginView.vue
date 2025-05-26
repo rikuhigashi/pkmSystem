@@ -117,7 +117,7 @@ import { useAuthForm } from '@/views/loginAndRegistration/configs/useAuthForm'
 import { useAlertStore } from '@/stores/alert'
 import {computed, ref} from "vue";
 import Alert from "@/components/appAlert.vue";
-import router from "@/router";
+
 
 const alertStore = useAlertStore()
 const { formData, authStore, isLoading, errorMessage } = useAuthForm()
@@ -190,7 +190,6 @@ const handleSubmit = async () => {
    const res =  await authStore.loginUser(formData.value.email, formData.value.password)
     if (res.success){
       alertStore.showAlert("登录成功", "success")
-      await router.replace({ name: 'home' })
     }else {
       alertStore.showAlert('账号或密码错误', 'error')
       errorMessage.value = '登录失败'

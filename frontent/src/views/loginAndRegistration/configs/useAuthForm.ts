@@ -1,5 +1,4 @@
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { userAuthStore } from '@/stores/auth'
 
 interface AuthForm {
@@ -20,7 +19,7 @@ interface resetPasswordForm extends AuthForm {
 }
 
 export function useAuthForm() {
-  const router = useRouter()
+
   const authStore = userAuthStore()
 
 
