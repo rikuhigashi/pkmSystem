@@ -1,6 +1,7 @@
 package com.example.backend.repository.side;
 
 import com.example.backend.entity.side.Sidedatum;
+import com.example.backend.entity.side.Tag;
 import com.example.backend.entity.user.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,4 +37,6 @@ public interface SidedatumRepository extends JpaRepository<Sidedatum, Integer> {
 
 
     List<Sidedatum> findAllByStatusAndExpiredAtLessThanEqual(Sidedatum.Status status, Instant now);
+
+    boolean existsByTag(Tag tag);
 }

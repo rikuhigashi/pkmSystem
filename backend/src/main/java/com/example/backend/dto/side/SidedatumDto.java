@@ -26,4 +26,6 @@ public class SidedatumDto implements Serializable {
 
     Sidedatum.Status status;
 
+    TagDto tag;
+
 }

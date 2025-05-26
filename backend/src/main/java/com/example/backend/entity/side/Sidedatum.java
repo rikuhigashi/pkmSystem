@@ -84,5 +84,7 @@ public class Sidedatum {
         REJECTED_PENDING //待处理拒绝
     }
 
-
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tag_id")
+    private Tag tag;
 }

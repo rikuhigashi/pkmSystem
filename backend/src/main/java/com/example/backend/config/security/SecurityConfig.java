@@ -58,6 +58,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()  // 允许匿名访问登录接口
+                        .requestMatchers("/tags/**").hasAnyRole("ADMIN", "USER") // 仅允许ADMIN和USER角色访问标签相关接口
                         .requestMatchers("/admin/**").hasRole("ADMIN")// 仅允许ADMIN角色访问
                         .requestMatchers("/api/payment/**").authenticated()
 
@@ -95,7 +96,7 @@ public class SecurityConfig {
         )); // 前端地址
         config.setAllowedMethods(List.of("*"));
         config.setAllowCredentials(true); // 允许携带 Cookie
-        config.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type","Reset-Token"));
+        config.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type", "Reset-Token"));
         config.setExposedHeaders(List.of("Authorization", "Content-Length"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

@@ -3,14 +3,12 @@ package com.example.backend.service.side;
 import com.example.backend.dto.side.SidedatumDto;
 import com.example.backend.entity.side.Sidedatum;
 import com.example.backend.entity.user.User;
-import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 
 public interface SideService {
 
@@ -47,5 +45,7 @@ public interface SideService {
     Page<Sidedatum> getPendingData(String name, Instant expiredBefore, Pageable pageable);
 
 
+    SidedatumDto moveToTag(Integer id, Integer tagId, String email);
 
+    SidedatumDto removeFromTag(Integer id, String email);
 }

@@ -104,4 +104,37 @@ public class SideController {
         return ResponseEntity.noContent().build();
     }
 
+
+    /**
+     * 将数据移动到指定标签
+     * @param id
+     * @param tagId
+     * @param userDetails
+     * @return 移入标签
+     */
+    @PutMapping("/{id}/tag/{tagId}")
+    public ResponseEntity<SidedatumDto> moveToTag(
+            @PathVariable Integer id,
+            @PathVariable Integer tagId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails.getUsername();
+        SidedatumDto data = sideService.moveToTag(id, tagId, email);
+        return ResponseEntity.ok(data);
+    }
+
+    /**
+     * 从标签中移除数据
+     * @param id
+     * @param userDetails
+     * @return 移出标签
+     */
+    @DeleteMapping("/{id}/tag")
+    public ResponseEntity<SidedatumDto> removeFromTag(
+            @PathVariable Integer id,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        String email = userDetails.getUsername();
+        SidedatumDto data = sideService.removeFromTag(id, email);
+        return ResponseEntity.ok(data);
+    }
+
 }

@@ -3,15 +3,18 @@ package com.example.backend.service.impl.side;
 import com.example.backend.dto.side.SidedatumDto;
 import com.example.backend.entity.message.Notification;
 import com.example.backend.entity.side.Sidedatum;
+import com.example.backend.entity.side.Tag;
 import com.example.backend.entity.user.User;
+import com.example.backend.exception.OperationNotAllowedException;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.mapper.side.SidedatumMapper;
 import com.example.backend.repository.message.NotificationRepository;
 import com.example.backend.repository.side.SidedatumRepository;
+import com.example.backend.repository.side.TagRepository;
 import com.example.backend.repository.user.UserRepository;
 import com.example.backend.service.side.SideService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -25,20 +28,13 @@ import java.util.List;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class SideServiceImpl implements SideService {
     private final SidedatumRepository sidedatumRepository;
     private final SidedatumMapper sidedatumMapper;
     private final UserRepository userRepository;
     private final NotificationRepository notificationRepository;
-
-
-    @Autowired
-    public SideServiceImpl(SidedatumRepository sidedatumRepository, SidedatumMapper sidedatumMapper, UserRepository userRepository, NotificationRepository notificationRepository) {
-        this.sidedatumRepository = sidedatumRepository;
-        this.sidedatumMapper = sidedatumMapper;
-        this.userRepository = userRepository;
-        this.notificationRepository = notificationRepository;
-    }
+    private final TagRepository tagRepository;
 
 
     @Override
@@ -229,6 +225,33 @@ public class SideServiceImpl implements SideService {
         }
 
         return sidedatumRepository.findAll(spec, pageable);
+    }
+
+    @Override
+    public SidedatumDto moveToTag(Integer sideId, Integer tagId, String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("用户不存在"));
+        Tag tag = tagRepository.findById(tagId)
+                .orElseThrow(() -> new ResourceNotFoundException("标签不存在"));
+
+        if (!tag.getUser().getId().equals(user.getId())) {
+            throw new OperationNotAllowedException("无权操作此标签");
+        }
+
+        Sidedatum sidedatum = sidedatumRepository.findByIdAndUser(sideId, user)
+                .orElseThrow(() -> new ResourceNotFoundException("数据不存在"));
+        sidedatum.setTag(tag);
+        return sidedatumMapper.toDto(sidedatumRepository.save(sidedatum));
+    }
+
+    @Override
+    public SidedatumDto removeFromTag(Integer sideId, String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("用户不存在"));
+        Sidedatum sidedatum = sidedatumRepository.findByIdAndUser(sideId, user)
+                .orElseThrow(() -> new ResourceNotFoundException("数据不存在"));
+        sidedatum.setTag(null);
+        return sidedatumMapper.toDto(sidedatumRepository.save(sidedatum));
     }
 
 
