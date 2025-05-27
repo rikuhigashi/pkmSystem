@@ -1,4 +1,3 @@
-// PaymentResultView.vue 支付结果页面
 <script setup lang="ts">
 import {onMounted, onUnmounted, ref} from 'vue'
 import { checkPaymentStatus } from '@/API/payment/paymentAPI'
