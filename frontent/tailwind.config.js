@@ -20,6 +20,7 @@ export default {
       },
       fontFamily: {
         sans: ['Poppins', 'sans-serif'],
+        mono: ['Fira Code', 'Menlo', 'Consolas', 'monospace']
       },
       spacing: {
         sidebarTranslate: '400rem',
@@ -112,6 +113,8 @@ export default {
     'group-hover:opacity-100',
     'opacity-0',
 
+    'font-mono',
+
     // 色彩（基础、状态、组件主题）
     { pattern: /bg-(indigo|gray|orange|green|red)-(100|600|700|800)/ },
     { pattern: /text-(gray|success|error|orange|green|red)-(400|700|800|900)/ },
@@ -176,5 +179,8 @@ export default {
 
     //  圆角
     { pattern: /(rounded-xl|rounded-2xl)/ },
+
+    { pattern: /hljs-+/ },
+    { pattern: /ProseMirror/ },
   ],
 }

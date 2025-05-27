@@ -25,11 +25,6 @@
               :is-active="item.isActive?.() ?? false"
             />
 
-            <!--          :class="[-->
-            <!--          'p-2 rounded hover:bg-gray-200 transition-colors ' ,-->
-            <!--          item.isActive?.() ? 'bg-gray-200 text-gray-900' : 'text-gray-600',-->
-            <!--          ]"-->
-
             <button
               v-else-if="item.type === 'button'"
               @mousedown.prevent="item.action($event)"
@@ -117,7 +112,7 @@ import ts from 'highlight.js/lib/languages/typescript'
 import html from 'highlight.js/lib/languages/xml'
 import { all, createLowlight } from 'lowlight'
 
-import 'highlight.js/styles/night-owl.css'
+import 'highlight.js/styles/vs2015.css'
 
 const lowlight = createLowlight(all)
 
@@ -783,19 +778,49 @@ onBeforeUnmount(() => {
 <style >
 /* 代码块容器 */
 .ProseMirror pre {
-  background-color: #1a1a1a;
-  color: #e0e0e0;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  margin: 1rem 0;
+  background-color: #f8f9fa !important;
+  border: 1px solid #e9ecef !important;
+  border-radius: 6px !important;
+  padding: 1.25rem !important;
+  margin: 1rem 0 !important;
   overflow-x: auto;
+  font-family: 'Fira Code', Menlo, Consolas, monospace !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
 }
 
 /* 代码行样式 */
-.ProseMirror pre code {
-  background: transparent !important;
-  color: inherit !important;
+.ProseMirror code {
+  background-color: transparent !important;
+  color: #383a42 !important;
   padding: 0 !important;
+  font-family: inherit !important;
+}
+/* 高亮关键字增强 */
+.hljs-keyword { color: #a626a4 !important; }
+.hljs-built_in { color: #e45649 !important; }
+.hljs-title { color: #4078f2 !important; }
+.hljs-string { color: #50a14f !important; }
+.hljs-comment { color: #a0a1a7 !important; }
+.hljs-number { color: #986801 !important; }
+.hljs-literal { color: #0184bc !important; }
+.hljs-type { color: #c18401 !important; }
+.hljs-params { color: #383a42 !important; }
+.hljs-function { color: #4078f2 !important; }
+.hljs-tag { color: #e45649 !important; }
+.hljs-attr { color: #986801 !important; }
+.hljs-selector-class { color: #c18401 !important; }
+
+.hljs-ln-numbers {
+  color: #adb5bd !important;
+  padding-right: 1.5em !important;
+  text-align: right !important;
+  user-select: none !important;
+}
+
+.ProseMirror pre::selection,
+.ProseMirror code::selection {
+  background-color: #d0e9ff !important;
 }
 
 /* 全局样式或组件样式 */
@@ -891,10 +916,7 @@ onBeforeUnmount(() => {
   max-width: 600px;
   height: auto;
   display: block;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 1rem auto;
   transition-property: all;
   transition-duration: 300ms;
   border-radius: 0.5rem;
