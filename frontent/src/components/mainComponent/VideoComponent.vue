@@ -41,7 +41,7 @@
 
 
 <script lang="ts" setup>
-import {ref, computed, watch, onMounted} from 'vue'
+import {ref, computed, watch, onMounted, type PropType} from 'vue'
 import {NodeViewWrapper, nodeViewProps} from '@tiptap/vue-3'
 
 // 接收传入的 props
@@ -52,7 +52,7 @@ const props = defineProps({
     required: true,
   },
   updateAttributes: {
-    type: Function,
+    type:  Function as PropType<(attributes: Record<string, unknown>) => void>,
     required: true,
   },
 })
@@ -64,7 +64,7 @@ const startWidth = ref(0)
 const currentWidth = ref(0)
 const tempWidth = ref(0)
 
-// 在 mounted 时初始化
+
 onMounted(() => {
   const editorWidth = document.querySelector('.editor-container')?.clientWidth || 800
   const initialWidth = Math.min(800, editorWidth * 0.8)
@@ -83,7 +83,7 @@ const parsedHeight = computed(() => {
   return `${height}px`
 })
 
-// 方法
+
 const startResize = (event: MouseEvent) => {
   if (isResizing.value) return
   isResizing.value = true
@@ -120,7 +120,7 @@ const stopResize = () => {
   }
 }
 
-// Watchers
+
 watch(
   () => props.node.attrs.width,
   (newWidth: string) => {
