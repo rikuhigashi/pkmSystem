@@ -12,6 +12,3 @@ ALTER TABLE sidedata
 
 ALTER TABLE sidedata
     ADD CONSTRAINT fk_sidedata_on_tag FOREIGN KEY (tag_id) REFERENCES tags (id);
-
-ALTER TABLE tags
-    ADD CONSTRAINT fk_tags_on_user FOREIGN KEY (user_id) REFERENCES "user" (id);
