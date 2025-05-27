@@ -75,7 +75,7 @@ public class JwtUtils {
     }
 
     public String getEmailFromToken(String token) {
-        return parseToken(token).getSubject(); // 邮箱即 subject
+        return parseToken(token).getSubject(); // 邮箱为subject
 
     }
 
