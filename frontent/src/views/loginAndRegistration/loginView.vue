@@ -6,6 +6,7 @@
     </template>
 
     <form class="space-y-6" @submit.prevent="handleSubmit">
+
       <div class="form-control w-full">
         <label for="email" class="label">
           <span class="label-text">电子邮件</span>
@@ -46,6 +47,7 @@
             <span class="label-text ml-2">记住我</span>
           </label>
         </div>
+
 
         <div class="text-sm/6">
           <router-link
@@ -110,15 +112,18 @@ import AuthButton from '@/components/loginAndRegistration/authButton.vue'
 import SocialAuthButton from '@/components/loginAndRegistration/socialAuthButton.vue'
 import AuthIcons from '@/assets/icons/authIcon/AuthIcons.vue'
 
+
 import { useAuthForm } from '@/views/loginAndRegistration/configs/useAuthForm'
 import { useAlertStore } from '@/stores/alert'
-import { computed, ref } from 'vue'
-import Alert from '@/components/appAlert.vue'
+import {computed, ref} from "vue";
+import Alert from "@/components/appAlert.vue";
+
 
 const alertStore = useAlertStore()
 const { formData, authStore, isLoading, errorMessage } = useAuthForm()
 
 // --------------------  组件引入 --------------------
+
 
 const emailError = ref(false)
 const emailErrorMessage = ref('')
@@ -131,6 +136,7 @@ const validateEmail = () => {
   emailErrorMessage.value = emailValid ? '' : '请输入有效的电子邮件地址'
 }
 
+
 const passwordHints = computed(() => {
   // 仅在密码输入后显示提示
   if (formData.value.password.length === 0) return []
@@ -138,16 +144,16 @@ const passwordHints = computed(() => {
   return [
     {
       text: '至少8个字符',
-      valid: formData.value.password.length >= 8,
+      valid: formData.value.password.length >= 8
     },
     {
       text: '包含大写字母',
-      valid: /[A-Z]/.test(formData.value.password),
+      valid: /[A-Z]/.test(formData.value.password)
     },
     {
       text: '包含特殊字符（!@#$%^&*?.）',
-      valid: /[!@#$%^&*?.]/.test(formData.value.password),
-    },
+      valid: /[!@#$%^&*?.]/.test(formData.value.password)
+    }
   ]
 })
 
@@ -180,17 +186,19 @@ const validateForm = () => {
 const handleSubmit = async () => {
   if (!validateForm()) return
 
-  alertStore.showLoading('正在登录中...请稍后...')
+  alertStore.showLoading("正在登录中...请稍后...")
+
 
   try {
     isLoading.value = true
-    const res = await authStore.loginUser(formData.value.email, formData.value.password)
-    if (res.success) {
-      alertStore.showAlert('登录成功', 'success')
-    } else {
+   const res =  await authStore.loginUser(formData.value.email, formData.value.password)
+    if (res.success){
+      alertStore.showAlert("登录成功", "success")
+    }else {
       alertStore.showAlert('账号或密码错误', 'error')
       errorMessage.value = '登录失败'
     }
+
   } catch (error) {
     alertStore.showAlert('用户不存在', 'error')
     errorMessage.value = '登录失败'
@@ -198,6 +206,7 @@ const handleSubmit = async () => {
   } finally {
     isLoading.value = false
   }
+
 
   // try {
   //   await handleSubmit('/login') // 触发统一登录逻辑
