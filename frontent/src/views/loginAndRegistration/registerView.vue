@@ -19,6 +19,7 @@ import { useAlertStore } from '@/stores/alert'
 import { useAuthForm } from '@/views/loginAndRegistration/configs/useAuthForm'
 import { useRouter } from 'vue-router'
 import type { AxiosError } from 'axios'
+
 const alertStore = useAlertStore()
 const { registerFormData, isLoading } = useAuthForm()
 // ------------------- store -------------------
@@ -59,6 +60,8 @@ const handleSendCode = async () => {
     alertStore.showAlert('请输入有效的邮箱地址', 'error')
     return
   }
+
+  alertStore.showLoading('验证码发送中...请稍后...')
 
   try {
     const res = await sendVerificationCode(registerFormData.value.email)

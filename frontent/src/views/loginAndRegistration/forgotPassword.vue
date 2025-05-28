@@ -46,6 +46,8 @@ const handleSendCode = async () => {
 
   const email = resetPasswordFormData.value.email.trim()
 
+  alertStore.showLoading('验证码发送中...请稍后...')
+
   try {
     isSending.value = true
 
@@ -83,7 +85,7 @@ const handleSubmit = async () => {
     })
 
     if (res.success && res.data?.resetToken) {
-      localStorage.setItem("resetToken", res.data.resetToken)
+      localStorage.setItem('resetToken', res.data.resetToken)
       await router.replace('/resetPassword')
     } else {
       alertStore.showAlert('验证码错误或信息未填写完全', 'error')
@@ -130,7 +132,6 @@ const handleSubmit = async () => {
         <div v-if="emailError" class="validator-hint text-error text-xs mt-1">
           {{ emailErrorMessage }}
         </div>
-
       </div>
 
       <!-- 验证码输入 -->

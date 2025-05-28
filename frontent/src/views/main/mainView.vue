@@ -286,7 +286,7 @@ const extractKeyFromCosUrl = (url: string): string | null => {
     const urlObj = new URL(url)
     return urlObj.pathname.substring(1) // 移除开头的斜杠
   } catch (e) {
-    console.error('解析URL失败:', e,url)
+    console.error('解析URL失败:', e, url)
     return null
   }
 }
@@ -312,8 +312,6 @@ const saveDocument = async () => {
 
     // 获取不再使用的图片
     const unusedImages = imageStore.getUnusedImages()
-
-
 
     // 删除不再使用的图片
     for (const url of unusedImages) {
