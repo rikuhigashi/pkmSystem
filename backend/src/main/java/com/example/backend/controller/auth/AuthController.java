@@ -15,6 +15,7 @@ import com.example.backend.utils.security.CodeGenerator;
 import com.example.backend.utils.security.JwtUtils;
 import com.example.backend.utils.side.DefaultTiptapContentFactory;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -37,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+@RequiredArgsConstructor
 @Slf4j
 @RestController
 @RequestMapping("/api/auth")
@@ -51,17 +53,7 @@ public class AuthController {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final SideServiceImpl sideService;
 
-    public AuthController(AuthenticationManager authenticationManager, JwtUtils jwtUtils, UserRepository userRepository, PasswordEncoder passwordEncoder, EmailVerificationCodeRepository codeRepository, EmailServiceImpl emailServiceImpl, CodeGenerator codeGenerator, PasswordResetTokenRepository passwordResetTokenRepository, SideServiceImpl sideService) {
-        this.authenticationManager = authenticationManager;
-        this.jwtUtils = jwtUtils;
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.codeRepository = codeRepository;
-        this.emailServiceImpl = emailServiceImpl;
-        this.codeGenerator = codeGenerator;
-        this.passwordResetTokenRepository = passwordResetTokenRepository;
-        this.sideService = sideService;
-    }
+
 
 
     @Value("${app.is-production}")
@@ -70,6 +62,9 @@ public class AuthController {
     //    登录
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+        log.info("登录请求: email={}", loginRequest.email());
+
+
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -96,6 +91,12 @@ public class AuthController {
             ));
 
         } catch (BadCredentialsException e) {
+            log.error("认证失败: email={}, 原因={}", loginRequest.email(), e.getMessage());
+
+            // 检查用户是否存在
+            boolean userExists = userRepository.existsByEmail(loginRequest.email());
+            log.info("用户存在状态: {}", userExists);
+
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("用户名或密码错误");
         }
     }
