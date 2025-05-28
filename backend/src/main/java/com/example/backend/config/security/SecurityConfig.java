@@ -96,7 +96,12 @@ public class SecurityConfig {
                 "http://localhost:5173",
                 "https://pkm-system.vercel.app"
         )); // 前端地址
-        config.setAllowedMethods(List.of("*"));
+//        config.setAllowedMethods(List.of("*"));
+        config.setAllowedMethods(Arrays.asList(
+                "GET", "POST", "PUT", "DELETE", "OPTIONS",
+                "HEAD", "PATCH", "TRACE", "CONNECT",
+                "COPY", "MOVE", "LINK", "UNLINK"
+        ));
         config.setAllowCredentials(true); // 允许携带 Cookie
         config.setAllowedHeaders(List.of("Authorization", "Cache-Control", "Content-Type", "Reset-Token"));
         config.setExposedHeaders(List.of("Authorization", "Content-Length"));
