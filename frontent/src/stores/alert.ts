@@ -19,7 +19,13 @@ export const useAlertStore = defineStore('alert', {
     },
     hideAlert() {
       this.show = false
-    }
+    },
+    showLoading(message: string) {
+      this.showAlert(message, 'info', 0)  // 0表示持续显示
+    },
+    showSuccess(message: string) {
+      this.showAlert(message, 'success')
+    },
   }
 })
 

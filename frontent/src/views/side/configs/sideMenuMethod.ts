@@ -8,23 +8,28 @@ import {
   getSideAllData,
   upDataMainData,
   upDataSideData,
+  uploadImage,
 } from '@/API/side/sideAPI'
 import type { sideListItem } from '@/views/side/types/sideTypes'
 import { useAlertStore } from '@/stores/alert'
 import { useEditorStore } from '@/stores/main/editorStore'
 import { loadMainData } from '@/views/main/configs/mainConfigs'
 import { AxiosError } from 'axios'
+import { useImageStore } from '@/stores/imageStore'
 
 // 这是一个右键菜单方法的ts
 
 let inputStore: ReturnType<typeof userInputStore> | null = null // 初始化为 null
 let alertStore: ReturnType<typeof useAlertStore> | null = null
 let editorStore: ReturnType<typeof useEditorStore> | null = null
+let imageStore: ReturnType<typeof useImageStore> | null = null
+
 // 使用 nextTick 确保代码在 Vue 应用挂载之后执行
 nextTick(() => {
   inputStore = userInputStore() // 在这里初始化 InputStore
   alertStore = useAlertStore()
   editorStore = useEditorStore()
+  imageStore = useImageStore()
 })
 
 // 创建时的默认值
@@ -130,9 +135,51 @@ export const saveMainData = async () => {
       }
     }
 
-    // console.log('editorStore?.currentDocId:', editorStore?.currentDocId)
-    // console.log('editorStore?.editorContent:', editorStore?.editorContent)
+    if (alertStore) {
+      alertStore.showLoading('正在保存中... 请稍后...')
+    }
 
+    if (editorStore && imageStore) {
+      const editorContent = editorStore.editorContent || {}
+
+      // 获取所有待上传的图片文件
+      const files = imageStore.getAllPendingImages()
+
+      const uploadPromises = files.map(async (file) => {
+        // 提交上传并获取
+        const uploadedImageUrl = await uploadImage(file)
+
+        const tempBlobUrl = URL.createObjectURL(file)
+
+        // 遍历编辑器内容的节点，并替换图片的 src
+        const replaceImageUrl = (node: any) => {
+          if (node.type === 'image' && node.attrs.src === tempBlobUrl) {
+            node.attrs.src = uploadedImageUrl
+          }
+
+          // 如果节点有子节点，递归处理
+          if (node.content) {
+            node.content.forEach(replaceImageUrl)
+          }
+        }
+
+        // 遍历 editorContent 并替换图片
+        if (Array.isArray(editorContent.content)) {
+          editorContent.content.forEach(replaceImageUrl)
+        }
+
+        // 上传成功后，移除该图片
+        imageStore?.removeImage(file)
+      })
+
+      // 等待所有图片上传完成
+      await Promise.all(uploadPromises)
+
+      // 将更新后的内容存储到 Pinia
+      editorStore.editorContent = editorContent
+    }
+
+    // 保存数据到后台
     await upDataMainData(editorStore?.currentDocId, editorStore?.editorContent)
 
     if (alertStore) {

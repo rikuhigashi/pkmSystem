@@ -252,6 +252,10 @@ const editor = useEditor({
 // ------------------- tiptap编辑器配置 -------------------
 
 // ------------------- 图片配置 -------------------
+import { useImageStore } from '@/stores/imageStore'
+
+const imageStore = useImageStore()
+
 // Bubble菜单显示条件判断
 const shouldShowBubble = ({ editor }: { editor: Editor }) => {
   // 选中图片节点时不显示
@@ -266,86 +270,39 @@ const handleDrop = async (event: DragEvent) => {
   const files = event.dataTransfer?.files
   if (!files || files.length === 0) return
 
+  // 获取当前选中图片的属性
+  const currentImageAttrs = editor.value?.getAttributes('image') || {
+    src: '',
+    width: '100%',
+    height: 'auto',
+    style: 'max-width: 600px; height: auto;',
+  }
+
   for (const file of Array.from(files)) {
     if (file.type.startsWith('image/')) {
-      try {
-        const imageUrl = await uploadImage(file)
-        // 插入图片到编辑器
-        editor.value!.chain().focus().setImage({ src: imageUrl }).run()
-      } catch (error) {
-        console.error(error)
-      }
+      // 生成临时预览URL
+      const blobUrl = URL.createObjectURL(file)
+
+      // 保存到 store
+      imageStore.addImage(file, blobUrl)
+
+      // 插入临时图片
+      editor
+        .value!.chain()
+        .focus()
+        .command(({ tr }) => {
+          const node = editor.value!.schema.nodes.image.create({
+            ...currentImageAttrs,
+            src: blobUrl,
+            style: `${currentImageAttrs.style}; --img-width: ${currentImageAttrs.width}; --img-height: ${currentImageAttrs.height};`,
+          })
+          tr.replaceSelectionWith(node)
+          return true
+        })
+        .run()
     }
   }
 }
-  // // 获取当前选中图片的属性
-  // const currentImageAttrs = editor.value?.getAttributes('image') || {
-  //   src: '',
-  //   width: '100%',
-  //   height: 'auto',
-  //   style: 'max-width: 600px; height: auto;',
-  // }
-  //
-  // for (const file of Array.from(files)) {
-  //   if (file.type.startsWith('image/')) {
-  //     const base64 = await readFileAsBase64(file)
-  //
-  //     editor
-  //       .value!.chain()
-  //       .focus()
-  //       .command(({ tr }) => {
-  //         const node = editor.value!.schema.nodes.image.create({
-  //           ...currentImageAttrs,
-  //           src: base64,
-  //           style: `${currentImageAttrs.style}; --img-width: ${currentImageAttrs.width}; --img-height: ${currentImageAttrs.height};`,
-  //         })
-  //         tr.replaceSelectionWith(node)
-  //         return true
-  //       })
-  //       .run()
-  //   }
-  // }
-
-
-
-
-// 读取文件为Base64
-// const readFileAsBase64 = (file: File): Promise<string> => {
-//   return new Promise((resolve) => {
-//     const reader = new FileReader()
-//     reader.onload = async (e) => {
-//       const base64 = e.target?.result as string
-//       // 压缩
-//       const compressedBase64 = await compressBase64Image(base64, 0.8)
-//       resolve(compressedBase64)
-//     }
-//     reader.readAsDataURL(file)
-//   })
-// }
-
-// Base64图片压缩工具函数
-// const compressBase64Image = async (base64: string, quality: number): Promise<string> => {
-//   return new Promise((resolve) => {
-//     const img = new Image()
-//     img.src = base64
-//     img.onload = () => {
-//       const canvas = document.createElement('canvas')
-//       const ctx = canvas.getContext('2d')!
-//       canvas.width = img.width
-//       canvas.height = img.height
-//
-//       ctx.clearRect(0, 0, canvas.width, canvas.height)
-//
-//       // 根据图片类型选择压缩格式
-//       const isPNG = base64.startsWith('data:image/png')
-//       const mimeType = isPNG ? 'image/png' : 'image/jpeg'
-//
-//       ctx.drawImage(img, 0, 0)
-//       // 转换为JPEG并压缩质量
-//       resolve(canvas.toDataURL(mimeType, isPNG ? 1.0 : quality))
-//     }
-//   })
-// }
 
 const handleDragOver = (event: DragEvent) => {
   event.dataTransfer!.dropEffect = 'copy'
@@ -703,7 +660,6 @@ import colorSelect from '@/components/mainComponent/colorSelect.vue'
 import type { toolbarItem } from '@/views/main/types/mainTypes'
 import DropdownMenu from '@/components/mainComponent/DropdownMenu.vue'
 import { VideoExtension } from '@/extensions/video'
-import {uploadImage} from "@/API/side/sideAPI";
 
 const showColorPicker = ref(false)
 const colorPickerPosition = ref({ top: 0, left: 0 })
@@ -790,7 +746,7 @@ onBeforeUnmount(() => {
 })
 </script>
 
-<style >
+<style>
 /* 代码块容器 */
 .ProseMirror pre {
   background-color: #f8f9fa !important;
@@ -811,20 +767,59 @@ onBeforeUnmount(() => {
   padding: 0 !important;
   font-family: inherit !important;
 }
+
 /* 高亮关键字增强 */
-.hljs-keyword { color: #a626a4 !important; }
-.hljs-built_in { color: #e45649 !important; }
-.hljs-title { color: #4078f2 !important; }
-.hljs-string { color: #50a14f !important; }
-.hljs-comment { color: #a0a1a7 !important; }
-.hljs-number { color: #986801 !important; }
-.hljs-literal { color: #0184bc !important; }
-.hljs-type { color: #c18401 !important; }
-.hljs-params { color: #383a42 !important; }
-.hljs-function { color: #4078f2 !important; }
-.hljs-tag { color: #e45649 !important; }
-.hljs-attr { color: #986801 !important; }
-.hljs-selector-class { color: #c18401 !important; }
+.hljs-keyword {
+  color: #a626a4 !important;
+}
+
+.hljs-built_in {
+  color: #e45649 !important;
+}
+
+.hljs-title {
+  color: #4078f2 !important;
+}
+
+.hljs-string {
+  color: #50a14f !important;
+}
+
+.hljs-comment {
+  color: #a0a1a7 !important;
+}
+
+.hljs-number {
+  color: #986801 !important;
+}
+
+.hljs-literal {
+  color: #0184bc !important;
+}
+
+.hljs-type {
+  color: #c18401 !important;
+}
+
+.hljs-params {
+  color: #383a42 !important;
+}
+
+.hljs-function {
+  color: #4078f2 !important;
+}
+
+.hljs-tag {
+  color: #e45649 !important;
+}
+
+.hljs-attr {
+  color: #986801 !important;
+}
+
+.hljs-selector-class {
+  color: #c18401 !important;
+}
 
 .hljs-ln-numbers {
   color: #adb5bd !important;
