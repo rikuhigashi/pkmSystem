@@ -102,6 +102,10 @@ import OrderedList from '@tiptap/extension-ordered-list'
 import ImageResize from 'tiptap-extension-resize-image'
 import type { Editor } from '@tiptap/core'
 import Placeholder from '@tiptap/extension-placeholder'
+import * as Y from 'yjs'
+import { Collaboration } from '@tiptap/extension-collaboration'
+import { CollaborationCursor } from '@tiptap/extension-collaboration-cursor'
+import { WebsocketProvider } from 'y-websocket'
 // -------------- tipTap各种导入 --------------
 
 // -------------- 高光代码块 --------------
@@ -185,6 +189,18 @@ const CustomImage = ImageResize.extend({
   },
 })
 
+
+// ------------------- 多人协作 -------------------
+const ydoc = new Y.Doc()
+const websocketProvider = ref<WebsocketProvider | null>(null)
+
+const currentUser = {
+  name: '当前用户',
+  color: '#f783ac', // 用户颜色
+}
+
+// ------------------- 多人协作 -------------------
+
 // ------------------- tiptap编辑器配置 -------------------
 
 const editor = useEditor({
@@ -193,7 +209,11 @@ const editor = useEditor({
 
     editorStore.editorContent = editor.getJSON()
   },
+
   extensions: [
+    Collaboration.configure({
+      document: ydoc,
+    }),
     StarterKit.configure({
       codeBlock: false, // 禁用默认的代码块扩展
       listItem: false,
@@ -248,9 +268,15 @@ const editor = useEditor({
     OrderedList,
     CustomImage,
     VideoExtension,
+    CollaborationCursor.configure({
+      provider: websocketProvider.value,
+      user: currentUser,
+    }),
   ],
 })
 // ------------------- tiptap编辑器配置 -------------------
+
+
 
 // ------------------- 图片配置 -------------------
 import { useImageStore } from '@/stores/imageStore'
@@ -772,6 +798,24 @@ watch(
 )
 
 onMounted(() => {
+
+  // 初始化 WebSocket 提供者
+  websocketProvider.value = new WebsocketProvider(
+    'wss://your-websocket-server.com',
+    `room-${editorStore.currentDocId}`, // 使用文档ID作为房间名
+    ydoc
+  )
+
+  // 设置提供者到协作光标
+  if (editor.value) {
+    const collaborationCursorExt = editor.value.extensionManager.extensions
+      .find(ext => ext.name === 'collaborationCursor');
+
+    if (collaborationCursorExt) {
+      collaborationCursorExt.options.provider = websocketProvider.value;
+    }
+  }
+
   if (editor.value && !editor.value.getHTML()) {
     editor.value.commands.insertContent('<p></p><p></p>')
   }
@@ -787,6 +831,10 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  // 清理协作资源
+  websocketProvider.value?.destroy()
+  ydoc.destroy()
+
   editor.value?.destroy()
 
   editorStore.saveDocument = null
@@ -1002,4 +1050,29 @@ onBeforeUnmount(() => {
 .selected-image {
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5);
 }
+
+/* 协作光标样式 */
+.collaboration-cursor__caret {
+  border-left: 1px solid;
+  border-right: 1px solid;
+  margin-left: -1px;
+  margin-right: -1px;
+  position: relative;
+  word-break: normal;
+}
+
+.collaboration-cursor__label {
+  border-radius: 3px 3px 3px 0;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 600;
+  left: -1px;
+  line-height: normal;
+  padding: 0.1rem 0.3rem;
+  position: absolute;
+  top: -1.4em;
+  user-select: none;
+  white-space: nowrap;
+}
+
 </style>
