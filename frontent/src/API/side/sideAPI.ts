@@ -107,7 +107,9 @@ export const uploadImage = async (file: File) => {
 // 删除图片
 export const deleteImage = async (fileKey: string) => {
   try {
-    const res = await apiClient.delete(`/upload/image/${fileKey}`)
+    const res = await apiClient.delete(`/upload/deleteImage`, {
+      params: { fileKey } // 改为查询参数
+    })
     return res.data
   } catch (error) {
     throw error

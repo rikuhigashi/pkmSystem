@@ -127,7 +127,6 @@ import { userInputStore } from '@/stores/inputState'
 import { useEditorStore } from '@/stores/main/editorStore'
 import { useAlertStore } from '@/stores/alert'
 
-
 const inputStore = userInputStore()
 const editorStore = useEditorStore()
 const alertStore = useAlertStore()
@@ -255,8 +254,11 @@ const editor = useEditor({
 
 // ------------------- 图片配置 -------------------
 import { useImageStore } from '@/stores/imageStore'
-import { handleImageDrop as handleImageDropUtil, processEditorImages } from '@/utils/editorImage/editorImageUtils'
-
+import {
+  extractImageUrls,
+  handleImageDrop as handleImageDropUtil,
+  processEditorImages,
+} from '@/utils/editorImage/editorImageUtils'
 
 const imageStore = useImageStore()
 
@@ -279,6 +281,16 @@ const handleDragOver = (event: DragEvent) => {
   event.dataTransfer!.dropEffect = 'copy'
 }
 
+const extractKeyFromCosUrl = (url: string): string | null => {
+  try {
+    const urlObj = new URL(url)
+    return urlObj.pathname.substring(1) // 移除开头的斜杠
+  } catch (e) {
+    console.error('解析URL失败:', e,url)
+    return null
+  }
+}
+
 // 保存文档数据
 const saveDocument = async () => {
   if (!editor.value) return
@@ -291,9 +303,34 @@ const saveDocument = async () => {
 
     // 处理并上传所有图片
     const processedContent = await processEditorImages(content, imageStore)
-
     // 更新编辑器内容
     editor.value.commands.setContent(processedContent)
+
+    // 提取当前文档中的所有图片URL
+    const currentImageUrls = extractImageUrls(processedContent)
+    imageStore.setCurrentDocImages(currentImageUrls)
+
+    // 获取不再使用的图片
+    const unusedImages = imageStore.getUnusedImages()
+
+
+
+    // 删除不再使用的图片
+    for (const url of unusedImages) {
+      // 确保这个URL不是当前文档正在使用的
+      if (!currentImageUrls.includes(url)) {
+        try {
+          // 从URL中提取key
+          const key = extractKeyFromCosUrl(url)
+          if (key) {
+            await deleteImage(key)
+            imageStore.removeUploadedImage(url)
+          }
+        } catch (error) {
+          console.error('删除图片失败:', url, error)
+        }
+      }
+    }
 
     // 保存到store
     editorStore.editorContent = processedContent
@@ -303,6 +340,7 @@ const saveDocument = async () => {
     alertStore.showAlert('保存成功', 'success')
   } catch (error) {
     console.error('保存文档失败:', error)
+    alertStore.showAlert('保存失败', 'error')
   }
 }
 
@@ -658,7 +696,8 @@ import colorSelect from '@/components/mainComponent/colorSelect.vue'
 import type { toolbarItem } from '@/views/main/types/mainTypes'
 import DropdownMenu from '@/components/mainComponent/DropdownMenu.vue'
 import { VideoExtension } from '@/extensions/video'
-import sideMenuMethod from "@/views/side/configs/sideMenuMethod";
+import sideMenuMethod from '@/views/side/configs/sideMenuMethod'
+import { deleteImage } from '@/API/side/sideAPI'
 
 const showColorPicker = ref(false)
 const colorPickerPosition = ref({ top: 0, left: 0 })
@@ -753,7 +792,6 @@ onBeforeUnmount(() => {
   editor.value?.destroy()
 
   editorStore.saveDocument = null
-
 })
 </script>
 

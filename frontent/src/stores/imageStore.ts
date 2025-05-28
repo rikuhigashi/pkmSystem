@@ -8,6 +8,10 @@ export const useImageStore = defineStore('imageStore', () => {
   // 用于存储已上传的图片文件和其预览链接
   const uploadedImages = ref<Set<string>>(new Set())
 
+  // 当前文档使用的所有图片URL
+  const currentDocImages = ref<Set<string>>(new Set());
+
+
   // 添加文件和其预览
   const addImage = (file: File, blobUrl: string) => {
     pendingImages.value.set(file, blobUrl)
@@ -43,14 +47,29 @@ export const useImageStore = defineStore('imageStore', () => {
     uploadedImages.value.delete(imageUrl)
   }
 
+  // 当前文档使用的图片
+  const setCurrentDocImages = (urls: string[]) => {
+    currentDocImages.value = new Set(urls);
+  };
+
+  // 不再使用的图片URL
+  const getUnusedImages = (): string[] => {
+    return Array.from(uploadedImages.value).filter(
+      url => !currentDocImages.value.has(url)
+    );
+  };
+
   return {
     pendingImages,
     uploadedImages,
+    currentDocImages,
     addImage,
     getAllPendingImages,
     removeImage,
     addUploadedImage,
     getAllUploadedImages,
     removeUploadedImage,
+    setCurrentDocImages,
+    getUnusedImages,
   }
 })

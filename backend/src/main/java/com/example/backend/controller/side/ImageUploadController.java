@@ -28,7 +28,7 @@ public class ImageUploadController {
     }
 
 
-    @DeleteMapping("/image")
+    @DeleteMapping("/deleteImage")
     public ResponseEntity<Void> deleteImage(@RequestParam("fileKey") String fileKey) {
         String key = extractFileKey(fileKey);  // 提取文件在腾讯云的路径
         cosUploadService.deleteImage(key);  // 调用服务删除图片
