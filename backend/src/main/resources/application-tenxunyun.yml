@@ -1,0 +1,6 @@
+tencent:
+  cos:
+    secret-id: ${TENCENT_SECRET_ID}
+    secret-key: ${TENCENT_SECRET_KEY}
+    region: ap-guangzhou
+    bucket: pkmsystemimage-1350925711

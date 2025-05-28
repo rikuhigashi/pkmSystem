@@ -20,7 +20,6 @@ public interface UserMapper {
 
     List<UserDto> toDtoList(List<User> userListData);
 
-
     @Mapping(target = "tiptapJsons", source = "sidedata")
     AdminUserDto toAdminDto(User user);
 

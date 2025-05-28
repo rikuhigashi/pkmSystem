@@ -56,13 +56,15 @@ public class SecurityConfig {
                 )
                 // 请求权限配置
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/**").permitAll()  // 允许匿名访问登录接口
-                        .requestMatchers("/tags/**").hasAnyRole("ADMIN", "USER") // 仅允许ADMIN和USER角色访问标签相关接口
-                        .requestMatchers("/admin/**").hasRole("ADMIN")// 仅允许ADMIN角色访问
-                        .requestMatchers("/api/payment/**").authenticated()
+                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                                .requestMatchers("/api/auth/**").permitAll()  // 允许匿名访问登录接口
+                                .requestMatchers("/upload/**").authenticated()
+//                        .requestMatchers(HttpMethod.POST, "/sideData/upload-image").authenticated()
+                                .requestMatchers("/tags/**").hasAnyRole("ADMIN", "USER") // 仅允许ADMIN和USER角色访问标签相关接口
+                                .requestMatchers("/admin/**").hasRole("ADMIN")// 仅允许ADMIN角色访问
+                                .requestMatchers("/api/payment/**").authenticated()
 
-                        .anyRequest().authenticated()  // 其他请求需认证
+                                .anyRequest().authenticated()  // 其他请求需认证
                 )
                 // 添加JWT过滤器
                 .addFilterBefore(new JwtAuthenticationFilter(jwtUtils, userDetailsService),

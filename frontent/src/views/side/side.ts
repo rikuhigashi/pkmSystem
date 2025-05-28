@@ -18,14 +18,11 @@ import {
 // --------------------------------- 导入图标 ---------------------------
 
 // --------------------------------- 各种import ---------------------------
-import {type Component, ref} from 'vue'
-import type {sideListItem} from "@/views/side/types/sideTypes";
-
-
+import { type Component, ref } from 'vue'
+import type { sideListItem } from '@/views/side/types/sideTypes'
 // --------------------------------- 各种import ---------------------------
 
 // --------------------------------- 图标映射 ---------------------------
-
 export const iconMap: Record<string, Component> = {
   CalendarIcon,
   ChartPieIcon,
@@ -42,31 +39,12 @@ export const iconMap: Record<string, Component> = {
   TrashIcon,
   UserPlusIcon,
 }
-
-
 // --------------------------------- 各种import ---------------------------
 
-
 // -------------------------- 侧边栏内容 --------------------
-// 获取侧边栏数据
-
-// export const loadSideData = async () => {
-//   try {
-//     const res = await getSideAllData()
-//     navigation.value = res.map((item:sideListItem)=>({
-//       ...item,
-//       iconComponent:iconMap[item.icon]
-//
-//     }))
-//   } catch (error) {
-//     console.log('side后端请求失败!', error)
-//   }
-// }
-
-// 获取侧边栏数据
 
 // 侧边栏主内容  current为默认选择
-export const navigation = ref<sideListItem[]>([])
+export const sideNavigation = ref<sideListItem[]>([])
 
 // 主内容内部的分组
 // export const teams = [
@@ -83,26 +61,6 @@ export const navigation = ref<sideListItem[]>([])
 
 
 
-
-
-// 点击用户名出现的下拉框
-export const accountSelect = [
-  {name: '账号详情', href: '#', isNew: false},
-  {name: '会员中心', href: '#', isNew: false},
-  {name: '消息通知', href: '#', isNew: true},
-  {name: '意见反馈', href: '#', isNew: false},
-  {name: '退出登录',  action: 'logout', isNew: false},
-]
-// 点击用户名出现的下拉框
-
-
-
-// 输入框状态
-
-export const isInputActive = ref(false)
-
-//
-
 // 添加方法
 
 export const inputForm = ref({
@@ -117,23 +75,15 @@ export const defaultInputForm = ref({
   icon: 'HomeIcon',
 })
 
-// export const isVipActive = computed(() => {
-//   return userAuthStore().userInfo?.vipActive || false
-// })
-
-
 // 输入框
 export const inputValue = ref()
 // 输入框
 
-
-
 export default {
-  navigation,
+  sideNavigation,
   // teams,
   iconMap,
   inputValue,
   inputForm,
   defaultInputForm,
-
 }

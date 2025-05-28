@@ -6,7 +6,8 @@ import com.example.backend.entity.user.User;
 import com.example.backend.repository.user.UserRepository;
 import com.example.backend.service.impl.side.SideServiceImpl;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,7 +15,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-
+@RequiredArgsConstructor
+@Slf4j
 @RestController
 @RequestMapping("/sideData")
 public class SideController {
@@ -22,11 +24,6 @@ public class SideController {
     private final SideServiceImpl sideService;
     private final UserRepository userRepository;
 
-    @Autowired
-    public SideController(SideServiceImpl sideService, UserRepository userRepository) {
-        this.sideService = sideService;
-        this.userRepository = userRepository;
-    }
 
 
     @GetMapping("/all")
@@ -136,5 +133,7 @@ public class SideController {
         SidedatumDto data = sideService.removeFromTag(id, email);
         return ResponseEntity.ok(data);
     }
+
+
 
 }

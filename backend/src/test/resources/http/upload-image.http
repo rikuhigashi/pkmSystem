@@ -1,0 +1,11 @@
+### 上传图片到腾讯云 COS（含用户认证）
+POST http://localhost:8080/upload/image
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIyOTY5MzY4ODYzQHFxLmNvbSIsImlhdCI6MTc0ODM5MTc5MywiZXhwIjoxNzQ4NDc4MTkzfQ.uKuFfVe-e6iM58iZnzhXyvSd_1t4oEd7i0PJBzErag8
+Content-Type: multipart/form-data; boundary=boundary123
+
+--boundary123
+Content-Disposition: form-data; name="image"; filename="22.png"
+Content-Type: image/png
+
+< H:\student\22.png
+--boundary123--

@@ -1,5 +1,5 @@
 import { nextTick } from 'vue'
-import sideUtils, { iconMap, inputForm, navigation } from '@/views/side/side'
+import sideUtils, { iconMap, inputForm, sideNavigation } from '@/views/side/side'
 import { userInputStore } from '@/stores/inputState'
 import {
   addSideData,
@@ -45,7 +45,7 @@ const highlightItem = async (newSideItem: sideListItem) => {
     editorStore.setCurrentDocId(newSideItem.id)
   }
 
-  sideUtils.navigation.value = sideUtils.navigation.value.map((item) => ({
+  sideUtils.sideNavigation.value = sideUtils.sideNavigation.value.map((item) => ({
     ...item,
     current: item.id === newSideItem.id,
   }))
@@ -56,8 +56,8 @@ export const loadSideData = async () => {
   try {
     const res = await getSideAllData()
 
-    const currentId = sideUtils.navigation.value.find((item) => item.current)?.id
-    navigation.value = res.map((item: sideListItem) => ({
+    const currentId = sideUtils.sideNavigation.value.find((item) => item.current)?.id
+    sideNavigation.value = res.map((item: sideListItem) => ({
       ...item,
       iconComponent: iconMap[item.icon],
       current: item.id === currentId,
@@ -133,12 +133,11 @@ export const saveMainData = async () => {
     // console.log('editorStore?.currentDocId:', editorStore?.currentDocId)
     // console.log('editorStore?.editorContent:', editorStore?.editorContent)
 
-     await upDataMainData(editorStore?.currentDocId, editorStore?.editorContent)
+    await upDataMainData(editorStore?.currentDocId, editorStore?.editorContent)
 
-    if (alertStore){
+    if (alertStore) {
       alertStore.showAlert('保存成功', 'success')
     }
-
   } catch (error) {
     console.error(error)
   }
@@ -168,7 +167,7 @@ export const savaDeleteSideData = async (id: number) => {
   try {
     await deleteSideData(id)
 
-    if (sideUtils.navigation.value.length <= 1) {
+    if (sideUtils.sideNavigation.value.length <= 1) {
       alertStore?.showAlert('无法删除最后一个文档', 'warning')
       return
     }
@@ -179,14 +178,14 @@ export const savaDeleteSideData = async (id: number) => {
     await loadSideData()
 
     // 如果删除的是当前选中项，自动选择第一个
-    if (sideUtils.navigation.value.length > 0) {
-      sideUtils.navigation.value = sideUtils.navigation.value.map((item, index) => ({
+    if (sideUtils.sideNavigation.value.length > 0) {
+      sideUtils.sideNavigation.value = sideUtils.sideNavigation.value.map((item, index) => ({
         ...item,
         current: index === 0,
       }))
     }
 
-    const newSelectedItem = sideUtils.navigation.value.find((item) => item.current)
+    const newSelectedItem = sideUtils.sideNavigation.value.find((item) => item.current)
 
     if (newSelectedItem && editorStore) {
       // 更新当前文档 ID
@@ -205,10 +204,6 @@ export const savaDeleteSideData = async (id: number) => {
     }
   }
 }
-
-
-
-
 
 export default {
   loadSideData,

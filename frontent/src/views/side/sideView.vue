@@ -76,7 +76,7 @@ const handleLeftClick = (item: sideListItem) => {
   editorStore.setCurrentDocId(rightClickStore.leftClickItemId)
 
   // 设置当前选中项
-  sideUtils.navigation.value = sideUtils.navigation.value.map((navItem) => ({
+  sideUtils.sideNavigation.value = sideUtils.sideNavigation.value.map((navItem) => ({
     ...navItem,
     current: navItem.id === item.id,
   }))
@@ -203,16 +203,16 @@ onMounted(async () => {
   // 加载side的全部数据
   await sideMenuMethod.loadSideData()
 
-  if (sideUtils.navigation.value?.length > 0) {
-    if (sideUtils.navigation.value?.length > 0) {
+  if (sideUtils.sideNavigation.value?.length > 0) {
+    if (sideUtils.sideNavigation.value?.length > 0) {
       // 设置第一个项目为选中状态
-      sideUtils.navigation.value = sideUtils.navigation.value.map((item, index) => ({
+      sideUtils.sideNavigation.value = sideUtils.sideNavigation.value.map((item, index) => ({
         ...item,
         current: index === 0,
       }))
     }
 
-    const firstItem = sideUtils.navigation.value[0]
+    const firstItem = sideUtils.sideNavigation.value[0]
     rightClickStore.leftClickItemId = firstItem.id
 
     editorStore.setCurrentDocId(rightClickStore.leftClickItemId) // 触发主内容加载
@@ -270,7 +270,7 @@ onMounted(async () => {
       <nav class="relative flex flex-1 flex-col">
         <ul role="list" class="flex flex-1 flex-col gap-y-7">
           <sideList
-            :navigation="sideUtils.navigation"
+            :navigation="sideUtils.sideNavigation"
             @right-click="handleRightClick"
             @left-click="handleLeftClick"
           />

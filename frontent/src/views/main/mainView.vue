@@ -266,72 +266,86 @@ const handleDrop = async (event: DragEvent) => {
   const files = event.dataTransfer?.files
   if (!files || files.length === 0) return
 
-  // 获取当前选中图片的属性
-  const currentImageAttrs = editor.value?.getAttributes('image') || {
-    src: '',
-    width: '100%',
-    height: 'auto',
-    style: 'max-width: 600px; height: auto;',
-  }
-
   for (const file of Array.from(files)) {
     if (file.type.startsWith('image/')) {
-      const base64 = await readFileAsBase64(file)
-
-      editor
-        .value!.chain()
-        .focus()
-        .command(({ tr }) => {
-          const node = editor.value!.schema.nodes.image.create({
-            ...currentImageAttrs,
-            src: base64,
-            style: `${currentImageAttrs.style}; --img-width: ${currentImageAttrs.width}; --img-height: ${currentImageAttrs.height};`,
-          })
-          tr.replaceSelectionWith(node)
-          return true
-        })
-        .run()
+      try {
+        const imageUrl = await uploadImage(file)
+        // 插入图片到编辑器
+        editor.value!.chain().focus().setImage({ src: imageUrl }).run()
+      } catch (error) {
+        console.error(error)
+      }
     }
   }
 }
+  // // 获取当前选中图片的属性
+  // const currentImageAttrs = editor.value?.getAttributes('image') || {
+  //   src: '',
+  //   width: '100%',
+  //   height: 'auto',
+  //   style: 'max-width: 600px; height: auto;',
+  // }
+  //
+  // for (const file of Array.from(files)) {
+  //   if (file.type.startsWith('image/')) {
+  //     const base64 = await readFileAsBase64(file)
+  //
+  //     editor
+  //       .value!.chain()
+  //       .focus()
+  //       .command(({ tr }) => {
+  //         const node = editor.value!.schema.nodes.image.create({
+  //           ...currentImageAttrs,
+  //           src: base64,
+  //           style: `${currentImageAttrs.style}; --img-width: ${currentImageAttrs.width}; --img-height: ${currentImageAttrs.height};`,
+  //         })
+  //         tr.replaceSelectionWith(node)
+  //         return true
+  //       })
+  //       .run()
+  //   }
+  // }
+
+
+
 
 // 读取文件为Base64
-const readFileAsBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve) => {
-    const reader = new FileReader()
-    reader.onload = async (e) => {
-      const base64 = e.target?.result as string
-      // 压缩
-      const compressedBase64 = await compressBase64Image(base64, 0.8)
-      resolve(compressedBase64)
-    }
-    reader.readAsDataURL(file)
-  })
-}
+// const readFileAsBase64 = (file: File): Promise<string> => {
+//   return new Promise((resolve) => {
+//     const reader = new FileReader()
+//     reader.onload = async (e) => {
+//       const base64 = e.target?.result as string
+//       // 压缩
+//       const compressedBase64 = await compressBase64Image(base64, 0.8)
+//       resolve(compressedBase64)
+//     }
+//     reader.readAsDataURL(file)
+//   })
+// }
 
 // Base64图片压缩工具函数
-const compressBase64Image = async (base64: string, quality: number): Promise<string> => {
-  return new Promise((resolve) => {
-    const img = new Image()
-    img.src = base64
-    img.onload = () => {
-      const canvas = document.createElement('canvas')
-      const ctx = canvas.getContext('2d')!
-      canvas.width = img.width
-      canvas.height = img.height
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-      // 根据图片类型选择压缩格式
-      const isPNG = base64.startsWith('data:image/png')
-      const mimeType = isPNG ? 'image/png' : 'image/jpeg'
-
-      ctx.drawImage(img, 0, 0)
-      // 转换为JPEG并压缩质量
-      resolve(canvas.toDataURL(mimeType, isPNG ? 1.0 : quality))
-    }
-  })
-}
+// const compressBase64Image = async (base64: string, quality: number): Promise<string> => {
+//   return new Promise((resolve) => {
+//     const img = new Image()
+//     img.src = base64
+//     img.onload = () => {
+//       const canvas = document.createElement('canvas')
+//       const ctx = canvas.getContext('2d')!
+//       canvas.width = img.width
+//       canvas.height = img.height
+//
+//       ctx.clearRect(0, 0, canvas.width, canvas.height)
+//
+//       // 根据图片类型选择压缩格式
+//       const isPNG = base64.startsWith('data:image/png')
+//       const mimeType = isPNG ? 'image/png' : 'image/jpeg'
+//
+//       ctx.drawImage(img, 0, 0)
+//       // 转换为JPEG并压缩质量
+//       resolve(canvas.toDataURL(mimeType, isPNG ? 1.0 : quality))
+//     }
+//   })
+// }
 
 const handleDragOver = (event: DragEvent) => {
   event.dataTransfer!.dropEffect = 'copy'
@@ -689,6 +703,7 @@ import colorSelect from '@/components/mainComponent/colorSelect.vue'
 import type { toolbarItem } from '@/views/main/types/mainTypes'
 import DropdownMenu from '@/components/mainComponent/DropdownMenu.vue'
 import { VideoExtension } from '@/extensions/video'
+import {uploadImage} from "@/API/side/sideAPI";
 
 const showColorPicker = ref(false)
 const colorPickerPosition = ref({ top: 0, left: 0 })

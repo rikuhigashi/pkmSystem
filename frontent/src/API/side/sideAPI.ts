@@ -1,6 +1,6 @@
 import apiClient from '@/API/axios'
 import type { sideListItem } from '@/views/side/types/sideTypes'
-
+import { AxiosError } from 'axios'
 // 获取全部数据
 export const getSideAllData = async () => {
   try {
@@ -74,4 +74,33 @@ export const deleteSideData = async (id: string | number) => {
   }
 }
 
+// 上传图片
+export const uploadImage = async (file: File) => {
+  try {
+    const formData = new FormData()
+    formData.append('image', file)
 
+    const res = await apiClient.post('/upload/image', formData, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+        'Content-Type': 'multipart/form-data',
+      },
+      timeout: 15000, // 设置超时时间为15秒
+    })
+
+
+    return res.data.url
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      console.error('服务器响应错误:', {
+        status: error.response?.status,
+        data: error.response?.data,
+      })
+    } else if (error instanceof Error) {
+      console.error('请求配置错误:', error.message)
+    } else {
+      console.error('未知错误:', error)
+    }
+    throw new Error('图片上传失败: ' + (error instanceof Error ? error.message : '未知错误'))
+  }
+}
