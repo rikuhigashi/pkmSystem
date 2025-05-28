@@ -4,15 +4,30 @@ import { MagnifyingGlassIcon } from '@heroicons/vue/20/solid'
 
 // ----------------- store -----------------
 import { useSidebarStore } from '@/stores/sidebar'
+import { useEditorStore } from '@/stores/main/editorStore'
 
+const editorStore = useEditorStore()
 const sidebarStore = useSidebarStore()
 
 import IconSaveData from '@/assets/icons/iconSaveData.vue'
-import sideMenuMethod from '@/views/side/configs/sideMenuMethod'
 import NotificationPanel from '@/components/message/notificationPanel.vue'
+import {ref} from "vue";
+
+const isSaving = ref(false)
 
 const handleSaveMainData = async () => {
-    await sideMenuMethod.saveMainData()
+  if (isSaving.value) return
+
+  try {
+    isSaving.value = true
+    if (editorStore.saveDocument) {
+      await editorStore.saveDocument()
+    }
+  } catch (error) {
+    console.error('保存失败:', error)
+  } finally {
+    isSaving.value = false
+  }
 }
 </script>
 <template>

@@ -7,6 +7,7 @@ import com.qcloud.cos.ClientConfig;
 import com.qcloud.cos.auth.BasicCOSCredentials;
 import com.qcloud.cos.auth.COSCredentials;
 import com.qcloud.cos.model.CannedAccessControlList;
+import com.qcloud.cos.model.DeleteObjectRequest;
 import com.qcloud.cos.model.ObjectMetadata;
 import com.qcloud.cos.model.PutObjectRequest;
 import com.qcloud.cos.region.Region;
@@ -52,5 +53,22 @@ public class CosUploadServiceImpl implements CosUploadService {
             throw new RuntimeException("上传失败", e);
         }
     }
+
+    @Override
+    public void deleteImage(String key) {
+        COSCredentials cred = new BasicCOSCredentials(config.getSecretId(), config.getSecretKey());
+        ClientConfig clientConfig = new ClientConfig(new Region(config.getRegion()));
+        COSClient cosClient = new COSClient(cred, clientConfig);
+
+        try {
+            // 创建删除对象请求
+            DeleteObjectRequest deleteObjectRequest = new DeleteObjectRequest(config.getBucket(), key);
+            cosClient.deleteObject(deleteObjectRequest); // 执行删除
+            cosClient.shutdown();
+        } catch (Exception e) {
+            throw new RuntimeException("删除图片失败", e);
+        }
+    }
+
 
 }

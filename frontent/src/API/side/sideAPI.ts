@@ -88,7 +88,6 @@ export const uploadImage = async (file: File) => {
       timeout: 15000, // 设置超时时间为15秒
     })
 
-
     return res.data.url
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
@@ -102,5 +101,15 @@ export const uploadImage = async (file: File) => {
       console.error('未知错误:', error)
     }
     throw new Error('图片上传失败: ' + (error instanceof Error ? error.message : '未知错误'))
+  }
+}
+
+// 删除图片
+export const deleteImage = async (fileKey: string) => {
+  try {
+    const res = await apiClient.delete(`/upload/image/${fileKey}`)
+    return res.data
+  } catch (error) {
+    throw error
   }
 }

@@ -125,10 +125,12 @@ lowlight.register('typescript', ts)
 // -------------- stores --------------
 import { userInputStore } from '@/stores/inputState'
 import { useEditorStore } from '@/stores/main/editorStore'
+import { useAlertStore } from '@/stores/alert'
+
 
 const inputStore = userInputStore()
 const editorStore = useEditorStore()
-
+const alertStore = useAlertStore()
 // -------------- stores --------------
 
 // -------------- 引入组件 --------------
@@ -253,6 +255,8 @@ const editor = useEditor({
 
 // ------------------- 图片配置 -------------------
 import { useImageStore } from '@/stores/imageStore'
+import { handleImageDrop as handleImageDropUtil, processEditorImages } from '@/utils/editorImage/editorImageUtils'
+
 
 const imageStore = useImageStore()
 
@@ -265,47 +269,41 @@ const shouldShowBubble = ({ editor }: { editor: Editor }) => {
 }
 
 // 图片拖放处理
-
-const handleDrop = async (event: DragEvent) => {
-  const files = event.dataTransfer?.files
-  if (!files || files.length === 0) return
-
-  // 获取当前选中图片的属性
-  const currentImageAttrs = editor.value?.getAttributes('image') || {
-    src: '',
-    width: '100%',
-    height: 'auto',
-    style: 'max-width: 600px; height: auto;',
-  }
-
-  for (const file of Array.from(files)) {
-    if (file.type.startsWith('image/')) {
-      // 生成临时预览URL
-      const blobUrl = URL.createObjectURL(file)
-
-      // 保存到 store
-      imageStore.addImage(file, blobUrl)
-
-      // 插入临时图片
-      editor
-        .value!.chain()
-        .focus()
-        .command(({ tr }) => {
-          const node = editor.value!.schema.nodes.image.create({
-            ...currentImageAttrs,
-            src: blobUrl,
-            style: `${currentImageAttrs.style}; --img-width: ${currentImageAttrs.width}; --img-height: ${currentImageAttrs.height};`,
-          })
-          tr.replaceSelectionWith(node)
-          return true
-        })
-        .run()
-    }
+const handleDrop = (event: DragEvent) => {
+  if (editor.value) {
+    handleImageDropUtil(editor.value, imageStore, event)
   }
 }
 
 const handleDragOver = (event: DragEvent) => {
   event.dataTransfer!.dropEffect = 'copy'
+}
+
+// 保存文档数据
+const saveDocument = async () => {
+  if (!editor.value) return
+
+  alertStore.showLoading('正在保存中... 请稍后...')
+
+  try {
+    // 获取当前编辑器内容
+    const content = editor.value.getJSON()
+
+    // 处理并上传所有图片
+    const processedContent = await processEditorImages(content, imageStore)
+
+    // 更新编辑器内容
+    editor.value.commands.setContent(processedContent)
+
+    // 保存到store
+    editorStore.editorContent = processedContent
+
+    // 调用保存API
+    await sideMenuMethod.saveMainData()
+    alertStore.showAlert('保存成功', 'success')
+  } catch (error) {
+    console.error('保存文档失败:', error)
+  }
 }
 
 // ------------------- 图片配置 -------------------
@@ -660,6 +658,7 @@ import colorSelect from '@/components/mainComponent/colorSelect.vue'
 import type { toolbarItem } from '@/views/main/types/mainTypes'
 import DropdownMenu from '@/components/mainComponent/DropdownMenu.vue'
 import { VideoExtension } from '@/extensions/video'
+import sideMenuMethod from "@/views/side/configs/sideMenuMethod";
 
 const showColorPicker = ref(false)
 const colorPickerPosition = ref({ top: 0, left: 0 })
@@ -741,8 +740,20 @@ onMounted(() => {
   }
 })
 
+onMounted(() => {
+  if (editor.value && !editor.value.getHTML()) {
+    editor.value.commands.insertContent('<p></p><p></p>')
+  }
+
+  // 设置保存方法到store
+  editorStore.saveDocument = saveDocument
+})
+
 onBeforeUnmount(() => {
   editor.value?.destroy()
+
+  editorStore.saveDocument = null
+
 })
 </script>
 
