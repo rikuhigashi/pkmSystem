@@ -68,9 +68,6 @@
       />
 
       <!-- 编辑器内容 -->
-
-      <!--    class="editor-container p-6 border-t-0 border-gray-200 rounded-b-lg prose prose-sm max-w-none bg-gray-200"-->
-
       <editor-content
         :editor="editor"
         class="editor-container flex-1 p-6 rounded-box bg-base-100 border border-base-300 shadow-sm prose prose-sm max-w-none min-h-screen"
@@ -104,8 +101,8 @@ import type { Editor } from '@tiptap/core'
 import Placeholder from '@tiptap/extension-placeholder'
 import * as Y from 'yjs'
 import { Collaboration } from '@tiptap/extension-collaboration'
-import { CollaborationCursor } from '@tiptap/extension-collaboration-cursor'
 import { WebsocketProvider } from 'y-websocket'
+import { CollaborationCursor } from '@tiptap/extension-collaboration-cursor'
 // -------------- tipTap各种导入 --------------
 
 // -------------- 高光代码块 --------------
@@ -189,15 +186,29 @@ const CustomImage = ImageResize.extend({
   },
 })
 
-
 // ------------------- 多人协作 -------------------
+
+import { userAuthStore } from '@/stores/auth'
+
+const authStore = userAuthStore()
+
 const ydoc = new Y.Doc()
 const websocketProvider = ref<WebsocketProvider | null>(null)
 
-const currentUser = {
-  name: '当前用户',
-  color: '#f783ac', // 用户颜色
+// 生成用户特定颜色
+const generateUserColor = (username: string): string => {
+  let hash = 0
+  for (let i = 0; i < username.length; i++) {
+    hash = username.charCodeAt(i) + ((hash << 5) - hash)
+  }
+  const color = Math.floor(Math.abs(((Math.sin(hash) * 10000) % 1) * 16777215)).toString(16)
+  return `#${'000000'.slice(0, 6 - color.length)}${color}`
 }
+
+const currentUser = ref({
+  name: authStore.userInfo?.username || '匿名用户',
+  color: authStore.userInfo?.username ? generateUserColor(authStore.userInfo.username) : '#f783ac',
+})
 
 // ------------------- 多人协作 -------------------
 
@@ -206,13 +217,15 @@ const currentUser = {
 const editor = useEditor({
   onUpdate: ({ editor }) => {
     // 获取到编辑器内部内容
-
     editorStore.editorContent = editor.getJSON()
   },
-
   extensions: [
     Collaboration.configure({
       document: ydoc,
+    }),
+    CollaborationCursor.configure({
+      provider: websocketProvider.value,
+      user: currentUser.value,
     }),
     StarterKit.configure({
       codeBlock: false, // 禁用默认的代码块扩展
@@ -268,15 +281,9 @@ const editor = useEditor({
     OrderedList,
     CustomImage,
     VideoExtension,
-    CollaborationCursor.configure({
-      provider: websocketProvider.value,
-      user: currentUser,
-    }),
   ],
 })
 // ------------------- tiptap编辑器配置 -------------------
-
-
 
 // ------------------- 图片配置 -------------------
 import { useImageStore } from '@/stores/imageStore'
@@ -798,36 +805,33 @@ watch(
 )
 
 onMounted(() => {
-
-  // 初始化 WebSocket 提供者
+  // WebSocket 初始化
+  const token = localStorage.getItem('authToken') || ''
   websocketProvider.value = new WebsocketProvider(
-    'wss://your-websocket-server.com',
-    `room-${editorStore.currentDocId}`, // 使用文档ID作为房间名
-    ydoc
+    'wss://websocket-5ngf.onrender.com',
+    `room-${editorStore.currentDocId}`,
+    ydoc,
+    { params: { token } },
   )
 
-  // 设置提供者到协作光标
-  if (editor.value) {
-    const collaborationCursorExt = editor.value.extensionManager.extensions
-      .find(ext => ext.name === 'collaborationCursor');
 
-    if (collaborationCursorExt) {
-      collaborationCursorExt.options.provider = websocketProvider.value;
-    }
-  }
-
-  if (editor.value && !editor.value.getHTML()) {
-    editor.value.commands.insertContent('<p></p><p></p>')
-  }
-})
-
-onMounted(() => {
+  // 编辑器初始化
   if (editor.value && !editor.value.getHTML()) {
     editor.value.commands.insertContent('<p></p><p></p>')
   }
 
   // 设置保存方法到store
   editorStore.saveDocument = saveDocument
+
+  // 连接状态监控
+  websocketProvider.value.on('status', (event) => {
+    console.log('WebSocket 状态:', event.status)
+    if (event.status === 'disconnected') {
+      alertStore.showAlert('协作连接断开', 'warning')
+    }
+  })
+
+
 })
 
 onBeforeUnmount(() => {
@@ -1074,5 +1078,4 @@ onBeforeUnmount(() => {
   user-select: none;
   white-space: nowrap;
 }
-
 </style>
