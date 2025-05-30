@@ -5,7 +5,7 @@ import { MagnifyingGlassIcon } from '@heroicons/vue/20/solid'
 // ----------------- store -----------------
 import { useSidebarStore } from '@/stores/sidebar'
 import { useEditorStore } from '@/stores/main/editorStore'
-import { useCollaborationStore } from '@/stores/collaboration'
+import { useCollaborationStore } from '@/stores/collaborationStore'
 
 const editorStore = useEditorStore()
 const sidebarStore = useSidebarStore()
@@ -38,6 +38,9 @@ const handleSaveMainData = async () => {
 const startCollaboration = () => {
   if (collaborationUsername.value.trim()) {
     collaborationStore.setCollaborationUser(collaborationUsername.value.trim())
+
+    // console.log(`协作用户名设置为: ${collaborationUsername.value.trim()}`)
+
     showCollaborationDialog.value = false
   }
 }
@@ -124,6 +127,5 @@ const startCollaboration = () => {
         </div>
       </div>
     </div>
-
   </div>
 </template>
