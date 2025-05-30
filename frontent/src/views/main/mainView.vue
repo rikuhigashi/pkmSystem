@@ -210,7 +210,6 @@ onMounted(() => {
     openLinkInput: openLinkInput,
     openColorPicker: openColorPicker
   })
-
 })
 
 onBeforeUnmount(() => {

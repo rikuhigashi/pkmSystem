@@ -39,6 +39,7 @@ export const useEditorConfig = (
   websocketProvider: Ref<WebsocketProvider | null>,
   currentUser: Ref<{ name: string; color: string }>
 ): Partial<EditorOptions> => {
+
   return {
     onUpdate: ({ editor }) => {
       // 获取到编辑器内部内容
