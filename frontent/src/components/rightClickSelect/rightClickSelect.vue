@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { nextTick, onMounted, ref, watch } from 'vue'
+import {nextTick, onMounted, ref, useAttrs, watch} from 'vue'
 
 interface MenuItem {
   icon: unknown
@@ -13,11 +13,18 @@ interface Props {
   menuPosition: { x: number; y: number } //位置
 }
 
+// 禁用自动继承属性
+defineOptions({
+  inheritAttrs: false
+})
+
 const props = defineProps<Props>()
 
 const menuRef = ref<HTMLElement | null>(null)
 
 const adjustedPosition = ref({ top: 0, left: 0 })
+// 获取所有传递给组件的属性
+const attrs = useAttrs()
 
 const adjustedMenuPosition = () => {
   if (menuRef.value) {
@@ -76,7 +83,7 @@ watch(
   <teleport to="body">
     <div
       ref="menuRef"
-      class="fixed z-[999] origin-top"
+      :class="['fixed z-[999] origin-top', attrs.class]"
       :style="{ top: `${adjustedPosition.top}px`, left: `${adjustedPosition.left}px` }"
     >
       <transition
