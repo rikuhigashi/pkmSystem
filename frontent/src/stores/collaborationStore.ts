@@ -1,24 +1,30 @@
+// stores/collaborationStore.ts
 import { defineStore } from 'pinia';
 
 export const useCollaborationStore = defineStore('collaboration', {
   state: () => ({
-    isActive: false,
-    username: '',
-    color: '#f783ac',
+    connected: false,
+    username: '匿名用户',
+    color: getRandomColor(),
   }),
   actions: {
-    setCollaborationUser(name: string) {
+    setConnected(status: boolean) {
+      this.connected = status;
+    },
+    setUsername(name: string) {
       this.username = name;
-      this.isActive = true;
-
-      // 生成用户颜色
-      let hash = 0;
-      for (let i = 0; i < name.length; i++) {
-        hash = name.charCodeAt(i) + ((hash << 5) - hash);
-      }
-      const color = Math.floor(Math.abs(((Math.sin(hash) * 10000) % 1) * 16777215)).toString(16);
-
-      this.color = `#${'000000'.slice(0, 6 - color.length)}${color}`;
+    },
+    setColor(color: string) {
+      this.color = color;
     },
   },
 });
+
+// 生成随机颜色
+function getRandomColor() {
+  const colors = [
+    '#FF6B6B', '#4ECDC4', '#FFD166', '#6A0572', '#AB83A1',
+    '#1A535C', '#4A7C59', '#F75C03', '#2274A5', '#F1C40F'
+  ];
+  return colors[Math.floor(Math.random() * colors.length)];
+}

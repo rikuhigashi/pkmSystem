@@ -79,13 +79,12 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import {onBeforeUnmount, onMounted, ref, watch} from 'vue'
 import { useEditor, EditorContent, BubbleMenu } from '@tiptap/vue-3'
 import { Editor } from '@tiptap/core'
 
-// 导入优化后的模块
+// 导入模块
 import { useEditorConfig } from '@/views/main/configs/editorConfig'
-import { useEditorCollaboration } from '@/views/main/configs/collaboration'
 import { toolbarButtons } from '@/views/main/configs/toolbarConfig'
 import { useImageHandling } from '@/views/main/configs/imageHandling'
 import { useColorPicker } from '@/views/main/configs/colorPicker'
@@ -96,7 +95,6 @@ import { userInputStore } from '@/stores/inputState'
 import { useEditorStore } from '@/stores/main/editorStore'
 import { useAlertStore } from '@/stores/alert'
 import { useImageStore } from '@/stores/imageStore'
-import { userAuthStore } from '@/stores/auth'
 
 // 导入工具函数
 import { loadMainData } from '@/views/main/configs/mainConfigs'
@@ -111,16 +109,10 @@ const inputStore = userInputStore()
 const editorStore = useEditorStore()
 const alertStore = useAlertStore()
 const imageStore = useImageStore()
-const authStore = userAuthStore()
 
-// 设置协作功能
-const { ydoc, websocketProvider, currentUser } = useEditorCollaboration(
-  authStore,
-  editorStore.currentDocId,
-)
 
 // 设置编辑器配置
-const editorConfig = useEditorConfig(ydoc, websocketProvider, currentUser)
+const editorConfig = useEditorConfig()
 
 // 初始化编辑器
 const editor = useEditor(editorConfig)
@@ -151,9 +143,9 @@ const {
 
 // Bubble菜单显示条件判断
 const shouldShowBubble = ({ editor }: { editor: Editor }) => {
-  if (editor.isActive('image')) return false
-  return editor.state.selection.content().size > 0
+  return !editor.isActive('image') && editor.state.selection.content().size > 0
 }
+
 
 // 保存文档
 const saveDocument = async () => {
@@ -167,19 +159,19 @@ const saveDocument = async () => {
 // 监听文档ID变化
 watch(
   () => editorStore.currentDocId,
-  async (newId) => {
-    await nextTick()
-    if (newId && editor.value) {
-      try {
-        await loadMainData(newId, editor.value)
-        editorStore.editorContent = editor.value.getJSON()
-      } catch (error) {
-        console.error('加载数据失败:', error)
-      }
+  (newId) => {
+    console.log('文档ID变化:', newId)
+    if (newId) {
+      // 加载新文档内容
+      loadMainData(newId, editor.value).then(() => {
+        console.log('新文档内容加载完成')
+      })
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
+
+
 
 onMounted(() => {
   // 初始化编辑器内容
@@ -189,14 +181,6 @@ onMounted(() => {
 
   // 设置保存方法
   editorStore.saveDocument = saveDocument
-
-  // 连接状态监控
-  websocketProvider.value?.on('status', (event) => {
-    console.log('WebSocket 状态:', event.status)
-    if (event.status === 'disconnected') {
-      alertStore.showAlert('协作连接断开', 'warning')
-    }
-  })
 
   // 创建工具栏配置
   toolbarItems.value = toolbarButtons({
@@ -208,13 +192,12 @@ onMounted(() => {
     showColorPicker: showColorPicker,
     colorActionType: colorActionType,
     openLinkInput: openLinkInput,
-    openColorPicker: openColorPicker
+    openColorPicker: openColorPicker,
   })
 })
 
 onBeforeUnmount(() => {
-  websocketProvider.value?.destroy()
-  ydoc.destroy()
+
   editor.value?.destroy()
   editorStore.saveDocument = null
 })

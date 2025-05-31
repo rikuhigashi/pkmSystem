@@ -1,6 +1,7 @@
 import type { toolbarItem } from '@/views/main/types/mainTypes'
-import type {Ref} from 'vue'
-import {computed} from "vue";
+import type { Ref } from 'vue'
+import { computed } from 'vue'
+import { useAlertStore } from '@/stores/alert'
 
 interface ToolbarConfigOptions {
   editor: any
@@ -12,12 +13,14 @@ interface ToolbarConfigOptions {
   colorActionType: Ref<'text' | 'highlight'>
   openLinkInput: () => void
   openColorPicker: (type: 'text' | 'highlight', event?: MouseEvent) => void
+
 }
 
 export const toolbarButtons = (options: ToolbarConfigOptions): toolbarItem[] => {
   const { editor } = options
 
   const editorInstance = computed(() => editor.value?.value)
+  const alertStore = useAlertStore()
 
   return [
     // 标题正文切换
@@ -45,7 +48,11 @@ export const toolbarButtons = (options: ToolbarConfigOptions): toolbarItem[] => 
         } else {
           const level = parseInt(value)
           if (level > 0) {
-            editorInstance.value?.chain().focus().toggleHeading({ level: level as 1 | 2 | 3 | 4 }).run()
+            editorInstance.value
+              ?.chain()
+              .focus()
+              .toggleHeading({ level: level as 1 | 2 | 3 | 4 })
+              .run()
           } else {
             editorInstance.value?.chain().focus().setParagraph().run()
           }
@@ -63,7 +70,7 @@ export const toolbarButtons = (options: ToolbarConfigOptions): toolbarItem[] => 
             ? editorInstance.value?.isActive('heading', { level })
             : editorInstance.value?.isActive('paragraph')
         }
-        return [1, 2, 3, 4].some((level) =>editorInstance.value?.isActive('heading', { level }))
+        return [1, 2, 3, 4].some((level) => editorInstance.value?.isActive('heading', { level }))
       },
       meta: { type: 'heading' },
     },
@@ -154,7 +161,7 @@ export const toolbarButtons = (options: ToolbarConfigOptions): toolbarItem[] => 
       icon: 'iconAlignRight',
       title: 'Justify Ctrl+Shift+R',
       action: () => editorInstance.value?.chain().focus().setTextAlign('right').run(),
-      isActive: () =>editorInstance.value?.isActive({ textAlign: 'right' }) ?? false,
+      isActive: () => editorInstance.value?.isActive({ textAlign: 'right' }) ?? false,
       disabled: () => !editorInstance.value?.can().chain().focus().setTextAlign('right').run(),
     },
     // 两端对齐
@@ -275,7 +282,7 @@ export const toolbarButtons = (options: ToolbarConfigOptions): toolbarItem[] => 
       type: 'button',
       icon: 'iconSubscript',
       title: 'Subscript Ctrl+,',
-      action: () =>editorInstance.value?.chain().focus().toggleSubscript().run(),
+      action: () => editorInstance.value?.chain().focus().toggleSubscript().run(),
       isActive: () => editorInstance.value?.isActive('subscript') ?? false,
       disabled: () => !editorInstance.value?.can().chain().focus().toggleSubscript().run(),
     },
@@ -288,5 +295,6 @@ export const toolbarButtons = (options: ToolbarConfigOptions): toolbarItem[] => 
       isActive: () => editorInstance.value?.isActive('superscript') ?? false,
       disabled: () => !editorInstance.value?.can().chain().focus().toggleSuperscript().run(),
     },
+
   ]
 }

@@ -5,11 +5,9 @@ import { MagnifyingGlassIcon } from '@heroicons/vue/20/solid'
 // ----------------- store -----------------
 import { useSidebarStore } from '@/stores/sidebar'
 import { useEditorStore } from '@/stores/main/editorStore'
-import { useCollaborationStore } from '@/stores/collaborationStore'
 
 const editorStore = useEditorStore()
 const sidebarStore = useSidebarStore()
-const collaborationStore = useCollaborationStore()
 
 import IconSaveData from '@/assets/icons/iconSaveData.vue'
 import NotificationPanel from '@/components/message/notificationPanel.vue'
@@ -35,14 +33,9 @@ const handleSaveMainData = async () => {
 }
 
 // 启动协作功能
-const startCollaboration = () => {
-  if (collaborationUsername.value.trim()) {
-    collaborationStore.setCollaborationUser(collaborationUsername.value.trim())
+const startCollaborations = () => {
+  console.log("启动协作功能,并关闭输入框")
 
-    // console.log(`协作用户名设置为: ${collaborationUsername.value.trim()}`)
-
-    showCollaborationDialog.value = false
-  }
 }
 </script>
 <template>
@@ -117,13 +110,13 @@ const startCollaboration = () => {
             class="input input-bordered w-full"
             v-model="collaborationUsername"
             placeholder="您的协作名称"
-            @keyup.enter="startCollaboration"
+            @keyup.enter="startCollaborations"
           />
           <p class="text-sm text-gray-500 mt-2">此名称将显示给其他协作者</p>
         </div>
         <div class="modal-action">
           <button class="btn" @click="showCollaborationDialog = false">取消</button>
-          <button class="btn btn-primary" @click="startCollaboration">加入</button>
+          <button class="btn btn-primary" @click="startCollaborations">加入</button>
         </div>
       </div>
     </div>
