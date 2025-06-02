@@ -79,6 +79,12 @@ const router = createRouter({
       meta: {requiresAuth: true},
       props: (route) => ({orderNo: route.query.orderNo})
     },
+    {
+      path: '/collaborationView',
+      name: 'collaborationView',
+      component: () => import('@/views/collaboration/collaborationView.vue'),
+      meta: {requiresAuth: true},
+    },
   ],
 })
 
