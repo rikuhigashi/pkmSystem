@@ -243,6 +243,9 @@ import Underline from '@tiptap/extension-underline'
 import { useCollaborationStore } from '@/stores/collaborationStore'
 import { createTiptapToken } from '@/API/tiptap/tiptapAPI'
 
+type ProviderStatus = 'connecting' | 'connected' | 'disconnected' | 'disconnecting'
+
+
 // 从store获取协作信息
 const collaborationStore = useCollaborationStore()
 const roomId = ref(collaborationStore.room)
@@ -453,29 +456,32 @@ onMounted(async () => {
       // 创建临时编辑器将内容写入Yjs文档
       const tempEditor = new Editor({
         extensions: [
-          // 必须包含协作扩展以连接到Yjs文档
-          Collaboration.configure({
-            document: doc,
-          }),
-          // 其他必要的扩展
-          StarterKit,
+          StarterKit.configure({ history: false }),
           Heading.configure({ levels: [1, 2, 3] }),
           Blockquote,
           CodeBlock,
           HorizontalRule,
           Underline,
-          Link
+          Collaboration.configure({ document: doc }),
+          Link.configure({
+            openOnClick: true,
+            HTMLAttributes: { class: 'text-blue-600 hover:underline' }
+          })
         ],
         content: rawContent,
       })
 
-      // 等待编辑器内容应用完成
-      await new Promise(resolve => setTimeout(resolve, 100))
+      // 等待编辑器内容完全渲染
+      await new Promise((resolve) => {
+        tempEditor.on('create', resolve)
+        setTimeout(resolve, 100) // 双保险
+      })
+
       tempEditor.destroy()
     }
 
     // 检查Yjs文档内容
-    console.log('Yjs文档内容:', doc.getXmlFragment('prosemirror').toString())
+    // console.log('Yjs文档内容:', doc.getXmlFragment('prosemirror').toString())
 
 
 
@@ -569,9 +575,10 @@ onMounted(async () => {
       clearInterval(activityInterval)
     })
 
-    const connectionStatus = ref('connecting')
-    provider.value.on('status', ({ status:any }) => {
-      connectionStatus.value = status
+    const connectionStatus = ref<ProviderStatus>('connecting')
+    provider.value.on('status', (event: { status: ProviderStatus }) => {
+      connectionStatus.value = event.status
+      console.log('连接状态:', event.status)
     })
 
     // 模拟保存状态
