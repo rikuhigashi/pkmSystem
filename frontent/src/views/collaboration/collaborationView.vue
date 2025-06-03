@@ -570,7 +570,7 @@ onMounted(async () => {
     })
 
     const connectionStatus = ref('connecting')
-    provider.value.on('status', ({ status }) => {
+    provider.value.on('status', ({ status:any }) => {
       connectionStatus.value = status
     })
 
