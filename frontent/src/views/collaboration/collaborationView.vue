@@ -72,7 +72,49 @@
     <!-- 编辑器区域 -->
     <div class="flex-1 flex flex-col overflow-hidden min-h-screen">
       <div class="flex-1 overflow-hidden relative">
-        <editor-content :editor="editor" class="min-h-screen max-w-6xl mx-auto p-4 border-2 border-gray-300 rounded-lg shadow-lg overflow-auto" />
+        <bubble-menu
+          v-if="editor"
+          ref="bubbleMenuRef"
+          class="bubble-menu bg-white shadow-lg rounded-md p-1 flex items-center border border-gray-200 gap-1 overflow-x-auto max-w-[80vw]"
+          :editor="editor"
+          :tippy-options="{ duration: 100, placement: 'top' }"
+        >
+          <template v-for="(item, index) in toolbarButtons" :key="index">
+            <!-- 分隔线 -->
+            <div v-if="item.type === 'divider'" class="w-px h-6 bg-gray-200 mx-1"></div>
+
+            <!-- 按钮 -->
+            <button
+              v-else
+              @click="item.action?.()"
+              :class="{ 'bg-gray-100': item.isActive?.() }"
+              class="p-2 rounded hover:bg-gray-100 tooltip mx-0.5"
+              :data-tip="item.title"
+            >
+              <component :is="item.icon" class="h-5 w-5"></component>
+            </button>
+          </template>
+        </bubble-menu>
+
+        <!-- 链接输入框 -->
+        <input
+          type="text"
+          placeholder="输入链接地址"
+          v-if="isInputLink"
+          v-model="inputLinkValue"
+          @keyup.enter.prevent="confirmLink"
+          @blur="confirmLink"
+          :style="{
+            top: `${linkPosition.top}px`,
+            left: `${linkPosition.left}px`,
+          }"
+          class="input fixed z-50 bg-white p-2 shadow-lg border border-gray-300 rounded-md w-64 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
+
+        <editor-content
+          :editor="editor"
+          class="min-h-screen max-w-6xl mx-auto p-4 border-2 border-gray-300 rounded-lg shadow-lg overflow-auto"
+        />
       </div>
     </div>
 
@@ -130,17 +172,26 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { BubbleMenu, type BubbleMenu as BubbleMenuType } from '@tiptap/vue-3'
 import { Editor, EditorContent } from '@tiptap/vue-3'
 import Collaboration from '@tiptap/extension-collaboration'
 import CollaborationCursor from '@tiptap/extension-collaboration-cursor'
 import * as Y from 'yjs'
-// import { TiptapCollabProvider } from '@hocuspocus/provider'
 import { HocuspocusProvider } from '@hocuspocus/provider'
 
+//tiptap导入
 import StarterKit from '@tiptap/starter-kit'
-import { useCollaborationStore } from '@/stores/collaborationStore'
 import router from '@/router'
+import Link from '@tiptap/extension-link'
+import { Heading } from '@tiptap/extension-heading'
+import { CodeBlock } from '@tiptap/extension-code-block'
+import { Blockquote } from '@tiptap/extension-blockquote'
+import { HorizontalRule } from '@tiptap/extension-horizontal-rule'
+import Underline from '@tiptap/extension-underline'
+
+//store
+import { useCollaborationStore } from '@/stores/collaborationStore'
 import { createTiptapToken } from '@/API/tiptap/tiptapAPI'
 
 // 从store获取协作信息
@@ -158,6 +209,14 @@ const provider = ref<HocuspocusProvider | null>(null)
 // 状态管理
 const isSaving = ref(false)
 const lastSavedTime = ref('刚刚')
+
+// 链接相关状态
+const isInputLink = ref(false)
+const inputLinkValue = ref('')
+
+const linkPosition = ref({ top: 0, left: 0 })
+const bubbleMenuRef = ref<InstanceType<typeof BubbleMenuType> | null>(null)
+
 const onlineUsers = ref<
   Array<{
     id: string
@@ -166,6 +225,109 @@ const onlineUsers = ref<
     avatar?: string
   }>
 >([])
+
+// 工具栏按钮配置
+const toolbarButtons = ref([
+  {
+    icon: 'iconBoldFont',
+    title: '加粗',
+    action: () => editor?.chain().focus().toggleBold().run(),
+    isActive: () => editor?.isActive('bold') || false,
+  },
+  {
+    icon: 'iconItalic',
+    title: '斜体',
+    action: () => editor?.chain().focus().toggleItalic().run(),
+    isActive: () => editor?.isActive('italic') || false,
+  },
+  {
+    icon: 'iconUnderline',
+    title: '下划线',
+    action: () => editor?.chain().focus().toggleUnderline().run(),
+    isActive: () => editor?.isActive('underline') ?? false,
+    disabled: () => !editor?.can().chain().focus().toggleUnderline().run(),
+  },
+  {
+    icon: 'iconStrikethrough',
+    title: '删除线',
+    action: () => editor?.chain().focus().toggleStrike().run(),
+    isActive: () => editor?.isActive('strike') || false,
+  },
+  { type: 'divider' },
+  {
+    icon: 'iconBulletList',
+    title: '项目符号',
+    action: () => editor?.chain().focus().toggleBulletList().run(),
+    isActive: () => editor?.isActive('bulletList') || false,
+  },
+  {
+    icon: 'iconOrderedList',
+    title: '编号列表',
+    action: () => editor?.chain().focus().toggleOrderedList().run(),
+    isActive: () => editor?.isActive('orderedList') || false,
+  },
+  {
+    icon: 'iconCodeBlock',
+    title: '代码块',
+    action: () => editor?.chain().focus().toggleCodeBlock().run(),
+    isActive: () => editor?.isActive('codeBlock') || false,
+  },
+  {
+    icon: 'iconHorizontalRule',
+    title: '水平线',
+    action: () => editor?.chain().focus().setHorizontalRule().run(),
+  },
+  { type: 'divider' },
+  {
+    icon: 'iconFontLink',
+    title: '添加链接',
+    action: () => setLink(),
+    isActive: () => editor?.isActive('link') || false,
+  },
+])
+
+// 设置链接功能
+const setLink = () => {
+  if (!editor) return
+  isInputLink.value = true
+
+  // 计算链接输入框位置
+  nextTick(() => {
+    if (bubbleMenuRef.value?.$el) {
+      const bubbleMenuEl = bubbleMenuRef.value.$el as HTMLElement
+      const rect = bubbleMenuEl.getBoundingClientRect()
+
+      // 计算位置：在气泡菜单下方
+      linkPosition.value = {
+        top: rect.bottom + 10,
+        left: rect.left,
+      }
+    }
+  })
+
+  // 如果已有链接，填充值
+  if (editor.isActive('link')) {
+    inputLinkValue.value = editor.getAttributes('link').href
+  }
+}
+
+// 确认链接
+const confirmLink = () => {
+  if (!editor) return
+
+  if (inputLinkValue.value) {
+    let href = inputLinkValue.value.trim()
+    if (!/^https?:\/\//i.test(href)) {
+      href = 'https://' + href
+    }
+    editor.chain().focus().setLink({ href }).run()
+  } else {
+    editor.chain().focus().unsetLink().run()
+  }
+
+  isInputLink.value = false
+  inputLinkValue.value = ''
+}
 
 // 生成随机颜色（用于用户光标）
 const generateColor = () => {
@@ -256,6 +418,13 @@ onMounted(async () => {
         StarterKit.configure({
           history: false,
         }),
+        Heading.configure({
+          levels: [1, 2, 3],
+        }),
+        Blockquote.configure(),
+        CodeBlock.configure(),
+        HorizontalRule.configure(),
+        Underline,
         Collaboration.configure({
           document: doc,
         }),
@@ -264,6 +433,12 @@ onMounted(async () => {
           user: {
             name: username.value,
             color: userColor,
+          },
+        }),
+        Link.configure({
+          openOnClick: true,
+          HTMLAttributes: {
+            class: 'text-blue-600 hover:underline',
           },
         }),
       ],
@@ -285,13 +460,10 @@ onMounted(async () => {
       clearInterval(activityInterval)
     })
 
-
-
     const connectionStatus = ref('connecting')
     provider.value.on('status', ({ status }) => {
       connectionStatus.value = status
     })
-
 
     // 模拟保存状态
     setInterval(() => {
@@ -315,7 +487,65 @@ onBeforeUnmount(() => {
 })
 </script>
 
-<style lang="scss" >
+<style lang="scss">
+.ProseMirror pre {
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  font-family: 'Fira Code', Menlo, Consolas, monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.ProseMirror code {
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.3rem;
+  font-family: 'Fira Code', Menlo, Consolas, monospace;
+}
+
+/* 引用样式 */
+.ProseMirror blockquote {
+  border-left: 3px solid #ccc;
+  padding-left: 1rem;
+  margin-left: 0;
+  font-style: italic;
+  color: #555;
+}
+
+/* 水平线样式 */
+.ProseMirror hr {
+  border: none;
+  border-top: 2px solid #e2e8f0;
+  margin: 1.5rem 0;
+}
+
+/* 添加下拉菜单样式 */
+.dropdown-content {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 0.5rem;
+}
+
+/* 工具提示样式 */
+.tooltip:before {
+  content: attr(data-tip);
+  @apply absolute bottom-full mb-2 px-2 py-1 text-xs bg-gray-800 text-white rounded whitespace-nowrap;
+  transform: translateX(-50%);
+  left: 50%;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+.tooltip:hover:before {
+  opacity: 1;
+}
+
 /* 协作光标样式 */
 .collaboration-cursor__caret {
   border-left: 2px solid;
@@ -371,7 +601,6 @@ onBeforeUnmount(() => {
 ::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
 }
-
 
 .editor-container {
   min-height: 100%;
