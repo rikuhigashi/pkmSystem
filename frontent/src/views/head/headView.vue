@@ -63,7 +63,11 @@ const startCollaboration = () => {
 
   const username = collaborationUsername.value.trim()
 
-  collaborationStore.setCollaborationInfo(collaborationRoomId.value, username)
+  // 获取当前文档ID和内容
+  const docId = editorStore.currentDocId
+  const content = editorStore.editorContent
+
+  collaborationStore.setCollaborationInfo(collaborationRoomId.value, username, docId, content)
 
   router.push({
     name: 'collaborationView',
@@ -72,7 +76,6 @@ const startCollaboration = () => {
   // 关闭弹窗
   showCollaborationDialog.value = false
 }
-
 </script>
 
 <template>
@@ -110,8 +113,6 @@ const startCollaboration = () => {
         <NotificationPanel />
       </div>
     </div>
-
-
 
     <!-- 新增协作按钮 -->
     <button

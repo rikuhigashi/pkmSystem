@@ -16,6 +16,54 @@
             {{ username }}
           </div>
         </div>
+
+        <!-- 保存按钮 -->
+        <button
+          @click="saveCollaboration"
+          class="btn btn-primary btn-sm shadow-md"
+          :disabled="isSaving"
+        >
+          <template v-if="isSaving">
+            <svg
+              class="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path
+                class="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+            保存中...
+          </template>
+          <template v-else>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4 mr-1"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+            保存
+          </template>
+        </button>
       </div>
 
       <div class="flex items-center space-x-4">
@@ -172,13 +220,14 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, toRaw } from 'vue'
 import { BubbleMenu, type BubbleMenu as BubbleMenuType } from '@tiptap/vue-3'
 import { Editor, EditorContent } from '@tiptap/vue-3'
 import Collaboration from '@tiptap/extension-collaboration'
 import CollaborationCursor from '@tiptap/extension-collaboration-cursor'
 import * as Y from 'yjs'
 import { HocuspocusProvider } from '@hocuspocus/provider'
+import { upDataMainData } from '@/API/side/sideAPI'
 
 //tiptap导入
 import StarterKit from '@tiptap/starter-kit'
@@ -286,6 +335,22 @@ const toolbarButtons = ref([
   },
 ])
 
+// 保存方法
+const saveCollaboration = async () => {
+  if (!editor || !collaborationStore.docId) return
+
+  isSaving.value = true
+  try {
+    const content = editor.getJSON()
+    await upDataMainData(collaborationStore.docId, content)
+    lastSavedTime.value = new Date().toLocaleTimeString()
+  } catch (error) {
+    console.error('保存协作内容失败:', error)
+  } finally {
+    isSaving.value = false
+  }
+}
+
 // 设置链接功能
 const setLink = () => {
   if (!editor) return
@@ -345,9 +410,23 @@ const generateColor = () => {
 }
 
 // 退出协作功能
-const exitCollaboration = () => {
+const exitCollaboration = async () => {
+  if (editor && collaborationStore.docId) {
+    try {
+      // 保存协作结果到原文档
+      const content = editor.getJSON()
+      await upDataMainData(collaborationStore.docId, content)
+
+      // 提示用户
+      alert('协作内容已保存！')
+    } catch (error) {
+      console.error('保存协作内容失败:', error)
+      alert('保存协作内容失败，请手动复制内容')
+    }
+  }
+
   provider.value?.disconnect()
-  router.push({ name: 'home' }) // 跳转到首页或其他页面
+  await router.push({ name: 'home' }) // 跳转到首页
   collaborationStore.clearCollaborationInfo()
 }
 
@@ -363,22 +442,48 @@ const getUserInitials = (name: string) => {
 
 // 初始化编辑器
 onMounted(async () => {
-  try {
-    token.value = await createTiptapToken()
-    console.log('获取到初始 token:', token.value)
-  } catch (error) {
-    console.error('获取初始 token 失败:', error)
-    return
-  }
+  token.value = await createTiptapToken()
+
+  const rawContent = toRaw(collaborationStore.initialContent)
 
   try {
-    console.log('创建 provider，appId:', token.value.appId)
+
+
+    if (rawContent) {
+      // 创建临时编辑器将内容写入Yjs文档
+      const tempEditor = new Editor({
+        extensions: [
+          // 必须包含协作扩展以连接到Yjs文档
+          Collaboration.configure({
+            document: doc,
+          }),
+          // 其他必要的扩展
+          StarterKit,
+          Heading.configure({ levels: [1, 2, 3] }),
+          Blockquote,
+          CodeBlock,
+          HorizontalRule,
+          Underline,
+          Link
+        ],
+        content: rawContent,
+      })
+
+      // 等待编辑器内容应用完成
+      await new Promise(resolve => setTimeout(resolve, 100))
+      tempEditor.destroy()
+    }
+
+    // 检查Yjs文档内容
+    console.log('Yjs文档内容:', doc.getXmlFragment('prosemirror').toString())
+
+
 
     // 初始化 Tiptap Collab 提供者
     provider.value = new HocuspocusProvider({
       url: `wss://${token.value.appId}.collab.tiptap.cloud`, // 正确的URL格式
       name: roomId.value,
-      token: token.value.token, // 直接传递token字符串
+      token: token.value.token,
       document: doc,
       broadcast: false, // 禁用广播以提高性能
 
@@ -400,7 +505,7 @@ onMounted(async () => {
             color: state.user?.color || generateColor(),
           }))
 
-        console.log('在线用户更新:', onlineUsers.value)
+        // console.log('在线用户更新:', onlineUsers.value)
       },
     })
 
@@ -442,9 +547,13 @@ onMounted(async () => {
           },
         }),
       ],
+      content: {},
       editable: true,
       autofocus: true,
     })
+
+    // 手动连接协作提供者
+    provider.value.connect()
 
     // 定期更新用户活动状态
     const activityInterval = setInterval(() => {
@@ -534,7 +643,15 @@ onBeforeUnmount(() => {
 /* 工具提示样式 */
 .tooltip:before {
   content: attr(data-tip);
-  @apply absolute bottom-full mb-2 px-2 py-1 text-xs bg-gray-800 text-white rounded whitespace-nowrap;
+  position: absolute;
+  bottom: 100%;
+  margin-bottom: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  background-color: #2d3748;
+  color: white;
+  border-radius: 0.375rem;
+  white-space: nowrap;
   transform: translateX(-50%);
   left: 50%;
   opacity: 0;
