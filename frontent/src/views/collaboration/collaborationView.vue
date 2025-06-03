@@ -70,8 +70,10 @@
     </div>
 
     <!-- 编辑器区域 -->
-    <div class="flex-1 overflow-hidden">
-      <editor-content :editor="editor" class="h-full" />
+    <div class="flex-1 flex flex-col overflow-hidden min-h-screen">
+      <div class="flex-1 overflow-hidden relative">
+        <editor-content :editor="editor" class="min-h-screen max-w-6xl mx-auto p-4 border-2 border-gray-300 rounded-lg shadow-lg overflow-auto" />
+      </div>
     </div>
 
     <!-- 右下角在线用户列表 -->
@@ -151,7 +153,7 @@ const token = ref({ appId: '', token: '' })
 // 编辑器实例
 let editor: Editor | undefined = undefined
 const doc = new Y.Doc()
-const provider = ref<TiptapCollabProvider | null>(null)
+const provider = ref<HocuspocusProvider | null>(null)
 
 // 状态管理
 const isSaving = ref(false)
@@ -242,10 +244,10 @@ onMounted(async () => {
 
     //设置完整的用户信息
     const userColor = generateColor()
-    provider.value.awareness.setLocalStateField('user', {
+    provider.value.awareness?.setLocalStateField('user', {
       name: username.value,
       color: userColor,
-      clientId: provider.value.awareness.clientID, // 添加客户端ID
+      clientId: provider.value.awareness?.clientID, // 添加客户端ID
       lastActive: Date.now(), // 添加最后活动时间
     })
     // 创建编辑器实例
@@ -271,8 +273,8 @@ onMounted(async () => {
 
     // 定期更新用户活动状态
     const activityInterval = setInterval(() => {
-      const currentState = provider.value.awareness.getLocalState()?.user || {}
-      provider.value.awareness.setLocalStateField('user', {
+      const currentState = provider.value?.awareness?.getLocalState()?.user || {}
+      provider.value?.awareness?.setLocalStateField('user', {
         ...currentState,
         lastActive: Date.now(),
       })
@@ -314,7 +316,8 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="scss" >
-::v-deep .collaboration-cursor__caret {
+/* 协作光标样式 */
+.collaboration-cursor__caret {
   border-left: 2px solid;
   border-right: 2px solid;
   margin-left: -1px;
@@ -323,8 +326,8 @@ onBeforeUnmount(() => {
   word-break: normal;
 }
 
-::v-deep .collaboration-cursor__label {
-  border-radius: 3px 3px 3px 0;
+.collaboration-cursor__label {
+  border-radius: 0 3px 3px 3px; /* 调整圆角方向 */
   color: white;
   font-size: 12px;
   font-weight: 600;
@@ -332,16 +335,27 @@ onBeforeUnmount(() => {
   line-height: normal;
   padding: 0.1rem 0.3rem;
   position: absolute;
-  top: -1.4em;
+  top: 100%; /* 在光标下方 */
+  margin-top: 4px; /* 添加一点间距 */
   user-select: none;
   white-space: nowrap;
   font-family: 'Inter', sans-serif;
+  z-index: 10; /* 确保标签不被遮挡 */
+}
+
+/* 编辑器内容区域样式 */
+.ProseMirror {
+  min-height: 100%;
+  padding: 1.5rem;
+  box-sizing: border-box;
+  position: relative;
+  outline: none;
 }
 
 /* 滚动条样式 */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
@@ -356,5 +370,10 @@ onBeforeUnmount(() => {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
+}
+
+
+.editor-container {
+  min-height: 100%;
 }
 </style>
