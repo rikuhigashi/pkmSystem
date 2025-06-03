@@ -27,6 +27,7 @@ spring:
       - classpath:application-mail.yml
       - classpath:application-payment.yml
       - classpath:application-tenxunyun.yml
+      - classpath:application-tiptap.yml
 app:
   is-production: true
 # JWT 配置

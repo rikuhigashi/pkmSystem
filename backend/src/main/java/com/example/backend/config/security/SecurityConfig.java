@@ -61,6 +61,7 @@ public class SecurityConfig {
                                 .requestMatchers("/upload/**").authenticated()
 //                        .requestMatchers(HttpMethod.POST, "/sideData/upload-image").authenticated()
                                 .requestMatchers("/tags/**").hasAnyRole("ADMIN", "USER") // 仅允许ADMIN和USER角色访问标签相关接口
+                                .requestMatchers("/api/tiptap/**").authenticated()
                                 .requestMatchers("/admin/**").hasRole("ADMIN")// 仅允许ADMIN角色访问
                                 .requestMatchers("/api/payment/**").authenticated()
 
