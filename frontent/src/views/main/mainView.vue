@@ -73,7 +73,7 @@
 
       <editor-content
         :editor="editor"
-        class="editor-container flex-1 p-6 rounded-box bg-base-100 border border-base-300 shadow-sm prose prose-sm max-w-none min-h-screen"
+        class="flex-1 p-6 rounded-box bg-base-100 border border-base-300 shadow-sm prose prose-sm max-w-none min-h-screen relative visible"
         @dragover.prevent="handleDragOver"
         @drop.prevent="handleDrop"
       >
@@ -958,10 +958,6 @@ onBeforeUnmount(() => {
   margin: 0.25rem 0;
 }
 
-.editor-container {
-  position: relative;
-  overflow: visible;
-}
 
 .prose-paragraph {
   min-height: 2rem;

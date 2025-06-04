@@ -161,7 +161,7 @@
 
         <editor-content
           :editor="editor"
-          class="min-h-screen max-w-6xl mx-auto p-4 border-2 border-gray-300 rounded-lg shadow-lg overflow-auto"
+          class="flex-1 p-6 rounded-box bg-base-100 border border-base-300 shadow-sm prose prose-sm max-w-none min-h-screen relative visible"
         />
       </div>
     </div>
