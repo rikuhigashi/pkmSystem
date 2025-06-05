@@ -11,6 +11,9 @@ export const useCollaborationStore = defineStore('collaborationStore', () => {
   // 关联的主文档ID
   const docId = ref<number | null>(null)
 
+  const isCreator = ref(false)
+
+
   // 初始内容
   const initialContent = ref<Record<string, any> | null>(null)
 

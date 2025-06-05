@@ -220,7 +220,7 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, onMounted, ref, toRaw } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { BubbleMenu, type BubbleMenu as BubbleMenuType } from '@tiptap/vue-3'
 import { Editor, EditorContent } from '@tiptap/vue-3'
 import Collaboration from '@tiptap/extension-collaboration'
@@ -244,7 +244,6 @@ import { useCollaborationStore } from '@/stores/collaborationStore'
 import { createTiptapToken } from '@/API/tiptap/tiptapAPI'
 
 type ProviderStatus = 'connecting' | 'connected' | 'disconnected' | 'disconnecting'
-
 
 // 从store获取协作信息
 const collaborationStore = useCollaborationStore()
@@ -447,119 +446,81 @@ const getUserInitials = (name: string) => {
 onMounted(async () => {
   token.value = await createTiptapToken()
 
-  const rawContent = toRaw(collaborationStore.initialContent)
-
   try {
-
-
-    if (rawContent) {
-      // 创建临时编辑器将内容写入Yjs文档
-      const tempEditor = new Editor({
-        extensions: [
-          StarterKit.configure({ history: false }),
-          Heading.configure({ levels: [1, 2, 3] }),
-          Blockquote,
-          CodeBlock,
-          HorizontalRule,
-          Underline,
-          Collaboration.configure({ document: doc }),
-          Link.configure({
-            openOnClick: true,
-            HTMLAttributes: { class: 'text-blue-600 hover:underline' }
-          })
-        ],
-        content: rawContent,
-      })
-
-      // 等待编辑器内容完全渲染
-      await new Promise((resolve) => {
-        tempEditor.on('create', resolve)
-        setTimeout(resolve, 100) // 双保险
-      })
-
-      tempEditor.destroy()
-    }
-
-    // 检查Yjs文档内容
-    // console.log('Yjs文档内容:', doc.getXmlFragment('prosemirror').toString())
-
-
-
-    // 初始化 Tiptap Collab 提供者
+    // 创建协作提供者
     provider.value = new HocuspocusProvider({
-      url: `wss://${token.value.appId}.collab.tiptap.cloud`, // 正确的URL格式
+      url: `wss://${token.value.appId}.collab.tiptap.cloud`,
       name: roomId.value,
       token: token.value.token,
       document: doc,
-      broadcast: false, // 禁用广播以提高性能
-
-      // 添加WebSocket事件处理
+      connect: false,
+      broadcast: false,
       onOpen: () => console.log('WebSocket连接已打开'),
       onConnect: () => console.log('协作服务已连接'),
       onDisconnect: () => console.log('协作服务已断开'),
       onDestroy: () => console.log('Provider已销毁'),
       onStateless: (payload) => console.log('无状态消息:', payload),
-
-      // 监听用户状态变化
       onAwarenessUpdate: ({ states }) => {
         onlineUsers.value = Array.from(states.entries())
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          .filter(([_, state]) => state.user) // 确保有用户信息
+          .filter(([_, state]) => state.user)
           .map(([key, state]) => ({
-            id: key.toString(), // 转换为字符串
+            id: key.toString(),
             name: state.user?.name || '匿名用户',
             color: state.user?.color || generateColor(),
           }))
+      },
+      onSynced() {
+        if (!doc.getMap('config').get('initialContentLoaded') && editor) {
+          doc.getMap('config').set('initialContentLoaded', true)
 
-        // console.log('在线用户更新:', onlineUsers.value)
+          editor.commands.setContent(collaborationStore.initialContent)
+        }
       },
     })
 
-    //设置完整的用户信息
+    // 手动连接协作服务
+    provider.value.connect()
+
+    // 设置用户信息
     const userColor = generateColor()
     provider.value.awareness?.setLocalStateField('user', {
       name: username.value,
       color: userColor,
-      clientId: provider.value.awareness?.clientID, // 添加客户端ID
-      lastActive: Date.now(), // 添加最后活动时间
+      clientId: provider.value.awareness?.clientID,
+      lastActive: Date.now(),
     })
-    // 创建编辑器实例
+
+    // 创建主编辑器实例
     editor = new Editor({
       extensions: [
         StarterKit.configure({
           history: false,
+          heading: false,
+          blockquote: false,
+          codeBlock: false,
+          horizontalRule: false,
+          orderedList:false
         }),
-        Heading.configure({
-          levels: [1, 2, 3],
-        }),
-        Blockquote.configure(),
-        CodeBlock.configure(),
-        HorizontalRule.configure(),
+        Heading.configure({ levels: [1, 2, 3] }),
+        Blockquote,
+        CodeBlock,
+        HorizontalRule,
         Underline,
-        Collaboration.configure({
-          document: doc,
-        }),
+        Collaboration.configure({ document: doc }),
         CollaborationCursor.configure({
           provider: provider.value,
-          user: {
-            name: username.value,
-            color: userColor,
-          },
+          user: { name: username.value, color: userColor },
         }),
         Link.configure({
           openOnClick: true,
-          HTMLAttributes: {
-            class: 'text-blue-600 hover:underline',
-          },
+          HTMLAttributes: { class: 'text-blue-600 hover:underline' },
         }),
       ],
-      content: {},
+
       editable: true,
       autofocus: true,
     })
-
-    // 手动连接协作提供者
-    provider.value.connect()
 
     // 定期更新用户活动状态
     const activityInterval = setInterval(() => {
@@ -570,11 +531,7 @@ onMounted(async () => {
       })
     }, 5000)
 
-    // 在组件卸载时清除定时器
-    onBeforeUnmount(() => {
-      clearInterval(activityInterval)
-    })
-
+    // 状态监听
     const connectionStatus = ref<ProviderStatus>('connecting')
     provider.value.on('status', (event: { status: ProviderStatus }) => {
       connectionStatus.value = event.status
@@ -582,7 +539,7 @@ onMounted(async () => {
     })
 
     // 模拟保存状态
-    setInterval(() => {
+    const saveInterval = setInterval(() => {
       isSaving.value = true
       setTimeout(() => {
         isSaving.value = false
@@ -590,6 +547,12 @@ onMounted(async () => {
         lastSavedTime.value = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`
       }, 1000)
     }, 30000)
+
+    // 清理定时器
+    onBeforeUnmount(() => {
+      clearInterval(activityInterval)
+      clearInterval(saveInterval)
+    })
   } catch (e) {
     console.error('初始化协作编辑器失败:', e)
   }
