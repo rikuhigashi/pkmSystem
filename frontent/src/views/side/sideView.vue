@@ -1,87 +1,96 @@
 <script lang="ts" setup>
-// ==================== import.ts====================
+// ==================== 导入模块 ====================
+import { ref, onMounted } from 'vue'
+import {  useRouter } from 'vue-router'
+import {
+  Cog6ToothIcon,
+  PencilSquareIcon,
+  TrashIcon,
+  DocumentDuplicateIcon,
+  ShareIcon
+} from '@heroicons/vue/24/outline'
+import { ChevronDownIcon } from '@heroicons/vue/20/solid'
+import { Menu, MenuButton } from '@headlessui/vue'
+
+// ==================== 导入工具和存储 ====================
 import sideUtils, { inputForm } from './side'
 import sideMenuMethod from '@/views/side/configs/sideMenuMethod'
 import noCollingBlur from '@/utils/noCollingBlurMethod'
-// ==================== import.ts====================
-
-// ==================== import store ====================
 import { useSidebarStore } from '@/stores/sidebar'
 import { useRightClickStore } from '@/stores/rightClick'
 import { userInputStore } from '@/stores/inputState'
 import { useEditorStore } from '@/stores/main/editorStore'
 import { userAuthStore } from '@/stores/auth'
 import { userVipStore } from '@/stores/vip'
-// ==================== import store ====================
+import type { sideListItem } from './types/sideTypes'
+import type { ShareFormData } from '@/types/knowledgeTypes'
 
-// ==================== userStore ====================
+// ==================== 导入组件 ====================
+import AccountSelect from '@/components/sideComponents/AccountSelect.vue'
+import RightClickRightClickSelect from '@/components/rightClickSelect/rightClickSelect.vue'
+import sideList from '@/components/sideComponents/sideList.vue'
+// import ShareKnowledgeModal from '@/components/sideComponents/ShareKnowledgeModal.vue'
+import ShareKnowledgeModal from '@/views/side/sideComponents/ShareKnowledgeModal.vue'
+import IconLeftArrow from '@/assets/icons/iconLeftArrow.vue'
+
+// ==================== 初始化存储 ====================
 const sidebarStore = useSidebarStore()
 const rightClickStore = useRightClickStore()
 const inputStore = userInputStore()
 const editorStore = useEditorStore()
 const authStore = userAuthStore()
 const useVipStore = userVipStore()
-// ==================== userStore ====================
+const router = useRouter()
 
-// ==================== import interface ====================
-import type { sideListItem } from './types/sideTypes'
+// ==================== 状态管理 ====================
+const showShareModal = ref(false)
+const shareForm = ref<ShareFormData>({
+  title: '',
+  isEncrypted: false,
+  price: 0,
+  tags: []
+})
 
-// ==================== import interface ====================
-
-// ==================== Component ====================
-import AccountSelect from '@/components/sideComponents/AccountSelect.vue'
-import RightClickRightClickSelect from '@/components/rightClickSelect/rightClickSelect.vue'
-import sideList from '@/components/sideComponents/sideList.vue'
-// ==================== Component ====================
-
-// ==================== icon ====================
-import { Menu, MenuButton } from '@headlessui/vue'
-
-const { Cog6ToothIcon, PencilSquareIcon, TrashIcon, DocumentDuplicateIcon } = sideUtils.iconMap
-
-// ==================== icon ====================
-
-import { ChevronDownIcon } from '@heroicons/vue/20/solid'
-import { onMounted } from 'vue'
-import IconLeftArrow from '@/assets/icons/iconLeftArrow.vue'
-import router from '@/router'
-
-// ==================== method ====================
-
+// ==================== 方法定义 ====================
 const handleVipClick = () => {
   if (!useVipStore.isVipActive) {
     router.push('/sponsorshipView')
-    // console.log(authStore.userInfo?.vipActive)
   }
 }
 
-// 右键事件
 const handleRightClick = (item: sideListItem, event: MouseEvent) => {
+  event.preventDefault()
   rightClickStore.toggleRightClick(event)
-  // 把item中的name传递给selectItem，这个item是从sideLide.vue中传递过来的
   rightClickStore.selectItem = item
-
   rightClickStore.selectItemId = item.id
-
-  // console.log("this allData:",rightClickStore.selectItem)
 }
 
-// 左键事件
 const handleLeftClick = (item: sideListItem) => {
-  // 把id传输出去
   rightClickStore.leftClickItemId = item.id
-  // console.log("sideViewValue:",rightClickStore.leftClickItemId)
-
-  // 设置当前文档ID
   editorStore.setCurrentDocId(rightClickStore.leftClickItemId)
 
-  // 设置当前选中项
-  sideUtils.sideNavigation.value = sideUtils.sideNavigation.value.map((navItem) => ({
+  sideUtils.sideNavigation.value = sideUtils.sideNavigation.value.map(navItem => ({
     ...navItem,
-    current: navItem.id === item.id,
+    current: navItem.id === item.id
   }))
 }
-// 点击用户名出现的下拉框
+
+const handleShareSubmit = (formData: ShareFormData) => {
+  // 调用API将当前文档内容分享到知识广场
+  console.log('分享内容:', {
+    ...formData,
+    content: editorStore?.editorContent
+  })
+
+  // 重置表单
+  shareForm.value = {
+    title: '',
+    isEncrypted: false,
+    price: 0,
+    tags: []
+  }
+}
+
 const accountSelect = [
   { name: '账号详情', href: '/AccountDetailView', isNew: false },
   { name: '消息通知', href: '/home', isNew: true },
@@ -96,94 +105,6 @@ const handleAction = async (action: string) => {
   }
 }
 
-// 点击右键出现的菜单内容
-const rightClickSelectMenuItems = [
-  [
-    // 保存逻辑在sideView中的handleEnterKey与handleBlur
-    {
-      icon: PencilSquareIcon,
-      label: '添加',
-      onClick: () => {
-        // 点击后关闭菜单栏
-        rightClickStore.closeRightClickMenu()
-        // 出现输入框
-        inputStore.openInput()
-
-        // console.log("addMethod");
-      },
-      show: () => true,
-    },
-    // 保存逻辑在sideList的handleEnterKey与保存逻辑在sideView中的handleEnterKey与handleBlur
-    // 为什么在sideList？因为输入框需要在数据上出现
-    {
-      icon: PencilSquareIcon,
-      label: '编辑',
-      onClick: () => {
-        // const item = rightClickStore.selectItem
-        if (rightClickStore.selectItemId) {
-          // 点击编辑后激活isEditingActive状态
-          inputStore.openEditingInput()
-          // console.log("test:",rightClickStore.isEditingActive);
-
-          rightClickStore.closeRightClickMenu()
-        }
-        // console.log("编辑");
-      },
-      show: () => true,
-    },
-    {
-      icon: DocumentDuplicateIcon,
-      label: '复制',
-      onClick: () => {
-        if (rightClickStore.selectItem) {
-          //只存储被复制的数据
-          rightClickStore.copiedItem = {
-            ...rightClickStore.selectItem,
-          }
-          // console.log('复制的数据:', rightClickStore.copiedItem)
-        }
-        // 关闭右键菜单
-        rightClickStore.closeRightClickMenu()
-
-        // console.log("复制");
-      },
-      show: () => true,
-    },
-    {
-      icon: DocumentDuplicateIcon,
-      label: '粘贴',
-      onClick: async () => {
-        try {
-          await sideMenuMethod.copySideData(rightClickStore.copiedItem)
-          // console.log(rightClickStore.copiedItem)
-          rightClickStore.copiedItem = null // 清空复制的数据
-        } catch (error) {
-          console.error('copyError', error)
-        }
-
-        rightClickStore.closeRightClickMenu()
-      },
-      show: () => !!rightClickStore.copiedItem,
-    },
-  ],
-  [
-    {
-      icon: TrashIcon,
-      label: '删去',
-      onClick: () => {
-        sideMenuMethod.savaDeleteSideData(rightClickStore.selectItemId)
-        rightClickStore.closeRightClickMenu()
-      },
-      show: () => true,
-    },
-  ],
-
-
-]
-// 点击右键出现的菜单内容
-
-// ---------------------- 这是解决enter键和blur事件的冲突问题 ----------------------
-// 使用保存方法
 const handleEnterKey = () => {
   noCollingBlur.handleKeyup()
   sideMenuMethod.saveInputDate()
@@ -195,30 +116,103 @@ const handleBlur = () => {
   }
   noCollingBlur.handleBlur()
 }
-// ---------------------- 这是解决enter键和blur事件的冲突问题 ----------------------
 
-// ==================== method ====================
+// ==================== 右键菜单项 ====================
+const rightClickSelectMenuItems = [
+  [
+    {
+      icon: PencilSquareIcon,
+      label: '添加',
+      onClick: () => {
+        rightClickStore.closeRightClickMenu()
+        inputStore.openInput()
+      },
+      show: () => true
+    },
+    {
+      icon: PencilSquareIcon,
+      label: '编辑',
+      onClick: () => {
+        if (rightClickStore.selectItemId) {
+          inputStore.openEditingInput()
+          rightClickStore.closeRightClickMenu()
+        }
+      },
+      show: () => true
+    },
+    {
+      icon: DocumentDuplicateIcon,
+      label: '复制',
+      onClick: () => {
+        if (rightClickStore.selectItem) {
+          rightClickStore.copiedItem = { ...rightClickStore.selectItem }
+          rightClickStore.closeRightClickMenu()
+        }
+      },
+      show: () => true
+    },
+    {
+      icon: DocumentDuplicateIcon,
+      label: '粘贴',
+      onClick: async () => {
+        try {
+          if (rightClickStore.copiedItem) {
+            await sideMenuMethod.copySideData(rightClickStore.copiedItem)
+            rightClickStore.copiedItem = null
+          }
+        } catch (error) {
+          console.error('copyError', error)
+        }
+        rightClickStore.closeRightClickMenu()
+      },
+      show: () => !!rightClickStore.copiedItem
+    },
+  ],
+  [
+    {
+      icon: TrashIcon,
+      label: '删去',
+      onClick: () => {
+        sideMenuMethod.savaDeleteSideData(rightClickStore.selectItemId)
+        rightClickStore.closeRightClickMenu()
+      },
+      show: () => true
+    },
+  ],
+  [
+    {
+      icon: ShareIcon,
+      label: '分享到知识广场',
+      onClick: () => {
+        // 设置分享表单的初始标题
+        if (rightClickStore.selectItem) {
+          shareForm.value.title = rightClickStore.selectItem.name
+        }
+        showShareModal.value = true
+        rightClickStore.closeRightClickMenu()
+      },
+      show: () => true
+    },
+  ],
+]
 
+// ==================== 生命周期钩子 ====================
 onMounted(async () => {
-  // 加载side的全部数据
   await sideMenuMethod.loadSideData()
 
   if (sideUtils.sideNavigation.value?.length > 0) {
-    if (sideUtils.sideNavigation.value?.length > 0) {
-      // 设置第一个项目为选中状态
-      sideUtils.sideNavigation.value = sideUtils.sideNavigation.value.map((item, index) => ({
-        ...item,
-        current: index === 0,
-      }))
-    }
+    sideUtils.sideNavigation.value = sideUtils.sideNavigation.value.map((item, index) => ({
+      ...item,
+      current: index === 0,
+    }))
 
     const firstItem = sideUtils.sideNavigation.value[0]
     rightClickStore.leftClickItemId = firstItem.id
-
-    editorStore.setCurrentDocId(rightClickStore.leftClickItemId) // 触发主内容加载
+    editorStore.setCurrentDocId(rightClickStore.leftClickItemId)
   }
 })
 </script>
+
 <template>
   <div
     :class="[
@@ -285,6 +279,14 @@ onMounted(async () => {
             @keyup.enter.prevent="handleEnterKey"
             @blur="handleBlur"
             v-focus="true"
+          />
+
+          <!-- 分享模态框 -->
+          <ShareKnowledgeModal
+            :show="showShareModal"
+            :form="shareForm"
+            @close="showShareModal = false"
+            @submit="handleShareSubmit"
           />
 
           <!-- 底部设置 -->

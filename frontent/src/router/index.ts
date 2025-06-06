@@ -106,6 +106,32 @@ const router = createRouter({
         }
       },
     },
+    {
+      path: '/knowledge',
+      name: 'knowledgeSquare',
+      component: () => import('@/views/knowledge/KnowledgeSquareView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/knowledge/upload',
+      name: 'uploadKnowledge',
+      component: () => import('@/views/knowledge/UploadKnowledgeView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/knowledge/my',
+      name: 'myKnowledge',
+      component: () => import('@/views/knowledge/MyKnowledgeView.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/knowledge/:id',
+      name: 'knowledgeDetail',
+      component: () => import('@/views/knowledge/KnowledgeDetailView.vue'),
+      meta: { requiresAuth: true },
+    }
+
+
   ],
 })
 

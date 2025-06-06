@@ -5,8 +5,6 @@ import com.example.backend.dto.common.PageResponse;
 import com.example.backend.dto.user.AdminSidedatumDto;
 import com.example.backend.dto.user.AdminUserDto;
 import com.example.backend.entity.side.Sidedatum;
-import com.example.backend.repository.message.NotificationRepository;
-import com.example.backend.repository.user.UserRepository;
 import com.example.backend.service.impl.side.SideServiceImpl;
 import com.example.backend.service.impl.user.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +22,6 @@ import org.springframework.web.bind.annotation.*;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -76,37 +73,40 @@ public class AdminController {
     public ResponseEntity<PageResponse<AdminSidedatumDto>> getPendingData(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant expiredBefore,
-            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
-    ) {
+            @PageableDefault(page = 0, size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 
         Page<Sidedatum> pendingData = sideService.getPendingData(name, expiredBefore, pageable);
-        List<AdminSidedatumDto> dtos = pendingData.getContent().stream()
-                .map(this::convertToAdminSidedatumDto)
-                .collect(Collectors.toList());
-
-
-        PageResponse<AdminSidedatumDto> response = new PageResponse<>(
-                dtos,
-                pendingData.getNumber(),
-                pendingData.getSize(),
-                pendingData.getTotalElements(),
-                pendingData.getTotalPages()
-        );
-        return ResponseEntity.ok(response);
-
+        Page<AdminSidedatumDto> dtoPage = pendingData.map(this::convertToAdminSidedatumDto);
+        return ResponseEntity.ok(new PageResponse<>(dtoPage));
     }
+//        Page<Sidedatum> pendingData = sideService.getPendingData(name, expiredBefore, pageable);
+//        List<AdminSidedatumDto> dtos = pendingData.getContent().stream()
+//                .map(this::convertToAdminSidedatumDto)
+//                .collect(Collectors.toList());
+//
+//
+//        PageResponse<AdminSidedatumDto> response = new PageResponse<>(
+//                dtos,
+//                pendingData.getNumber(),
+//                pendingData.getSize(),
+//                pendingData.getTotalElements(),
+//                pendingData.getTotalPages()
+//        );
+//        return ResponseEntity.ok(response);
+
+
 
 
     private AdminSidedatumDto convertToAdminSidedatumDto(Sidedatum side) {
-        AdminSidedatumDto dto = new AdminSidedatumDto();
-        dto.setId(side.getId());
-        dto.setName(side.getName());
-        dto.setHref(side.getHref());
-        dto.setIcon(side.getIcon());
-        dto.setTiptapJson(side.getTiptapJson());
-        dto.setExpiredAt(side.getExpiredAt());
-        dto.setStatus(side.getStatus());
-        return dto;
+        return AdminSidedatumDto.builder()
+                .id(side.getId())
+                .name(side.getName())
+                .href(side.getHref())
+                .icon(side.getIcon())
+                .tiptapJson(side.getTiptapJson())
+                .expiredAt(side.getExpiredAt())
+                .status(side.getStatus())
+                .build();
     }
 
 

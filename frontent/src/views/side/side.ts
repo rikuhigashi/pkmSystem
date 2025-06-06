@@ -14,6 +14,7 @@ import {
   UserPlusIcon,
   UsersIcon,
   XMarkIcon,
+  ShareIcon
 } from '@heroicons/vue/24/outline'
 // --------------------------------- 导入图标 ---------------------------
 
@@ -38,6 +39,7 @@ export const iconMap: Record<string, Component> = {
   PencilSquareIcon,
   TrashIcon,
   UserPlusIcon,
+  ShareIcon
 }
 // --------------------------------- 各种import ---------------------------
 

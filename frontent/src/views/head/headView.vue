@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { Bars3Icon } from '@heroicons/vue/24/outline'
 import { MagnifyingGlassIcon } from '@heroicons/vue/20/solid'
+import { BookOpenIcon } from '@heroicons/vue/24/outline'
 
 // ----------------- store -----------------
 import { useSidebarStore } from '@/stores/sidebar'
@@ -21,6 +22,10 @@ const isSaving = ref(false)
 const showCollaborationDialog = ref(false)
 const collaborationUsername = ref('')
 const collaborationRoomId = ref('')
+
+const goToKnowledgeSquare = () => {
+  router.push({ name: 'knowledgeSquare' })
+}
 
 const handleSaveMainData = async () => {
   if (isSaving.value) return
@@ -76,6 +81,16 @@ const startCollaboration = () => {
   // 关闭弹窗
   showCollaborationDialog.value = false
 }
+
+const collaborationCreate = () => {
+  collaborationMode.value = 'create'
+  collaborationRoomId.value = generateRoomId()
+}
+
+const collaborationJoin = () => {
+  collaborationMode.value = 'join'
+  collaborationRoomId.value = ''
+}
 </script>
 
 <template>
@@ -114,9 +129,10 @@ const startCollaboration = () => {
       </div>
     </div>
 
-
-
-
+    <button class="btn btn-ghost btn-sm ml-2" @click="goToKnowledgeSquare" title="知识广场">
+      <BookOpenIcon class="h-5 w-5" />
+      <span class="ml-1 hidden md:inline">知识广场</span>
+    </button>
 
     <!-- 协作按钮 -->
     <button
@@ -150,11 +166,12 @@ const startCollaboration = () => {
         <div class="tabs tabs-boxed mb-6">
           <button
             :class="['tab flex-1', collaborationMode === 'create' ? 'tab-active' : '']"
-            @click="
-              collaborationMode = 'create';
-              collaborationRoomId = generateRoomId()
-            "
+            @click="collaborationCreate()"
           >
+            <!--            @click="-->
+            <!--              collaborationMode = 'create'-->
+            <!--              collaborationRoomId = generateRoomId()-->
+            <!--            "-->
             <svg
               xmlns="http://www.w3.org/2000/svg"
               class="h-5 w-5 mr-1"
@@ -173,11 +190,12 @@ const startCollaboration = () => {
           </button>
           <button
             :class="['tab flex-1', collaborationMode === 'join' ? 'tab-active' : '']"
-            @click="
-              collaborationMode = 'join';
-              collaborationRoomId = ''
-            "
+            @click="collaborationJoin()"
           >
+            <!--            @click="-->
+            <!--              collaborationMode = 'join'-->
+            <!--              collaborationRoomId = ''-->
+            <!--            "-->
             <svg
               xmlns="http://www.w3.org/2000/svg"
               class="h-5 w-5 mr-1"

@@ -55,6 +55,9 @@ dependencies {
 
     implementation 'com.qcloud:cos_api:5.6.246'
 
+    implementation 'org.springframework.boot:spring-boot-starter-hateoas'
+
+
 }
 
 tasks.named('test') {

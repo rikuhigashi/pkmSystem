@@ -1,12 +1,14 @@
 package com.example.backend.dto.user;
 
 import com.example.backend.entity.side.Sidedatum;
+import lombok.Builder;
 import lombok.Data;
 
 import java.time.Instant;
 import java.util.Map;
 
 @Data
+@Builder
 public class AdminSidedatumDto {
     private Integer id;
     private String icon;

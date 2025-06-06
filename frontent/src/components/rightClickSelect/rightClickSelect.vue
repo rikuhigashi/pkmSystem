@@ -78,6 +78,7 @@ watch(
       ref="menuRef"
       class="fixed z-[999] origin-top"
       :style="{ top: `${adjustedPosition.top}px`, left: `${adjustedPosition.left}px` }"
+      v-bind="$attrs"
     >
       <transition
         enter-active-class="transition duration-100 ease-out"
