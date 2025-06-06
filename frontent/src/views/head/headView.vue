@@ -114,7 +114,11 @@ const startCollaboration = () => {
       </div>
     </div>
 
-    <!-- 新增协作按钮 -->
+
+
+
+
+    <!-- 协作按钮 -->
     <button
       class="btn btn-ghost btn-sm ml-2"
       @click="showCollaborationDialog = true"
