@@ -13,6 +13,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -88,6 +89,11 @@ public class User {
         ADMIN,  // 对应数据库中的 0
         USER    // 对应数据库中的 1
     }
+
+    @Column(name = "balance", precision = 10, scale = 2)
+    @NotNull
+    private BigDecimal balance = BigDecimal.ZERO;
+
 
     @Override
     public String toString() {

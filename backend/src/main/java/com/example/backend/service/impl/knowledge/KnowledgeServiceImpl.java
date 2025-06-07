@@ -9,12 +9,15 @@ import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.exception.UnauthorizedException;
 import com.example.backend.mapper.knowledge.KnowledgePurchaseRepository;
 import com.example.backend.repository.knowledge.KnowledgeRepository;
+import com.example.backend.repository.user.UserRepository;
 import com.example.backend.service.knowledge.KnowledgeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
 
 
 @Service
@@ -23,6 +26,7 @@ public class KnowledgeServiceImpl implements KnowledgeService {
 
     private final KnowledgeRepository knowledgeRepository;
     private final KnowledgePurchaseRepository purchaseRepository;
+    private final UserRepository userRepository;
 
     @Transactional
     @Override
@@ -131,6 +135,17 @@ public class KnowledgeServiceImpl implements KnowledgeService {
             throw new IllegalStateException("您已购买此知识");
         }
 
+        // 检查余额是否足够
+        if (user.getBalance().compareTo(BigDecimal.valueOf(knowledge.getPrice())) < 0) {
+            throw new IllegalStateException("余额不足，请先充值");
+        }
+
+        // 扣除余额
+        BigDecimal newBalance = user.getBalance().subtract(BigDecimal.valueOf(knowledge.getPrice()));
+        user.setBalance(newBalance);
+        userRepository.save(user);
+
+
         // 创建购买记录
         KnowledgePurchase purchase = new KnowledgePurchase();
         purchase.setKnowledge(knowledge);
@@ -141,4 +156,9 @@ public class KnowledgeServiceImpl implements KnowledgeService {
         knowledge.setPurchaseCount(knowledge.getPurchaseCount() + 1);
         knowledgeRepository.save(knowledge);
     }
+
+
+
+
+
 }

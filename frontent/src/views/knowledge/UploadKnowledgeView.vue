@@ -3,33 +3,58 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { CheckCircleIcon } from '@heroicons/vue/24/solid'
+import { createKnowledge } from '@/API/knowledge/knowledgeAPI'
 
 const router = useRouter()
 
 const form = ref({
   title: '',
   content: '',
-  isEncrypted: false,
+  encrypted: false,
   price: 0,
-  tags: []
+  tags: [] as string[]
 })
 
-const tags = ref('')
+const tagsInput = ref('')
 const isSubmitting = ref(false)
 const submitSuccess = ref(false)
 
 const submitForm = async () => {
-  isSubmitting.value = true
-  // 模拟API请求
-  await new Promise(resolve => setTimeout(resolve, 1500))
+  if (!form.value.title.trim()) {
+    alert('请填写知识标题')
+    return
+  }
 
-  submitSuccess.value = true
-  isSubmitting.value = false
+  try {
+    isSubmitting.value = true
 
-  // 2秒后跳转回知识广场
-  setTimeout(() => {
-    router.push({ name: 'knowledgeSquare' })
-  }, 2000)
+    // 处理标签
+    const tagsArray = tagsInput.value
+      .split(',')
+      .map(tag => tag.trim())
+      .filter(tag => tag.length > 0)
+
+    // 创建知识
+    await createKnowledge({
+      title: form.value.title,
+      content: form.value.content,
+      encrypted: form.value.encrypted,
+      price: form.value.price,
+      tags: tagsArray
+    })
+
+    submitSuccess.value = true
+
+    // 2秒后跳转回知识广场
+    setTimeout(() => {
+      router.push({ name: 'knowledgeSquare' })
+    }, 2000)
+  } catch (error) {
+    console.error('上传知识失败:', error)
+    alert('上传知识失败，请稍后再试')
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>
 
@@ -52,23 +77,27 @@ const submitForm = async () => {
         <div class="form-control">
           <label class="label">
             <span class="label-text">知识标题</span>
+            <span class="label-text-alt text-error">* 必填</span>
           </label>
           <input
             v-model="form.title"
             type="text"
             placeholder="输入标题"
             class="input input-bordered"
+            required
           />
         </div>
 
         <div class="form-control mt-4">
           <label class="label">
             <span class="label-text">知识内容</span>
+            <span class="label-text-alt text-error">* 必填</span>
           </label>
           <textarea
             v-model="form.content"
             class="textarea textarea-bordered h-48"
             placeholder="详细描述你的知识..."
+            required
           ></textarea>
         </div>
 
@@ -77,7 +106,7 @@ const submitForm = async () => {
             <span class="label-text">标签（逗号分隔）</span>
           </label>
           <input
-            v-model="tags"
+            v-model="tagsInput"
             type="text"
             placeholder="例如: Vue, 前端, 设计模式"
             class="input input-bordered"
@@ -87,7 +116,7 @@ const submitForm = async () => {
         <div class="form-control mt-6">
           <label class="cursor-pointer label justify-start">
             <input
-              v-model="form.isEncrypted"
+              v-model="form.encrypted"
               type="checkbox"
               class="checkbox checkbox-primary mr-3"
             />
@@ -95,12 +124,12 @@ const submitForm = async () => {
           </label>
         </div>
 
-        <div v-if="form.isEncrypted" class="form-control mt-4">
+        <div v-if="form.encrypted" class="form-control mt-4">
           <label class="label">
             <span class="label-text">设置价格（元）</span>
           </label>
           <input
-            v-model="form.price"
+            v-model.number="form.price"
             type="number"
             min="0"
             step="0.1"

@@ -123,15 +123,16 @@ const isLoading = ref(false)
 const handlePayment = async (price: string) => {
   try {
     isLoading.value = true
-
-    // 提取金额数值
-    // const amount = price.replace('￥', '').trim()
     const amount = parseFloat(price.replace('￥', ''))
 
-    const response = await createPaymentOrder({
-      amount: amount,
-      subject: 'VIP会员订阅',
-    })
+    // 调用统一的支付接口
+    const response = await createPaymentOrder(
+      {
+        amount: amount,
+        subject: 'VIP会员订阅'
+      },
+      'vip' // 指定支付类型为VIP
+    )
 
     if (!response.success) {
       throw new Error('支付请求失败')
@@ -140,19 +141,11 @@ const handlePayment = async (price: string) => {
     const orderNo = response.data.orderNo
     const payForm = response.data.payForm
 
-    if (!orderNo || !payForm) {
-      throw new Error('支付订单数据异常')
-    }
-
-    const validOrderNo = orderNo as string
-    const validPayForm = payForm as string
-
-    // 处理支付表单
+    // 处理支付表单跳转
     const formContainer = document.createElement('div')
-    formContainer.innerHTML = validPayForm
+    formContainer.innerHTML = payForm
     document.body.appendChild(formContainer)
 
-    // 提交支付表单
     const form = formContainer.querySelector('form')
     if (form) {
       form.submit()
@@ -160,50 +153,43 @@ const handlePayment = async (price: string) => {
       throw new Error('支付表单解析失败')
     }
 
-    // 创建隐藏iframe处理支付跳转
-    const iframe = document.createElement('iframe')
-    iframe.style.display = 'none'
-    document.body.appendChild(iframe)
-
-    if (form) {
-      iframe.contentWindow?.document.write(response.data.payForm)
-      iframe.contentWindow?.document.forms[0].submit()
-    }
-
     // 支付状态轮询
-    const maxAttempts = 30 // 最长轮询30次（约3分钟）
+    const maxAttempts = 30
     let attempts = 0
 
     const checkStatus = async () => {
       attempts++
       try {
-        const statusRes = await checkPaymentStatus(validOrderNo)
+        const statusRes = await checkPaymentStatus(orderNo)
         if (statusRes.success) {
           switch (statusRes.data.status) {
             case 'SUCCESS':
               clearInterval(interval)
               await router.push({
                 name: 'paymentSuccess',
-                query: { orderNo: validOrderNo },
+                query: { orderNo: orderNo },
               })
-              document.body.removeChild(iframe)
+              document.body.removeChild(formContainer)
               break
             case 'EXPIRED':
             case 'FAILED':
               alert('支付失败或超时')
               clearInterval(interval)
+              document.body.removeChild(formContainer)
               break
           }
         }
         if (attempts >= maxAttempts) {
           clearInterval(interval)
           alert('支付状态查询超时')
+          document.body.removeChild(formContainer)
         }
       } catch (error) {
         console.error('支付状态查询失败:', error)
       }
     }
     const interval = setInterval(checkStatus, 3000)
+
   } catch (error) {
     console.error('支付请求失败:', error)
     alert(`支付请求失败: ${error instanceof Error ? error.message : '未知错误'}`)

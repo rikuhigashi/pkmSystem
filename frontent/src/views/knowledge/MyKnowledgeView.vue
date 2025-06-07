@@ -1,18 +1,42 @@
 <!--我的知识库页面-->
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { DocumentTextIcon, LockClosedIcon } from '@heroicons/vue/24/outline'
+import { getPurchasedKnowledge, getMyKnowledge, type KnowledgeItem } from '@/API/knowledge/knowledgeAPI'
 
-// 模拟数据
-const purchasedKnowledge = ref([
-  { id: 1, title: 'Vue3 高级技巧', author: '张三', purchasedAt: '2023-06-18' },
-  { id: 2, title: 'React性能优化', author: '李四', purchasedAt: '2023-06-10' }
-])
+const purchasedKnowledge = ref<KnowledgeItem[]>([])
+const myKnowledge = ref<KnowledgeItem[]>([])
+const isLoading = ref(true)
 
-const myKnowledge = ref([
-  { id: 3, title: 'TypeScript 类型体操', author: '王五', createdAt: '2023-06-05' },
-  { id: 4, title: 'Node.js 实战', author: '赵六', createdAt: '2023-05-28' }
-])
+// 获取已购知识
+const fetchPurchasedKnowledge = async () => {
+  try {
+    purchasedKnowledge.value = await getPurchasedKnowledge()
+  } catch (error) {
+    console.error('获取已购知识失败:', error)
+  }
+}
+
+// 获取我分享的知识
+const fetchMyKnowledge = async () => {
+  try {
+    myKnowledge.value = await getMyKnowledge()
+  } catch (error) {
+    console.error('获取分享知识失败:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// 查看知识详情
+const viewKnowledge = (id: number) => {
+  router.push({ name: 'knowledgeDetail', params: { id } })
+}
+
+onMounted(() => {
+  fetchPurchasedKnowledge()
+  fetchMyKnowledge()
+})
 </script>
 
 <template>
@@ -37,10 +61,15 @@ const myKnowledge = ref([
         >
           <div class="card-body">
             <h3 class="card-title">{{ item.title }}</h3>
-            <p class="text-gray-500">作者: {{ item.author }}</p>
+            <p class="text-gray-500">作者: {{ item.authorName }}</p>
             <p class="text-sm text-gray-400 mt-2">购买日期: {{ item.purchasedAt }}</p>
             <div class="card-actions justify-end mt-4">
-              <button class="btn btn-ghost btn-sm">查看</button>
+              <button
+                class="btn btn-ghost btn-sm"
+                @click="viewKnowledge(item.id)"
+              >
+                查看
+              </button>
             </div>
           </div>
         </div>
@@ -71,10 +100,15 @@ const myKnowledge = ref([
         >
           <div class="card-body">
             <h3 class="card-title">{{ item.title }}</h3>
-            <p class="text-gray-500">作者: {{ item.author }}</p>
+            <p class="text-gray-500">作者: {{ item.authorName }}</p>
             <p class="text-sm text-gray-400 mt-2">创建日期: {{ item.createdAt }}</p>
             <div class="card-actions justify-end mt-4">
-              <button class="btn btn-ghost btn-sm">查看</button>
+              <button
+                class="btn btn-ghost btn-sm"
+                @click="viewKnowledge(item.id)"
+              >
+                查看
+              </button>
               <button class="btn btn-ghost btn-sm">编辑</button>
             </div>
           </div>

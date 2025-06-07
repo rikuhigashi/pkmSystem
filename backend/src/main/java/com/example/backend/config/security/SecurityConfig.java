@@ -59,6 +59,10 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                 .requestMatchers("/api/auth/**").permitAll()  // 允许匿名访问登录接口
                                 .requestMatchers("/upload/**").authenticated()
+                                .requestMatchers(
+                                        "/api/payment/alipay/notify",
+                                        "/api/payment/alipay/return"
+                                ).permitAll()
 //                        .requestMatchers(HttpMethod.POST, "/sideData/upload-image").authenticated()
                                 .requestMatchers("/tags/**").hasAnyRole("ADMIN", "USER") // 仅允许ADMIN和USER角色访问标签相关接口
                                 .requestMatchers("/api/tiptap/**").authenticated()

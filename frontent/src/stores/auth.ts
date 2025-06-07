@@ -80,19 +80,6 @@ export const userAuthStore = defineStore('auth', () => {
       userInfo.value = null
     }
   }
-  // const logout = async () => {
-  //   try {
-  //     await logoutAPI()
-  //     // await apiClient.post('/api/auth/logout')
-  //     isLoggedIn.value = false
-  //     userInfo.value = null
-  //     // localStorage.removeItem('token')
-  //     // sessionStorage.clear()
-  //     await router.replace({ name: 'login' })
-  //   } catch (error) {
-  //     console.error('登出失败:', error)
-  //   }
-  // }
 
   // 检查会话状态
   const checkSession = async () => {
@@ -126,39 +113,6 @@ export const userAuthStore = defineStore('auth', () => {
     }
   }
 
-  // const checkSession = async () => {
-  //   try {
-  //
-  //     const token = localStorage.getItem('authToken');
-  //     if (!token) {
-  //       isLoggedIn.value = false;
-  //       return;
-  //     }
-  //     const res = await apiClient.get('/api/auth/checkSession', {
-  //       headers: { Authorization: `Bearer ${token}` }
-  //     });
-  //     isLoggedIn.value = res.data.isAuthenticated;
-  //     userInfo.value = res.data.userInfo || null;
-  //
-  //     // const res = await apiClient.get('/api/auth/checkSession')
-  //     //
-  //     // isLoggedIn.value = res.data.isAuthenticated
-  //     // // userInfo.value = res.data.userInfo || {}
-  //     // userInfo.value = res.data.userInfo
-  //     //   ? {
-  //     //       id: res.data.userInfo.id,
-  //     //       username: res.data.userInfo.username,
-  //     //       email: res.data.userInfo.email,
-  //     //       vipActive: res.data.userInfo.vipActive,
-  //     //     }
-  //     //   : null
-  //
-  //   } catch (error) {
-  //     isLoggedIn.value = false
-  //     console.error(error)
-  //   }
-  // }
-
   //更新user数据
   const updateUserInfo = async (payload: Partial<UserInfo>) => {
     try {
@@ -177,5 +131,31 @@ export const userAuthStore = defineStore('auth', () => {
     }
   }
 
-  return { isLoggedIn, userInfo, loginUser, registerUser, logout, checkSession, updateUserInfo }
+  // 更新用户余额
+  const updateBalance = (newBalance: number) => {
+    if (userInfo.value) {
+      userInfo.value.balance = newBalance
+    }
+  }
+
+  // 从后端获取用户信息
+  const fetchUserInfo = async () => {
+    try {
+      const res = await apiClient.get('/user/info');
+      userInfo.value = {
+        id: res.data.id,
+        username: res.data.username,
+        email: res.data.email,
+        vipActive: res.data.vipActive,
+        balance: res.data.balance,
+        vipExpireDate: res.data.vipExpireDate,
+        role: res.data.role
+      };
+    } catch (error) {
+      console.error('获取用户信息失败:', error);
+    }
+  };
+
+
+  return { isLoggedIn, userInfo, loginUser, registerUser, logout, checkSession, updateUserInfo,updateBalance,fetchUserInfo }
 })

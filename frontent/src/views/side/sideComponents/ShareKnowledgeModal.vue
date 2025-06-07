@@ -1,91 +1,108 @@
 <script lang="ts" setup>
-import { ref, watch, onUnmounted, defineProps, defineEmits } from 'vue'
+import { ref } from 'vue'
 import { CheckCircleIcon } from '@heroicons/vue/24/solid'
-import type { ShareFormData } from '@/types/knowledgeTypes'
+import { createKnowledge } from '@/API/knowledge/knowledgeAPI'
+import { useEditorStore } from '@/stores/main/editorStore'
+import { userAuthStore } from '@/stores/auth'
+import { generateHTML } from '@tiptap/html'
+import StarterKit from '@tiptap/starter-kit'
+import Heading from '@tiptap/extension-heading'
+import Blockquote from '@tiptap/extension-blockquote'
+import CodeBlock from '@tiptap/extension-code-block'
+import HorizontalRule from '@tiptap/extension-horizontal-rule'
+import Underline from '@tiptap/extension-underline'
+import Link from '@tiptap/extension-link'
 
-const props = defineProps<{
-  show: boolean;
-  form: ShareFormData;
+const editorStore = useEditorStore()
+const authStore = userAuthStore()
+
+defineProps<{
+  show: boolean
 }>()
 
 const emit = defineEmits<{
-  (e: 'close'): void;
-  (e: 'submit', formData: ShareFormData): void;
+  (e: 'close'): void
 }>()
 
-// 创建本地表单副本
-const localForm = ref<ShareFormData>({
+const form = ref({
   title: '',
   isEncrypted: false,
   price: 0,
-  tags: []
+  tags: [] as string[],
 })
 
-// 标签输入
 const tagsInput = ref('')
-
-// 监听父组件传入的 form 变化，更新本地副本
-watch(() => props.form, (newForm) => {
-  if (newForm) {
-    localForm.value = { ...newForm }
-    tagsInput.value = newForm.tags.join(', ') // 将标签数组转换为逗号分隔字符串
-  }
-}, { immediate: true })
-
 const isSubmitting = ref(false)
 const submitSuccess = ref(false)
-let resetTimeout: ReturnType<typeof setTimeout> | null = null
 
-// 重置状态
-const resetState = () => {
-  isSubmitting.value = false
-  submitSuccess.value = false
-  tagsInput.value = props.form.tags.join(', ') // 使用当前表单值初始化
+// Tiptap 扩展配置
+const extensions = [
+  StarterKit,
+  Heading.configure({ levels: [1, 2, 3] }),
+  Blockquote,
+  CodeBlock,
+  HorizontalRule,
+  Underline,
+  Link.configure({
+    openOnClick: true,
+    HTMLAttributes: { class: 'text-blue-600 hover:underline' },
+  }),
+]
 
-  if (resetTimeout) {
-    clearTimeout(resetTimeout)
-    resetTimeout = null
-  }
-}
-
-// 监听显示状态变化
-watch(() => props.show, (newVal) => {
-  if (newVal) {
-    resetState()
-  }
-})
-
+// 提交分享表单
 const submitForm = async () => {
-  isSubmitting.value = true
-  // 模拟API请求
-  await new Promise(resolve => setTimeout(resolve, 1500))
+  if (!form.value.title.trim()) {
+    alert('请填写知识标题')
+    return
+  }
 
-  submitSuccess.value = true
-  isSubmitting.value = false
+  try {
+    isSubmitting.value = true
 
-  // 2秒后关闭模态框
-  resetTimeout = setTimeout(() => {
     // 处理标签为数组
     const tagsArray = tagsInput.value
       .split(',')
       .map(tag => tag.trim())
       .filter(tag => tag.length > 0)
 
-    // 提交数据
-    emit('submit', {
-      ...localForm.value,
-      tags: tagsArray
-    })
-    emit('close')
-  }, 2000)
-}
+    // 将 Tiptap JSON 内容转换为 HTML
+    const contentHtml = generateHTML(editorStore.editorContent, extensions)
 
-// 组件卸载时清理
-onUnmounted(() => {
-  if (resetTimeout) {
-    clearTimeout(resetTimeout)
+    // 准备请求数据
+    const requestData = {
+      title: form.value.title,
+      content: contentHtml,
+      isEncrypted: form.value.isEncrypted,
+      price: form.value.price,
+      tags: tagsArray,
+      authorId: authStore.userInfo?.id
+    }
+
+    // 调用创建知识API
+    await createKnowledge(requestData)
+
+    submitSuccess.value = true
+
+    // 2秒后关闭模态框
+    setTimeout(() => {
+      emit('close')
+      // 重置表单
+      form.value = {
+        title: '',
+        isEncrypted: false,
+        price: 0,
+        tags: [],
+      }
+      tagsInput.value = ''
+      submitSuccess.value = false
+    }, 2000)
+  } catch (error) {
+    console.error('分享知识失败:', error)
+    alert('分享知识失败，请稍后再试')
+  } finally {
+    isSubmitting.value = false
   }
-})
+}
 </script>
 
 <template>
@@ -96,7 +113,6 @@ onUnmounted(() => {
         <p class="text-gray-500 mt-1">将你的知识分享给社区</p>
       </div>
 
-      <!-- 修复成功提示样式：添加 flex 布局和间距 -->
       <div
         v-if="submitSuccess"
         class="alert alert-success shadow-lg mb-6 flex items-center bg-green-100 text-green-800 p-4 rounded-lg"
@@ -109,12 +125,14 @@ onUnmounted(() => {
         <div class="form-control">
           <label class="label">
             <span class="label-text">知识标题</span>
+            <span class="label-text-alt text-error">* 必填</span>
           </label>
           <input
-            v-model="localForm.title"
+            v-model="form.title"
             type="text"
             placeholder="输入标题"
             class="input input-bordered"
+            required
           />
         </div>
 
@@ -133,7 +151,7 @@ onUnmounted(() => {
         <div class="form-control">
           <label class="cursor-pointer label justify-start">
             <input
-              v-model="localForm.isEncrypted"
+              v-model="form.isEncrypted"
               type="checkbox"
               class="checkbox checkbox-primary mr-3"
             />
@@ -141,12 +159,12 @@ onUnmounted(() => {
           </label>
         </div>
 
-        <div v-if="localForm.isEncrypted" class="form-control">
+        <div v-if="form.isEncrypted" class="form-control">
           <label class="label">
             <span class="label-text">设置价格（元）</span>
           </label>
           <input
-            v-model.number="localForm.price"
+            v-model.number="form.price"
             type="number"
             min="0"
             step="0.1"

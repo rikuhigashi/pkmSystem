@@ -1,160 +1,48 @@
 <script lang="ts" setup>
-import { ref, onMounted } from 'vue'
+import {ref, onMounted, computed} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { renderTiptapContent } from '@/utils/tiptapRenderer'
-import type { JSONContent } from '@tiptap/core'
+import { getKnowledgeDetail, purchaseKnowledge, type KnowledgeDetail } from '@/API/knowledge/knowledgeAPI'
+import { userAuthStore } from "@/stores/auth"
 
+const authStore = userAuthStore()
 const route = useRoute()
 const router = useRouter()
-const knowledgeId = ref(route.params.id as string)
+const knowledgeId = ref(parseInt(route.params.id as string))
 
-// 知识详情数据结构
-interface KnowledgeDetail {
-  id: string;
-  title: string;
-  author: string;
-  createdAt: string;
-  price: number;
-  isEncrypted: boolean;
-  purchased: boolean;
-  tags: string[];
-  content: JSONContent;
-}
-
-// 模拟知识数据
 const knowledge = ref<KnowledgeDetail | null>(null)
 const isLoading = ref(true)
 const isPurchasing = ref(false)
 
-// 模拟API获取知识详情
-const fetchKnowledgeDetail = async (id: string) => {
-  // 模拟API请求
-  await new Promise(resolve => setTimeout(resolve, 500))
+// 获取用户余额
+const userBalance = computed(() => authStore.userInfo?.balance || 0)
 
-  // 模拟数据
-  const mockData: KnowledgeDetail[] = [
-    {
-      id: "1",
-      title: "Vue3 高级技巧",
-      author: "张三",
-      createdAt: "2023-06-15",
-      price: 9.9,
-      isEncrypted: true,
-      purchased: false,
-      tags: ["Vue", "前端", "JavaScript"],
-      content: {
-        type: "doc",
-        content: [
-          {
-            type: "heading",
-            attrs: { level: 2 },
-            content: [{ type: "text", text: "Vue3 响应式原理深度解析" }]
-          },
-          {
-            type: "paragraph",
-            content: [
-              { type: "text", text: "Vue3 使用 " },
-              { type: "text", marks: [{ type: "bold" }], text: "Proxy" },
-              { type: "text", text: " 代替了 Vue2 中的 " },
-              { type: "text", marks: [{ type: "code" }], text: "Object.defineProperty" },
-              { type: "text", text: "，这带来了以下优势：" }
-            ]
-          },
-          {
-            type: "bulletList",
-            content: [
-              {
-                type: "listItem",
-                content: [{ type: "paragraph", content: [{ type: "text", text: "更好的性能" }] }]
-              },
-              {
-                type: "listItem",
-                content: [{ type: "paragraph", content: [{ type: "text", text: "支持数组索引变化" }] }]
-              },
-              {
-                type: "listItem",
-                content: [{ type: "paragraph", content: [{ type: "text", text: "支持 Map/Set 等新数据结构" }] }]
-              }
-            ]
-          },
-          {
-            type: "heading",
-            attrs: { level: 3 },
-            content: [{ type: "text", text: "组合式 API 最佳实践" }]
-          },
-          {
-            type: "paragraph",
-            content: [
-              { type: "text", text: "组合式 API 是 Vue3 最重要的特性之一，它允许我们更好地组织代码：" }
-            ]
-          },
-          {
-            type: "codeBlock",
-            attrs: { language: "typescript" },
-            content: [{
-              type: "text",
-              text: `import { ref, computed } from 'vue'
-
-export default function useCounter() {
-  const count = ref(0)
-  const double = computed(() => count.value * 2)
-
-  function increment() {
-    count.value++
+// 获取知识详情
+const fetchKnowledgeDetail = async () => {
+  try {
+    isLoading.value = true
+    knowledge.value = await getKnowledgeDetail(knowledgeId.value)
+  } catch (error) {
+    console.error('加载知识详情失败:', error)
+  } finally {
+    isLoading.value = false
   }
-
-  return { count, double, increment }
-}`
-            }]
-          }
-        ]
-      }
-    },
-    {
-      id: "2",
-      title: "TypeScript 类型体操",
-      author: "李四",
-      createdAt: "2023-06-10",
-      price: 0,
-      isEncrypted: false,
-      purchased: true,
-      tags: ["TypeScript", "前端"],
-      content: {
-        type: "doc",
-        content: [
-          {
-            type: "heading",
-            attrs: { level: 2 },
-            content: [{ type: "text", text: "高级类型技巧" }]
-          },
-          {
-            type: "paragraph",
-            content: [
-              { type: "text", text: "TypeScript 的类型系统非常强大，可以完成许多复杂的类型操作。" }
-            ]
-          }
-        ]
-      }
-    }
-  ]
-
-  return mockData.find(item => item.id === id) || null
 }
 
 // 购买知识
-const purchaseKnowledge = async () => {
+const handlePurchase = async () => {
   if (!knowledge.value) return
 
-  isPurchasing.value = true
   try {
-    // 模拟购买API请求
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    isPurchasing.value = true
+    // 调用购买API并获取新余额
+    const newBalance = await purchaseKnowledge(knowledge.value.id)
 
-    // 更新购买状态
+    // 更新本地余额
+    authStore.updateBalance(newBalance)
+
+    // 标记知识为已购买
     knowledge.value.purchased = true
-
-    // 显示成功消息
-    alert(`已成功购买 "${knowledge.value.title}"，现在可以查看完整内容了！`)
   } catch (error) {
     console.error('购买失败:', error)
     alert('购买失败，请稍后再试')
@@ -163,14 +51,8 @@ const purchaseKnowledge = async () => {
   }
 }
 
-onMounted(async () => {
-  try {
-    knowledge.value = await fetchKnowledgeDetail(knowledgeId.value)
-  } catch (error) {
-    console.error('加载知识详情失败:', error)
-  } finally {
-    isLoading.value = false
-  }
+onMounted(() => {
+  fetchKnowledgeDetail()
 })
 </script>
 
@@ -186,6 +68,11 @@ onMounted(async () => {
       返回知识广场
     </button>
 
+    <!-- 余额显示 -->
+    <div class="bg-blue-50 px-4 py-2 rounded-full mb-6">
+      <span class="text-blue-700 font-medium">我的余额: {{ userBalance }}元</span>
+    </div>
+
     <!-- 加载状态 -->
     <div v-if="isLoading" class="text-center py-12 flex flex-col items-center">
       <span class="loading loading-spinner loading-lg text-primary"></span>
@@ -200,7 +87,7 @@ onMounted(async () => {
             {{ knowledge.title }}
           </h1>
 
-          <div v-if="knowledge.isEncrypted"
+          <div v-if="knowledge.encrypted"
                :class="['badge', knowledge.purchased ? 'badge-success' : 'badge-primary', 'gap-1']">
             <span>{{ knowledge.price }}元</span>
             <span v-if="knowledge.purchased" class="ml-1">✓</span>
@@ -222,17 +109,17 @@ onMounted(async () => {
         <div class="flex items-center text-gray-500 mb-6">
           <div class="avatar placeholder">
             <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-              <span class="text-gray-600 font-medium">{{ knowledge.author.charAt(0) }}</span>
+              <span class="text-gray-600 font-medium">{{ knowledge.authorName.charAt(0) }}</span>
             </div>
           </div>
-          <span class="ml-2">{{ knowledge.author }}</span>
+          <span class="ml-2">{{ knowledge.authorName }}</span>
           <span class="mx-2">•</span>
           <span>发布于 {{ knowledge.createdAt }}</span>
         </div>
 
         <!-- 加密内容提示 -->
         <div
-          v-if="knowledge.isEncrypted && !knowledge.purchased"
+          v-if="knowledge.encrypted && !knowledge.purchased"
           class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center mb-6"
         >
           <div class="flex justify-center mb-4">
@@ -245,18 +132,19 @@ onMounted(async () => {
             购买后可查看完整内容。购买后永久有效。
           </p>
           <button
-            @click="purchaseKnowledge"
+            @click="handlePurchase"
             class="btn btn-primary w-full sm:w-auto"
-            :disabled="isPurchasing"
+            :disabled="isPurchasing || userBalance < knowledge.price"
           >
             <span v-if="isPurchasing" class="loading loading-spinner"></span>
             {{ isPurchasing ? '购买中...' : `购买查看 (¥${knowledge.price})` }}
+            <span v-if="userBalance < knowledge.price" class="ml-2 text-xs text-red-500">余额不足</span>
           </button>
         </div>
 
         <!-- 知识内容 -->
         <div
-          v-if="!knowledge.isEncrypted || knowledge.purchased"
+          v-if="!knowledge.encrypted || knowledge.purchased"
           class="prose prose-sm max-w-none"
         >
           <component :is="renderTiptapContent(knowledge.content)" />

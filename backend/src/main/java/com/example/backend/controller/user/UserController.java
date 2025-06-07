@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -100,5 +101,29 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
+
+    @GetMapping("/info")
+    public ResponseEntity<Map<String, Object>> getUserInfo(
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("用户不存在"));
+
+
+        // 确保余额不为null
+        BigDecimal balance = user.getBalance();
+        if (balance == null) {
+            balance = BigDecimal.ZERO;
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", user.getId());
+        response.put("username", user.getUsername());
+        response.put("email", user.getEmail());
+        response.put("balance", balance); // 返回余额
+        response.put("vipActive", user.isVipActive());
+
+        return ResponseEntity.ok(response);
+    }
 
 }

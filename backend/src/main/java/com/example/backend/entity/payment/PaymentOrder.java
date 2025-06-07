@@ -49,7 +49,10 @@ public class PaymentOrder {
     private LocalDateTime payTime;
 
     public enum PayType {
-        ALIPAY, WECHAT
+        ALIPAY,
+        WECHAT,
+        BALANCE,       // 余额支付
+        BALANCE_RECHARGE // 余额充值
     }
 
     public enum OrderStatus {

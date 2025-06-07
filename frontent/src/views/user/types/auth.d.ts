@@ -5,4 +5,5 @@ export interface UserInfo {
   vipActive?: boolean
   vipExpireDate?: string
   role?:string
+  balance?: number
 }

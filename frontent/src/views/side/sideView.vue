@@ -184,8 +184,8 @@ const rightClickSelectMenuItems = [
       icon: ShareIcon,
       label: '分享到知识广场',
       onClick: () => {
-        // 设置分享表单的初始标题
         if (rightClickStore.selectItem) {
+
           shareForm.value.title = rightClickStore.selectItem.name
         }
         showShareModal.value = true
