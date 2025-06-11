@@ -8,11 +8,16 @@ import com.example.backend.repository.user.UserRepository;
 import com.example.backend.service.impl.knowledge.KnowledgeServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/knowledge")
@@ -61,7 +66,19 @@ public class KnowledgeController {
     @GetMapping("/search")
     public ResponseEntity<PageResponse<KnowledgeDTO>> searchKnowledge(
             @RequestParam(required = false) String query,
-            Pageable pageable) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortField,
+            @RequestParam(defaultValue = "DESC") String sortDirection) {
+
+        // 创建分页和排序
+        Sort.Direction direction = Sort.Direction.fromString(sortDirection);
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(direction, sortField)
+        );
+
         Page<KnowledgeDTO> result = knowledgeService.searchKnowledge(query, pageable);
         return ResponseEntity.ok(new PageResponse<>(result));
     }
@@ -86,24 +103,37 @@ public class KnowledgeController {
 
     @GetMapping("/{id}")
     public ResponseEntity<KnowledgeDTO> getKnowledgeDetails(
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
-        // 获取当前认证用户
-        User user = userRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("用户不存在"));
+        User user = getUserFromDetails(userDetails);
+
+
         KnowledgeDTO knowledge = knowledgeService.getKnowledgeDetails(id, user);
+
+        // 检查用户是否已购买（包括作者）
+//        boolean isPurchased = knowledgeService.isKnowledgePurchased(id, user.getId());
+
+//        return ResponseEntity.ok(knowledge.withPurchased(isPurchased));
         return ResponseEntity.ok(knowledge);
     }
 
     @PostMapping("/{id}/purchase")
-    public ResponseEntity<Void> purchaseKnowledge(
+    public ResponseEntity<BigDecimal> purchaseKnowledge(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) {
-        // 获取当前认证用户
         User user = userRepository.findByEmail(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
-        knowledgeService.purchaseKnowledge(id, user);
-        return ResponseEntity.ok().build();
+        BigDecimal newBalance = knowledgeService.purchaseKnowledge(id, user);
+        return ResponseEntity.ok(newBalance);
+    }
+
+    // 获取用户的知识权限ID列表
+    @GetMapping("/user-knowledge-ids")
+    public ResponseEntity<List<Long>> getUserKnowledgeIds(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User user = getUserFromDetails(userDetails);
+        List<Long> knowledgeIds = knowledgeService.getUserKnowledgeIds(user.getId());
+        return ResponseEntity.ok(knowledgeIds);
     }
 
     // 从认证信息获取用户

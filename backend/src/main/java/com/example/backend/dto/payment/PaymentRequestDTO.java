@@ -11,6 +11,7 @@ public record PaymentRequestDTO(
         @DecimalMin(value = "0.01", message = "金额必须大于0")
         BigDecimal amount,
         @NotBlank(message = "订单标题不能为空")
-        String subject
+        String subject,
+        Long knowledgeId //知识ID（用于知识购买）
 ) {
 }

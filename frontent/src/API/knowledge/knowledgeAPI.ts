@@ -6,6 +6,7 @@ import type { AxiosError } from 'axios'
 export interface KnowledgeDetail {
   id: number
   title: string
+  authorId: number
   authorName: string
   createdAt: string
   price: number
@@ -19,18 +20,21 @@ export interface KnowledgeDetail {
 export interface KnowledgeItem {
   id: number
   title: string
+  authorId: number
   authorName: string
   price: number
   encrypted: boolean
   purchased: boolean
   tags: string[]
+  createdAt: string       // 创建时间字段
+  purchasedAt?: string    // 购买时间字段
 }
 
 // 创建知识请求参数
 export interface CreateKnowledgeRequest {
   title: string
   content: string
-  isEncrypted: boolean
+  encrypted: boolean
   price: number
   tags: string[]
 }
@@ -42,14 +46,25 @@ interface ErrorResponse {
 /**
  * 搜索知识列表
  * @param query 搜索关键词
- * @param pageable 分页参数
+ * @param page 页码（从0开始）
+ * @param size 每页数量
+ * @param sortField
+ * @param sortDirection
  */
-export const searchKnowledge = async (query?: string, pageable?: any) => {
+export const searchKnowledge = async (
+  query?: string,
+  page: number = 0,
+  size: number = 10,
+  sortField: string = 'createdAt',
+  sortDirection: string = 'DESC'
+) => {
   try {
     const params = {
       query,
-      page: pageable?.page || 0,
-      size: pageable?.size || 10
+      page,
+      size,
+      sortField,
+      sortDirection
     }
 
     const res = await apiClient.get('/api/knowledge/search', { params })
@@ -125,5 +140,17 @@ export const createKnowledge = async (data: CreateKnowledgeRequest) => {
   } catch (error) {
     const axiosError = error as AxiosError<ErrorResponse>
     throw new Error(axiosError.response?.data?.message || '创建知识失败')
+  }
+}
+
+
+// 获取用户知识权限ID列表
+export const getUserKnowledgeIds = async (): Promise<number[]> => {
+  try {
+    const res = await apiClient.get('/api/knowledge/user-knowledge-ids')
+    return res.data
+  } catch (error) {
+    console.error('获取用户知识ID失败:', error)
+    return []
   }
 }

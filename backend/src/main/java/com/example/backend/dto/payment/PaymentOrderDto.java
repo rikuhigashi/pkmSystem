@@ -9,7 +9,15 @@ import java.time.LocalDateTime;
 /**
  * DTO for {@link PaymentOrder}
  */
-public record PaymentOrderDto(Long id, String orderNo, BigDecimal amount, String subject, String body,
-                              PaymentOrder.PayType payType, PaymentOrder.OrderStatus status, LocalDateTime createTime,
-                              LocalDateTime expireTime, String transactionId) implements Serializable {
+public record PaymentOrderDto(Long id,
+                              String orderNo,
+                              BigDecimal amount,
+                              String subject,
+                              String body,
+                              PaymentOrder.PayType payType,
+                              PaymentOrder.OrderStatus status,
+                              LocalDateTime createTime,
+                              LocalDateTime expireTime,
+                              String transactionId
+) implements Serializable {
 }

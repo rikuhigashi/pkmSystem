@@ -3,7 +3,6 @@ package com.example.backend.controller.payment;
 import com.example.backend.dto.payment.PaymentRequestDTO;
 import com.example.backend.dto.payment.PaymentResponseDTO;
 import com.example.backend.dto.payment.PaymentStatusResponse;
-import com.example.backend.dto.payment.RechargeRequestDTO;
 import com.example.backend.entity.user.User;
 import com.example.backend.repository.user.UserRepository;
 import com.example.backend.service.impl.payment.AlipayServiceImpl;
@@ -40,8 +39,6 @@ public class PaymentController {
         String email = userDetails.getUsername();
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
-
-        log.info("用户 {} 发起支付请求，金额：{} 元", user.getUsername(), request.amount());
 
         try {
             PaymentResponseDTO response = paymentService.createPaymentOrder(user, request);
@@ -99,23 +96,23 @@ public class PaymentController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/recharge")
-    public ResponseEntity<PaymentResponseDTO> rechargeBalance(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody @Valid RechargeRequestDTO request) {
-
-        String email = userDetails.getUsername();
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("用户不存在"));
-
-        log.info("用户 {} 发起充值请求，金额：{} 元", user.getUsername(), request.amount());
-
-        try {
-            PaymentResponseDTO response = paymentService.createRechargeOrder(user, request.amount());
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.error("充值订单创建失败: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
+//    @PostMapping("/recharge")
+//    public ResponseEntity<PaymentResponseDTO> rechargeBalance(
+//            @AuthenticationPrincipal UserDetails userDetails,
+//            @RequestBody @Valid RechargeRequestDTO request) {
+//
+//        String email = userDetails.getUsername();
+//        User user = userRepository.findByEmail(email)
+//                .orElseThrow(() -> new RuntimeException("用户不存在"));
+//
+//        log.info("用户 {} 发起充值请求，金额：{} 元", user.getUsername(), request.amount());
+//
+//        try {
+//            PaymentResponseDTO response = paymentService.createRechargeOrder(user, request.amount());
+//            return ResponseEntity.ok(response);
+//        } catch (Exception e) {
+//            log.error("充值订单创建失败: {}", e.getMessage());
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+//        }
+//    }
 }

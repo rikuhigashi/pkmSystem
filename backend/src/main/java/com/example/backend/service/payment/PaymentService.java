@@ -21,8 +21,6 @@ public interface PaymentService {
 
     PaymentStatusResponse getPaymentStatus(String orderNo, String username);
 
-    @Transactional
-    PaymentResponseDTO createRechargeOrder(User user, BigDecimal amount);
 
     boolean verifyAlipaySignature(Map<String, String> params);
 }

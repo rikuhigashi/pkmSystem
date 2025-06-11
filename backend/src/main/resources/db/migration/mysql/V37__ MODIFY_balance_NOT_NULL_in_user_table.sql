@@ -1,2 +1,0 @@
-ALTER TABLE user
-    MODIFY balance DECIMAL(10, 2) NOT NULL;

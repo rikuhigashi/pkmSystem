@@ -1,20 +1,13 @@
-<script lang="ts" setup>
+<!--知识分享弹窗-->
+<script setup lang="ts">
 import { ref } from 'vue'
-import { CheckCircleIcon } from '@heroicons/vue/24/solid'
 import { createKnowledge } from '@/API/knowledge/knowledgeAPI'
 import { useEditorStore } from '@/stores/main/editorStore'
-import { userAuthStore } from '@/stores/auth'
-import { generateHTML } from '@tiptap/html'
-import StarterKit from '@tiptap/starter-kit'
-import Heading from '@tiptap/extension-heading'
-import Blockquote from '@tiptap/extension-blockquote'
-import CodeBlock from '@tiptap/extension-code-block'
-import HorizontalRule from '@tiptap/extension-horizontal-rule'
-import Underline from '@tiptap/extension-underline'
-import Link from '@tiptap/extension-link'
+import { CheckCircleIcon } from '@heroicons/vue/24/solid'
+import { useAlertStore } from '@/stores/alert'
 
 const editorStore = useEditorStore()
-const authStore = userAuthStore()
+const alertStore = useAlertStore()
 
 defineProps<{
   show: boolean
@@ -24,9 +17,10 @@ const emit = defineEmits<{
   (e: 'close'): void
 }>()
 
+// 使用强类型定义表单
 const form = ref({
   title: '',
-  isEncrypted: false,
+  encrypted: false,
   price: 0,
   tags: [] as string[],
 })
@@ -35,70 +29,58 @@ const tagsInput = ref('')
 const isSubmitting = ref(false)
 const submitSuccess = ref(false)
 
-// Tiptap 扩展配置
-const extensions = [
-  StarterKit,
-  Heading.configure({ levels: [1, 2, 3] }),
-  Blockquote,
-  CodeBlock,
-  HorizontalRule,
-  Underline,
-  Link.configure({
-    openOnClick: true,
-    HTMLAttributes: { class: 'text-blue-600 hover:underline' },
-  }),
-]
-
-// 提交分享表单
 const submitForm = async () => {
   if (!form.value.title.trim()) {
-    alert('请填写知识标题')
+    alertStore.showAlert('请填写知识标题', 'error')
     return
   }
 
   try {
     isSubmitting.value = true
 
-    // 处理标签为数组
+    // 处理标签
     const tagsArray = tagsInput.value
       .split(',')
       .map(tag => tag.trim())
       .filter(tag => tag.length > 0)
 
-    // 将 Tiptap JSON 内容转换为 HTML
-    const contentHtml = generateHTML(editorStore.editorContent, extensions)
-
-    // 准备请求数据
-    const requestData = {
-      title: form.value.title,
-      content: contentHtml,
-      isEncrypted: form.value.isEncrypted,
-      price: form.value.price,
-      tags: tagsArray,
-      authorId: authStore.userInfo?.id
+    // 确保编辑器内容存在
+    if (!editorStore.editorContent) {
+      throw new Error('知识内容为空')
     }
 
-    // 调用创建知识API
-    await createKnowledge(requestData)
+    // 创建知识 - 传递JSON内容
+    await createKnowledge({
+      title: form.value.title,
+      content: JSON.stringify(editorStore.editorContent),
+      encrypted: form.value.encrypted,
+      price: form.value.price,
+      tags: tagsArray
+    })
 
     submitSuccess.value = true
+    alertStore.showAlert('知识分享成功！', 'success')
 
     // 2秒后关闭模态框
     setTimeout(() => {
       emit('close')
-      // 重置表单
       form.value = {
         title: '',
-        isEncrypted: false,
+        encrypted: false,
         price: 0,
         tags: [],
       }
       tagsInput.value = ''
       submitSuccess.value = false
     }, 2000)
-  } catch (error) {
-    console.error('分享知识失败:', error)
-    alert('分享知识失败，请稍后再试')
+  } catch (error: unknown) {
+    let errorMessage = '知识分享失败'
+    if (error instanceof Error) {
+      errorMessage = error.message
+    }
+
+    console.error('知识分享失败:', errorMessage)
+    alertStore.showAlert(`知识分享失败: ${errorMessage}`, 'error', 5000)
   } finally {
     isSubmitting.value = false
   }
@@ -151,7 +133,7 @@ const submitForm = async () => {
         <div class="form-control">
           <label class="cursor-pointer label justify-start">
             <input
-              v-model="form.isEncrypted"
+              v-model="form.encrypted"
               type="checkbox"
               class="checkbox checkbox-primary mr-3"
             />
@@ -159,7 +141,7 @@ const submitForm = async () => {
           </label>
         </div>
 
-        <div v-if="form.isEncrypted" class="form-control">
+        <div v-if="form.encrypted" class="form-control">
           <label class="label">
             <span class="label-text">设置价格（元）</span>
           </label>

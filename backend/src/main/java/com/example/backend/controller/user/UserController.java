@@ -4,6 +4,8 @@ import com.example.backend.dto.user.UserDto;
 import com.example.backend.dto.user.UserUpdateRequest;
 import com.example.backend.entity.message.Notification;
 import com.example.backend.entity.user.User;
+import com.example.backend.mapper.knowledge.KnowledgePurchaseRepository;
+import com.example.backend.repository.knowledge.KnowledgeRepository;
 import com.example.backend.repository.message.NotificationRepository;
 import com.example.backend.repository.user.UserRepository;
 import com.example.backend.service.impl.user.UserServiceImpl;
@@ -17,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,12 +32,16 @@ public class UserController {
     private final UserServiceImpl userService;
     private final UserRepository userRepository;
     private final NotificationRepository notificationRepository;
+    private final KnowledgePurchaseRepository knowledgePurchaseRepository;
+    private final KnowledgeRepository knowledgeRepository;
 
     @Autowired
-    public UserController(UserServiceImpl userService, UserRepository userRepository, NotificationRepository notificationRepository) {
+    public UserController(UserServiceImpl userService, UserRepository userRepository, NotificationRepository notificationRepository, KnowledgePurchaseRepository knowledgePurchaseRepository, KnowledgeRepository knowledgeRepository) {
         this.userService = userService;
         this.userRepository = userRepository;
         this.notificationRepository = notificationRepository;
+        this.knowledgePurchaseRepository = knowledgePurchaseRepository;
+        this.knowledgeRepository = knowledgeRepository;
     }
 
 
@@ -122,8 +129,33 @@ public class UserController {
         response.put("email", user.getEmail());
         response.put("balance", balance); // 返回余额
         response.put("vipActive", user.isVipActive());
+        response.put("vipExpireDate", user.getVipExpireTime());
 
         return ResponseEntity.ok(response);
     }
+
+    // 获取用户已购买的知识ID列表
+    @GetMapping("/purchased-knowledge-ids")
+    public ResponseEntity<List<Long>> getPurchasedKnowledgeIds(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("用户不存在"));
+
+        // 获取用户购买的知识ID
+        List<Long> purchasedIds = knowledgePurchaseRepository.findKnowledgeIdsByUserId(user.getId());
+
+        // 获取用户创建的知识ID（作者自动拥有权限）
+        List<Long> createdIds = knowledgeRepository.findIdsByAuthorId(user.getId());
+
+        // 合并ID列表
+        List<Long> allIds = new ArrayList<>();
+        allIds.addAll(purchasedIds);
+        allIds.addAll(createdIds);
+
+        return ResponseEntity.ok(allIds);
+    }
+
+
+
 
 }

@@ -1,6 +1,7 @@
 package com.example.backend.dto.knowledge;
 
 import com.example.backend.entity.knowledge.Knowledge;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -13,13 +14,15 @@ public class KnowledgeDTO {
     private Long id;
     private String title;
     private String content;
-    private Integer  authorId;
+    private Integer authorId;
     private String authorName;
     private Double price;
+    @JsonProperty("encrypted")
     private Boolean isEncrypted;
     private List<String> tags;
     private Instant createdAt;
     private Integer purchaseCount;
+    private Boolean purchased; // 标记用户是否已购买
 
     public static KnowledgeDTO fromEntity(Knowledge knowledge) {
         return KnowledgeDTO.builder()
@@ -34,5 +37,11 @@ public class KnowledgeDTO {
                 .createdAt(knowledge.getCreatedAt())
                 .purchaseCount(knowledge.getPurchaseCount())
                 .build();
+    }
+
+    // 设置购买状态的方法
+    public KnowledgeDTO withPurchased(Boolean purchased) {
+        this.purchased = purchased;
+        return this;
     }
 }

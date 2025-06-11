@@ -1,8 +1,8 @@
-<!--我的知识库页面-->
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue'
 import { DocumentTextIcon, LockClosedIcon } from '@heroicons/vue/24/outline'
 import { getPurchasedKnowledge, getMyKnowledge, type KnowledgeItem } from '@/API/knowledge/knowledgeAPI'
+import router from "@/router";
 
 const purchasedKnowledge = ref<KnowledgeItem[]>([])
 const myKnowledge = ref<KnowledgeItem[]>([])
@@ -33,6 +33,11 @@ const viewKnowledge = (id: number) => {
   router.push({ name: 'knowledgeDetail', params: { id } })
 }
 
+// 返回知识广场
+const goBack = () => {
+  router.push({ name: 'knowledgeSquare' })
+}
+
 onMounted(() => {
   fetchPurchasedKnowledge()
   fetchMyKnowledge()
@@ -41,6 +46,25 @@ onMounted(() => {
 
 <template>
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- 返回按钮 -->
+    <button @click="goBack" class="btn btn-ghost btn-sm mb-6 flex items-center">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-4 w-4 mr-1"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M10 19l-7-7m0 0l7-7m-7 7h18"
+        />
+      </svg>
+      返回知识广场
+    </button>
+
     <h1 class="text-3xl font-bold text-gray-900 mb-8">我的知识库</h1>
 
     <div class="mb-12">
@@ -53,7 +77,7 @@ onMounted(() => {
         <p class="text-gray-500">您尚未购买任何知识</p>
       </div>
 
-      <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div
           v-for="item in purchasedKnowledge"
           :key="item.id"
@@ -92,7 +116,7 @@ onMounted(() => {
         </router-link>
       </div>
 
-      <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <div
           v-for="item in myKnowledge"
           :key="item.id"

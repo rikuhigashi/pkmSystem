@@ -4,6 +4,7 @@ import com.example.backend.dto.knowledge.KnowledgeDTO;
 import com.example.backend.dto.knowledge.KnowledgeRequest;
 import com.example.backend.entity.knowledge.Knowledge;
 import com.example.backend.entity.knowledge.KnowledgePurchase;
+import com.example.backend.entity.payment.PaymentOrder;
 import com.example.backend.entity.user.User;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.exception.UnauthorizedException;
@@ -16,8 +17,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 
 @Service
@@ -32,12 +39,12 @@ public class KnowledgeServiceImpl implements KnowledgeService {
     @Override
     public KnowledgeDTO createKnowledge(User user, KnowledgeRequest request) {
         Knowledge knowledge = new Knowledge();
-        knowledge.setTitle(request.getTitle());
-        knowledge.setContent(request.getContent());
+        knowledge.setTitle(request.title());
+        knowledge.setContent(request.content());
         knowledge.setAuthor(user);
-        knowledge.setIsEncrypted(request.getIsEncrypted());
-        knowledge.setPrice(request.getPrice() != null ? request.getPrice() : 0.0);
-        knowledge.setTags(request.getTags());
+        knowledge.setIsEncrypted(request.isEncrypted());
+        knowledge.setPrice(request.price() != null ? request.price() : 0.0);
+        knowledge.setTags(request.tags());
         knowledge.setStatus(Knowledge.Status.PUBLISHED);
 
         Knowledge saved = knowledgeRepository.save(knowledge);
@@ -54,11 +61,11 @@ public class KnowledgeServiceImpl implements KnowledgeService {
             throw new UnauthorizedException("无权修改此知识");
         }
 
-        knowledge.setTitle(request.getTitle());
-        knowledge.setContent(request.getContent());
-        knowledge.setIsEncrypted(request.getIsEncrypted());
-        knowledge.setPrice(request.getPrice() != null ? request.getPrice() : 0.0);
-        knowledge.setTags(request.getTags());
+        knowledge.setTitle(request.title());
+        knowledge.setContent(request.content());
+        knowledge.setIsEncrypted(request.isEncrypted());
+        knowledge.setPrice(request.price() != null ? request.price() : 0.0);
+        knowledge.setTags(request.tags());
 
         Knowledge updated = knowledgeRepository.save(knowledge);
         return KnowledgeDTO.fromEntity(updated);
@@ -80,8 +87,19 @@ public class KnowledgeServiceImpl implements KnowledgeService {
 
     @Override
     public Page<KnowledgeDTO> searchKnowledge(String query, Pageable pageable) {
-        return knowledgeRepository.searchKnowledge(query, pageable)
-                .map(KnowledgeDTO::fromEntity);
+        if (StringUtils.hasText(query)) {
+            // 使用支持分页的搜索方法
+            return knowledgeRepository.findByTitleContainingIgnoreCaseAndStatus(
+                    query,
+                    Knowledge.Status.PUBLISHED,
+                    pageable
+            ).map(KnowledgeDTO::fromEntity);
+        } else {
+            return knowledgeRepository.findByStatus(
+                    Knowledge.Status.PUBLISHED,
+                    pageable
+            ).map(KnowledgeDTO::fromEntity);
+        }
     }
 
     @Override
@@ -97,17 +115,33 @@ public class KnowledgeServiceImpl implements KnowledgeService {
                 .map(KnowledgeDTO::fromEntity);
     }
 
+    // 获取用户已购买的知识ID列表
+    public List<Long> getPurchasedKnowledgeIds(Integer userId) {
+        return purchaseRepository.findKnowledgeIdsByUserId(userId);
+    }
+
+
     @Override
     public KnowledgeDTO getKnowledgeDetails(Long id, User user) {
         Knowledge knowledge = knowledgeRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("知识不存在"));
 
-        // 检查用户是否购买或是否是作者
-        boolean hasAccess = knowledge.getAuthor().getId().equals(user.getId()) ||
-                purchaseRepository.existsByKnowledgeIdAndUserId(id, user.getId());
+        // 检查用户是否是作者
+        boolean isAuthor = knowledge.getAuthor().getId().equals(user.getId());
+
+
+        // 如果是作者直接返回完整内容
+        if (isAuthor) {
+            KnowledgeDTO dto = KnowledgeDTO.fromEntity(knowledge);
+            dto.setPurchased(true); // 标记为已购买
+            return dto;
+        }
+
+        // 检查用户是否购买
+        boolean hasPurchased = purchaseRepository.existsByKnowledgeIdAndUserId(id, user.getId());
 
         // 如果是加密知识且用户未购买/不是作者，则隐藏内容
-        if (knowledge.getIsEncrypted() && !hasAccess) {
+        if (knowledge.getIsEncrypted() && !hasPurchased) {
             return KnowledgeDTO.builder()
                     .id(knowledge.getId())
                     .title(knowledge.getTitle())
@@ -121,18 +155,22 @@ public class KnowledgeServiceImpl implements KnowledgeService {
                     .build();
         }
 
-        return KnowledgeDTO.fromEntity(knowledge);
+        // 创建DTO并设置购买状态
+        KnowledgeDTO dto = KnowledgeDTO.fromEntity(knowledge);
+        dto.setPurchased(isAuthor || hasPurchased); // 设置购买状态
+
+        return dto;
     }
 
     @Transactional
     @Override
-    public void purchaseKnowledge(Long knowledgeId, User user) {
+    public BigDecimal purchaseKnowledge(Long knowledgeId, User user) {
         Knowledge knowledge = knowledgeRepository.findById(knowledgeId)
                 .orElseThrow(() -> new ResourceNotFoundException("知识不存在"));
 
         // 检查是否已购买
         if (purchaseRepository.existsByKnowledgeIdAndUserId(knowledgeId, user.getId())) {
-            throw new IllegalStateException("您已购买此知识");
+            return user.getBalance();
         }
 
         // 检查余额是否足够
@@ -145,20 +183,62 @@ public class KnowledgeServiceImpl implements KnowledgeService {
         user.setBalance(newBalance);
         userRepository.save(user);
 
+        PaymentOrder paymentOrder = PaymentOrder.builder()
+                .orderNo("BALANCE-" + System.currentTimeMillis() + "-" + knowledgeId)
+                .amount(BigDecimal.valueOf(knowledge.getPrice()))
+                .subject("知识购买: " + knowledge.getTitle())
+                .body("余额支付购买知识")
+                .payType(PaymentOrder.PayType.BALANCE)
+                .status(PaymentOrder.OrderStatus.SUCCESS)
+                .user(user)
+                .knowledge(knowledge)
+                .createTime(LocalDateTime.now())
+                .payTime(LocalDateTime.now())
+                .build();
+
 
         // 创建购买记录
         KnowledgePurchase purchase = new KnowledgePurchase();
         purchase.setKnowledge(knowledge);
         purchase.setUser(user);
+        purchase.setPaymentOrder(paymentOrder);
         purchaseRepository.save(purchase);
 
         // 更新购买计数
         knowledge.setPurchaseCount(knowledge.getPurchaseCount() + 1);
         knowledgeRepository.save(knowledge);
+        return newBalance;
+    }
+
+    @Override
+    public boolean isKnowledgePurchased(Long knowledgeId, Integer userId) {
+        // 获取知识
+        Knowledge knowledge = knowledgeRepository.findById(knowledgeId)
+                .orElseThrow(() -> new ResourceNotFoundException("知识不存在"));
+
+        // 作者自动拥有访问权限
+        if (knowledge.getAuthor().getId().equals(userId)) {
+            return true;
+        }
+
+        // 检查购买记录
+        return purchaseRepository.existsByKnowledgeIdAndUserId(knowledgeId, userId);
     }
 
 
+    // 获取用户有权限的知识ID列表
+    @Override
+    public List<Long> getUserKnowledgeIds(Integer userId) {
+        // 获取用户创建的知识ID
+        List<Long> createdIds = knowledgeRepository.findIdsByAuthorId(userId);
 
+        // 获取用户购买的知识ID
+        List<Long> purchasedIds = purchaseRepository.findKnowledgeIdsByUserId(userId);
 
+        // 合并并去重
+        Set<Long> allIds = new HashSet<>(createdIds);
+        allIds.addAll(purchasedIds);
+        return new ArrayList<>(allIds);
+    }
 
 }

@@ -17,6 +17,8 @@ const renderNode = (node: JSONContent): ReturnType<typeof h> | string | null => 
 
   // 根据节点类型渲染
   switch (node.type) {
+    case 'doc':
+      return h('div', { class: 'tiptap-content space-y-4' }, children)
     case 'paragraph':
       return h('p', {}, children)
     case 'heading':
@@ -63,11 +65,16 @@ const renderNode = (node: JSONContent): ReturnType<typeof h> | string | null => 
 }
 
 // 主渲染函数
-export const renderTiptapContent = (content: JSONContent): ReturnType<typeof h> | null => {
-  if (!content || !content.content) return null
+export const renderTiptapContent = (content: JSONContent): ReturnType<typeof h> | string | null => {
+  if (!content) return null
 
-  // 创建根节点
-  return h('div', { class: 'tiptap-content space-y-4' },
-    content.content.map(renderNode).filter(Boolean)
-  )
+  // 确保内容有doc节点
+  if (content.type !== 'doc') {
+    content = {
+      type: 'doc',
+      content: [content]
+    }
+  }
+
+  return renderNode(content)
 }

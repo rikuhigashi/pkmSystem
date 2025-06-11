@@ -1,6 +1,7 @@
 package com.example.backend.entity.knowledge;
 
 import com.example.backend.entity.user.User;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -34,6 +35,7 @@ public class Knowledge {
     private Double price = 0.0;
 
     @Column(nullable = false)
+    @JsonProperty("encrypted")
     private Boolean isEncrypted = false; //是否加密
 
     @ElementCollection
