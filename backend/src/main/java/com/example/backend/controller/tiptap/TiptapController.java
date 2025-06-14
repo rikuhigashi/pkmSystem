@@ -1,5 +1,7 @@
 package com.example.backend.controller.tiptap;
 
+import com.example.backend.annotation.CurrentUser;
+import com.example.backend.entity.user.User;
 import com.example.backend.service.impl.tiptap.TiptapCloudServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,10 +20,11 @@ public class TiptapController {
 
     private final TiptapCloudServiceImpl tiptapCloudService;
 
+
     @PostMapping("/generate-token")
-    public ResponseEntity<?> generateTiptapToken(Authentication authentication) {
+    public ResponseEntity<?> generateTiptapToken(@CurrentUser User user) {
         // 获取当前认证用户ID
-        String userId = authentication.getName();
+        String userId = user.getId().toString();
 
         // 生成 Tiptap Cloud 令牌
         String token = tiptapCloudService.generateTiptapToken(userId);
@@ -33,4 +36,20 @@ public class TiptapController {
 
         return ResponseEntity.ok(response);
     }
+
+//    @PostMapping("/generate-token")
+//    public ResponseEntity<?> generateTiptapToken(Authentication authentication) {
+//        // 获取当前认证用户ID
+//        String userId = authentication.getName();
+//
+//        // 生成 Tiptap Cloud 令牌
+//        String token = tiptapCloudService.generateTiptapToken(userId);
+//
+//        // 返回响应
+//        Map<String, Object> response = new HashMap<>();
+//        response.put("token", token);
+//        response.put("appId", tiptapCloudService.getAppId());
+//
+//        return ResponseEntity.ok(response);
+//    }
 }
