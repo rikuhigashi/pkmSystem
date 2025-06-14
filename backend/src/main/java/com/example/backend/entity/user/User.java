@@ -49,7 +49,7 @@ public class User {
     private Role role;
 
     @Size(max = 255)
-    @Column(name = "email",unique = true,updatable = false)
+    @Column(name = "email", unique = true, updatable = false)
     private String email;
 
     @ColumnDefault("CURRENT_TIMESTAMP")
@@ -65,7 +65,6 @@ public class User {
     @Column(name = "email_verified", nullable = false)
     @ColumnDefault("false")
     private Boolean emailVerified = false;
-
 
 
     @OneToMany(mappedBy = "user")

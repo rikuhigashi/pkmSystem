@@ -15,11 +15,11 @@ import com.example.backend.entity.knowledge.Knowledge;
 import com.example.backend.entity.knowledge.KnowledgePurchase;
 import com.example.backend.entity.payment.PaymentOrder;
 import com.example.backend.entity.user.User;
-import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.mapper.knowledge.KnowledgePurchaseRepository;
 import com.example.backend.repository.knowledge.KnowledgeRepository;
 import com.example.backend.repository.payment.PaymentOrderRepository;
 import com.example.backend.repository.user.UserRepository;
+import com.example.backend.service.payment.PaymentHandler;
 import com.example.backend.service.payment.PaymentService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +31,6 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -46,10 +45,11 @@ public class AlipayServiceImpl implements PaymentService {
     private final KnowledgePurchaseRepository knowledgePurchaseRepository;
     private final AlipayConfig alipayConfig;
     private final AlipayClient alipayClient;
+    private final Map<String, PaymentHandler> paymentHandlers;
 
     private static final String PRODUCT_CODE = "FAST_INSTANT_TRADE_PAY";
     private static final int ORDER_EXPIRE_MINUTES = 15;
-    private static final String CHARSET = "UTF-8"; // 添加字符集常量
+    private static final String CHARSET = "UTF-8";
 
     @Transactional
     @Override
@@ -57,18 +57,17 @@ public class AlipayServiceImpl implements PaymentService {
         log.info("创建支付订单，用户: {}, 金额: {}, 知识ID: {}",
                 user.getUsername(), request.amount(), request.knowledgeId());
 
-        // 处理知识购买
+        // 使用策略模式选择处理器
+        PaymentHandler handler;
         if (request.knowledgeId() != null) {
-            return createKnowledgePayment(user, request);
+            handler = paymentHandlers.get("knowledgePaymentHandler");
+        } else if (request.subject().contains("充值")) {
+            handler = paymentHandlers.get("rechargePaymentHandler");
+        } else {
+            handler = paymentHandlers.get("vipPaymentHandler");
         }
-        // 处理充值
-        else if (request.subject().contains("充值")) {
-            return createRechargeOrder(user, request);
-        }
-        // 默认VIP支付
-        else {
-            return createVipOrder(user, request);
-        }
+
+        return handler.handle(user, request);
     }
 
     @Transactional
@@ -127,12 +126,13 @@ public class AlipayServiceImpl implements PaymentService {
             return;
         }
 
-        // 创建购买记录 - 确保关联双向设置
+        // 创建购买记录
         KnowledgePurchase purchase = new KnowledgePurchase();
         purchase.setKnowledge(knowledge);
         purchase.setUser(order.getUser());
-        purchase.setPaymentOrder(order);  // 设置关联
+        purchase.setPaymentOrder(order);
         purchase.setPurchasedAt(Instant.now());
+        knowledgePurchaseRepository.save(purchase);
 
         // 设置反向关联
         order.setKnowledgePurchase(purchase);
@@ -196,9 +196,9 @@ public class AlipayServiceImpl implements PaymentService {
                 return false;
             }
 
-            // 3. 直接使用原始参数进行验签（不要过滤掉sign和sign_type）
+            // 3. 直接使用原始参数进行验签
             return AlipaySignature.rsaCheckV1(
-                    params, // 关键修改：使用完整参数
+                    params,
                     cleanKey(alipayConfig.getAlipayPublicKey()),
                     CHARSET,
                     signType
@@ -210,6 +210,45 @@ public class AlipayServiceImpl implements PaymentService {
         }
     }
 
+    // 通用创建订单方法（改为public供处理器调用）
+    public PaymentResponseDTO createAlipayOrder(
+            User user,
+            BigDecimal amount,
+            String subject,
+            String body,
+            PaymentOrder.PayType payType,
+            Knowledge knowledge,
+            Map<String, Object> payload) {
+
+        PaymentOrder order = buildPaymentOrder(user, amount, subject, body, payType);
+        order.setKnowledge(knowledge);
+        order.setPayload(JSON.toJSONString(payload));
+        paymentOrderRepository.save(order);
+
+        if (payType == PaymentOrder.PayType.KNOWLEDGE && knowledge != null) {
+            KnowledgePurchase purchase = new KnowledgePurchase();
+            purchase.setKnowledge(knowledge);
+            purchase.setUser(user);
+            purchase.setPaymentOrder(order);
+            purchase.setPurchasedAt(Instant.now());
+            knowledgePurchaseRepository.save(purchase);
+
+            order.setKnowledgePurchase(purchase);
+            paymentOrderRepository.save(order);
+        }
+
+        try {
+            String payForm = generateAlipayForm(order);
+            return PaymentResponseDTO.builder()
+                    .orderNo(order.getOrderNo())
+                    .payForm(payForm)
+                    .expireTime(order.getExpireTime())
+                    .build();
+        } catch (AlipayApiException e) {
+            log.error("支付宝接口调用失败: {}", e.getMessage());
+            throw new RuntimeException("支付请求创建失败", e);
+        }
+    }
 
     private PaymentOrder buildPaymentOrder(
             User user,
@@ -230,109 +269,6 @@ public class AlipayServiceImpl implements PaymentService {
                 .expireTime(LocalDateTime.now().plusMinutes(ORDER_EXPIRE_MINUTES))
                 .build();
     }
-
-    // 通用创建订单方法
-    private PaymentResponseDTO createAlipayOrder(
-            User user,
-            BigDecimal amount,
-            String subject,
-            String body,
-            PaymentOrder.PayType payType,
-            Knowledge knowledge,
-            Map<String, Object> payload) {
-
-        PaymentOrder order = buildPaymentOrder(user, amount, subject, body, payType);
-        order.setKnowledge(knowledge);
-
-        order.setPayload(JSON.toJSONString(payload));
-        paymentOrderRepository.save(order);
-
-        if (payType == PaymentOrder.PayType.KNOWLEDGE && knowledge != null) {
-            KnowledgePurchase purchase = new KnowledgePurchase();
-            purchase.setKnowledge(knowledge);
-            purchase.setUser(user);
-            purchase.setPaymentOrder(order); // 设置关联
-            purchase.setPurchasedAt(Instant.now());
-
-            // 设置反向关联
-            order.setKnowledgePurchase(purchase);
-        }
-
-
-        try {
-            String payForm = generateAlipayForm(order);
-            return PaymentResponseDTO.builder()
-                    .orderNo(order.getOrderNo())
-                    .payForm(payForm)
-                    .expireTime(order.getExpireTime())
-                    .build();
-        } catch (AlipayApiException e) {
-            log.error("支付宝接口调用失败: {}", e.getMessage());
-            throw new RuntimeException("支付请求创建失败", e);
-        }
-    }
-
-
-    // 创建知识支付订单
-    private PaymentResponseDTO createKnowledgePayment(User user, PaymentRequestDTO request) {
-        Long knowledgeId = request.knowledgeId();
-        Knowledge knowledge = knowledgeRepository.findById(knowledgeId)
-                .orElseThrow(() -> new ResourceNotFoundException("知识不存在"));
-
-        // 验证价格是否匹配
-        if (knowledge.getPrice() == null ||
-                knowledge.getPrice().compareTo(request.amount().doubleValue()) != 0) {
-            throw new IllegalArgumentException("知识价格不匹配");
-        }
-
-        // 构建负载数据
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("knowledgeId", knowledgeId);
-        payload.put("knowledgeTitle", knowledge.getTitle());
-
-        return createAlipayOrder(
-                user,
-                request.amount(),
-                request.subject(),
-                "知识购买: " + knowledge.getTitle(),
-                PaymentOrder.PayType.KNOWLEDGE,
-                knowledge, // 关联知识
-                payload
-        );
-    }
-
-    // 创建VIP订单
-    private PaymentResponseDTO createVipOrder(User user, PaymentRequestDTO request) {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("vipType", "monthly");
-
-        return createAlipayOrder(
-                user,
-                request.amount(),
-                request.subject(),
-                "VIP会员购买",
-                PaymentOrder.PayType.ALIPAY,
-                null,
-                payload
-        );
-    }
-
-    // 创建充值订单
-    private PaymentResponseDTO createRechargeOrder(User user, PaymentRequestDTO request) {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("rechargeType", "balance");
-
-        return createAlipayOrder(
-                user,
-                request.amount(),
-                request.subject(),
-                "账户余额充值",
-                PaymentOrder.PayType.BALANCE_RECHARGE,
-                null,
-                payload
-        );
-    }
-
 
     private String generateAlipayForm(PaymentOrder order) throws AlipayApiException {
         AlipayTradePagePayRequest request = new AlipayTradePagePayRequest();

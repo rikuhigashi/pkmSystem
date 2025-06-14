@@ -1,16 +1,14 @@
 package com.example.backend.controller.side;
 
+import com.example.backend.annotation.CurrentUser;
 import com.example.backend.dto.side.SidedatumDto;
 import com.example.backend.entity.side.Sidedatum;
 import com.example.backend.entity.user.User;
-import com.example.backend.repository.user.UserRepository;
 import com.example.backend.service.impl.side.SideServiceImpl;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,15 +20,11 @@ import java.util.List;
 public class SideController {
 
     private final SideServiceImpl sideService;
-    private final UserRepository userRepository;
-
 
 
     @GetMapping("/all")
-    public ResponseEntity<List<SidedatumDto>> getAllSideData(@AuthenticationPrincipal UserDetails userDetails) {
-        String email = userDetails.getUsername();
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("用户不存在"));
+    public ResponseEntity<List<SidedatumDto>> getAllSideData(@CurrentUser User user) {
+
 
         List<SidedatumDto> data = sideService.getAllSideDataByUser(user);
         return ResponseEntity.ok(data);
@@ -39,11 +33,10 @@ public class SideController {
 
     //    通过id获取数据
     @GetMapping("/full/{id}")
-    public ResponseEntity<SidedatumDto> getFullData(@PathVariable Integer id, @AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<SidedatumDto> getFullData(@PathVariable Integer id, @CurrentUser User user) {
 
 
-
-        String email = userDetails.getUsername();
+        String email = user.getUsername();
         SidedatumDto data = sideService.getFullSidedata(id, email);
 
         return ResponseEntity.ok(data);
@@ -52,10 +45,7 @@ public class SideController {
 
     //    添加数据
     @PostMapping("/add")
-    public ResponseEntity<SidedatumDto> addSideData(@RequestBody SidedatumDto sidedatumDto, @AuthenticationPrincipal UserDetails userDetails) {
-        String email = userDetails.getUsername();
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("用户不存在"));
+    public ResponseEntity<SidedatumDto> addSideData(@RequestBody SidedatumDto sidedatumDto, @CurrentUser User user) {
 
 
         // 设置用户 ID
@@ -84,7 +74,6 @@ public class SideController {
     }
 
 
-
     //    复制
     @PostMapping("/{id}/copy")
     public ResponseEntity<SidedatumDto> copySideData(@PathVariable Integer id) {
@@ -104,36 +93,32 @@ public class SideController {
 
     /**
      * 将数据移动到指定标签
-     * @param id
-     * @param tagId
-     * @param userDetails
+     *
      * @return 移入标签
      */
     @PutMapping("/{id}/tag/{tagId}")
     public ResponseEntity<SidedatumDto> moveToTag(
             @PathVariable Integer id,
             @PathVariable Integer tagId,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        String email = userDetails.getUsername();
+            @CurrentUser User user) {
+        String email = user.getUsername();
         SidedatumDto data = sideService.moveToTag(id, tagId, email);
         return ResponseEntity.ok(data);
     }
 
     /**
      * 从标签中移除数据
-     * @param id
-     * @param userDetails
+     *
      * @return 移出标签
      */
     @DeleteMapping("/{id}/tag")
     public ResponseEntity<SidedatumDto> removeFromTag(
             @PathVariable Integer id,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        String email = userDetails.getUsername();
+            @CurrentUser User user) {
+        String email = user.getUsername();
         SidedatumDto data = sideService.removeFromTag(id, email);
         return ResponseEntity.ok(data);
     }
-
 
 
 }

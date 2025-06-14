@@ -79,23 +79,6 @@ public class AdminController {
         Page<AdminSidedatumDto> dtoPage = pendingData.map(this::convertToAdminSidedatumDto);
         return ResponseEntity.ok(new PageResponse<>(dtoPage));
     }
-//        Page<Sidedatum> pendingData = sideService.getPendingData(name, expiredBefore, pageable);
-//        List<AdminSidedatumDto> dtos = pendingData.getContent().stream()
-//                .map(this::convertToAdminSidedatumDto)
-//                .collect(Collectors.toList());
-//
-//
-//        PageResponse<AdminSidedatumDto> response = new PageResponse<>(
-//                dtos,
-//                pendingData.getNumber(),
-//                pendingData.getSize(),
-//                pendingData.getTotalElements(),
-//                pendingData.getTotalPages()
-//        );
-//        return ResponseEntity.ok(response);
-
-
-
 
     private AdminSidedatumDto convertToAdminSidedatumDto(Sidedatum side) {
         return AdminSidedatumDto.builder()
@@ -108,39 +91,5 @@ public class AdminController {
                 .status(side.getStatus())
                 .build();
     }
-
-
-//    /**
-//     * 用户获取通知
-//     */
-//    @GetMapping("/user/notifications")
-//    @PreAuthorize("hasRole('USER')")
-//    public List<Notification> getUserNotifications(
-//            @AuthenticationPrincipal UserDetails userDetails
-//    ) {
-//        log.info("当前请求用户：{}", userDetails.getUsername());
-//
-//
-//        User user = userRepository.findByEmail(userDetails.getUsername())
-//                .orElseThrow(() -> new RuntimeException("用户不存在"));
-//        log.info("数据库用户ID：{}", user.getId());
-//        return notificationRepository.findByUserOrderByCreatedAtDesc(user);
-//    }
-//
-//    /**
-//     * 删除通知
-//     * @param id 通知ID
-//     */
-//    @DeleteMapping("/user/notifications/{id}")
-//    @PreAuthorize("hasRole('USER')")
-//    public ResponseEntity<Void> deleteNotification(
-//            @PathVariable Integer id,
-//            @AuthenticationPrincipal UserDetails userDetails
-//    ) {
-//        User user = userRepository.findByEmail(userDetails.getUsername())
-//                .orElseThrow(() -> new RuntimeException("用户不存在"));
-//        notificationRepository.deleteByIdAndUser(id, user);
-//        return ResponseEntity.ok().build();
-//    }
 
 }
