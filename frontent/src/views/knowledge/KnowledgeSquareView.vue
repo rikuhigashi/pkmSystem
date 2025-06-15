@@ -42,8 +42,19 @@ const fetchKnowledgeList = async () => {
   try {
     isLoading.value = true
 
-    // 构建排序参数
-    let sortParams = {};
+    // 定义排序参数类型
+    type SortParams = {
+      sortField: string;
+      sortDirection: string;
+    };
+
+    // 初始化排序参数
+    let sortParams: SortParams = {
+      sortField: 'createdAt',
+      sortDirection: 'DESC'
+    };
+
+    // 根据选项设置排序参数
     switch (sortOption.value) {
       case 'newest':
         sortParams = { sortField: 'createdAt', sortDirection: 'DESC' };
@@ -59,7 +70,6 @@ const fetchKnowledgeList = async () => {
         break;
     }
 
-
     const response = await searchKnowledge(
       searchQuery.value,
       currentPage.value - 1, // 后端页码从0开始
@@ -68,8 +78,8 @@ const fetchKnowledgeList = async () => {
       sortParams.sortDirection
     )
 
-    // 更新列表项的购买状态
-    knowledgeList.value = response.content.map(item => {
+    // 为item添加类型注解
+    knowledgeList.value = response.content.map((item: KnowledgeItem) => {
       const purchased = authStore.hasPurchasedKnowledge(item.id)
       return {
         ...item,
