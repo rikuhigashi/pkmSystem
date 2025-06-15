@@ -19,7 +19,7 @@ const pollPaymentStatus = async () => {
   const res = await checkPaymentStatus(orderNo.value)
 
   if (res.success) {
-    if (res.data.status === 'SUCCESS') {
+    if (res.data?.status === 'SUCCESS') {
       paymentStatus.value = 'success'
       clearInterval(pollInterval.value)
 
@@ -29,7 +29,7 @@ const pollPaymentStatus = async () => {
       setTimeout(() => {
         router.push('/home')
       }, 3000)
-    } else if (res.data.status === 'EXPIRED') {
+    } else if (res.data?.status === 'EXPIRED') {
       paymentStatus.value = 'failed'
       clearInterval(pollInterval.value)
     }

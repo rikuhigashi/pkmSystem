@@ -58,8 +58,8 @@
         <h3 :id="tier.id" class="text-base/7 font-semibold text-indigo-600">{{ tier.name }}</h3>
         <p class="mt-4 flex items-baseline gap-x-2">
           <span class="text-5xl font-semibold tracking-tight text-gray-900">{{
-            tier.priceMonthly
-          }}</span>
+              tier.priceMonthly
+            }}</span>
           <span class="text-base text-gray-500">/month</span>
         </p>
         <p class="mt-6 text-base/7 text-gray-600">{{ tier.description }}</p>
@@ -111,10 +111,10 @@
 
 <script setup lang="ts">
 import { CheckIcon } from '@heroicons/vue/20/solid'
-import {ref, watch} from 'vue'
+import { ref, watch } from 'vue'
 import { checkPaymentStatus, createPaymentOrder } from '@/API/payment/paymentAPI'
 import router from '@/router'
-import {userVipStore} from '@/stores/vip'
+import { userVipStore } from '@/stores/vip'
 
 const useVipStore = userVipStore()
 
@@ -125,17 +125,16 @@ const handlePayment = async (price: string) => {
     isLoading.value = true
     const amount = parseFloat(price.replace('￥', ''))
 
-    // 调用统一的支付接口
-    const response = await createPaymentOrder(
-      {
-        amount: amount,
-        subject: 'VIP会员订阅'
-      },
-      'vip' // 指定支付类型为VIP
-    )
 
-    if (!response.success) {
-      throw new Error('支付请求失败')
+    const response = await createPaymentOrder({
+      amount: amount,
+      subject: 'VIP会员订阅',
+      type: 'vip'  // 支付类型为VIP
+    })
+
+    // 检查response.data是否存在
+    if (!response.success || !response.data) {
+      throw new Error(response.error || '支付请求失败')
     }
 
     const orderNo = response.data.orderNo
@@ -161,31 +160,48 @@ const handlePayment = async (price: string) => {
       attempts++
       try {
         const statusRes = await checkPaymentStatus(orderNo)
-        if (statusRes.success) {
-          switch (statusRes.data.status) {
-            case 'SUCCESS':
-              clearInterval(interval)
-              await router.push({
-                name: 'paymentSuccess',
-                query: { orderNo: orderNo },
-              })
-              document.body.removeChild(formContainer)
-              break
-            case 'EXPIRED':
-            case 'FAILED':
-              alert('支付失败或超时')
-              clearInterval(interval)
-              document.body.removeChild(formContainer)
-              break
+
+        // 修复3: 检查statusRes.data是否存在
+        if (!statusRes.success || !statusRes.data) {
+          if (attempts < maxAttempts) {
+            setTimeout(checkStatus, 3000)
+          } else {
+            clearInterval(interval)
+            alert('支付状态查询失败')
+            document.body.removeChild(formContainer)
           }
+          return
         }
-        if (attempts >= maxAttempts) {
-          clearInterval(interval)
-          alert('支付状态查询超时')
-          document.body.removeChild(formContainer)
+
+        switch (statusRes.data.status) {
+          case 'SUCCESS':
+            clearInterval(interval)
+            await router.push({
+              name: 'paymentSuccess',
+              query: { orderNo: orderNo },
+            })
+            document.body.removeChild(formContainer)
+            break
+          case 'EXPIRED':
+          case 'FAILED':
+            alert('支付失败或超时')
+            clearInterval(interval)
+            document.body.removeChild(formContainer)
+            break
+          default:
+            if (attempts >= maxAttempts) {
+              clearInterval(interval)
+              alert('支付状态查询超时')
+              document.body.removeChild(formContainer)
+            }
         }
       } catch (error) {
         console.error('支付状态查询失败:', error)
+        if (attempts >= maxAttempts) {
+          clearInterval(interval)
+          alert('支付状态查询失败')
+          document.body.removeChild(formContainer)
+        }
       }
     }
     const interval = setInterval(checkStatus, 3000)
@@ -218,7 +234,6 @@ const tiers = [
     featured: false,
   },
 ]
-
 
 watch(
   () => useVipStore.isVipActive,
