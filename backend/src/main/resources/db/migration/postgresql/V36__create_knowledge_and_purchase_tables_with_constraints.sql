@@ -1,3 +1,4 @@
+
 CREATE TABLE knowledge
 (
     id             BIGSERIAL PRIMARY KEY,
@@ -13,6 +14,7 @@ CREATE TABLE knowledge
     CONSTRAINT fk_knowledge_user FOREIGN KEY (user_id) REFERENCES "user" (id)
 );
 
+
 CREATE TABLE knowledge_purchase
 (
     id               BIGSERIAL PRIMARY KEY,
@@ -20,11 +22,12 @@ CREATE TABLE knowledge_purchase
     user_id          INT                   NOT NULL,
     payment_order_id BIGINT                NOT NULL,
     purchased_at     TIMESTAMP             NULL,
+    CONSTRAINT uc_knowledge_purchase_payment_order UNIQUE (payment_order_id),
     CONSTRAINT fk_knowledge_purchase_knowledge FOREIGN KEY (knowledge_id) REFERENCES knowledge (id),
     CONSTRAINT fk_knowledge_purchase_user FOREIGN KEY (user_id) REFERENCES "user" (id),
-    CONSTRAINT fk_knowledge_purchase_payment_order FOREIGN KEY (payment_order_id) REFERENCES payment_order (id),
-    CONSTRAINT uc_knowledge_purchase_payment_order UNIQUE (payment_order_id)
+    CONSTRAINT fk_knowledge_purchase_payment_order FOREIGN KEY (payment_order_id) REFERENCES payment_order (id)
 );
+
 
 CREATE TABLE knowledge_tags
 (
@@ -33,7 +36,7 @@ CREATE TABLE knowledge_tags
     CONSTRAINT fk_knowledge_tags_on_knowledge FOREIGN KEY (knowledge_id) REFERENCES knowledge (id)
 );
 
--- Add foreign key constraints for other referenced tables
+
 ALTER TABLE knowledge_purchase
     ADD CONSTRAINT fk_knowledge_purchase_on_knowledge FOREIGN KEY (knowledge_id) REFERENCES knowledge (id);
 
@@ -45,3 +48,6 @@ ALTER TABLE knowledge_purchase
 
 ALTER TABLE payment_order
     ADD CONSTRAINT fk_payment_order_on_knowledge FOREIGN KEY (knowledge_id) REFERENCES knowledge (id);
+
+ALTER TABLE knowledge_tags
+    ADD CONSTRAINT fk_knowledge_tags_on_knowledge FOREIGN KEY (knowledge_id) REFERENCES knowledge (id);
