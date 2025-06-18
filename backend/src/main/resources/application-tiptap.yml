@@ -1,5 +1,5 @@
 tiptap:
   cloud:
     appId: y9drnrwm
-    appSecret: JG4jG29er1mPgRwn24oCtNlKyGO27JZPatiV6WoKRz6VfRKGRcGCIIWe8Aot80N5
+    appSecret: ${TIPTAP_APP_SECRET}
     expiration: 3600
