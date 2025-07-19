@@ -153,7 +153,7 @@ const handleSubmit = async () => {
 
       <!-- 验证码 -->
       <InputField
-        v-if="showVerificationField"
+
         label="验证码"
         type="text"
         v-model="registerFormData.code"
