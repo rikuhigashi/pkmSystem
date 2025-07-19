@@ -99,7 +99,8 @@ public class SecurityConfig {
 //        config.setAllowedOrigins(List.of("http://localhost:5173")); // 前端地址
         config.setAllowedOrigins(Arrays.asList(
                 "http://localhost:5173",
-                "https://pkm-system.vercel.app"
+                "https://pkm-system.vercel.app",
+                "https://pkm-system-higashis-projects-6c54d254.vercel.app/"
         )); // 前端地址
 //        config.setAllowedMethods(List.of("*"));
         config.setAllowedMethods(Arrays.asList(
